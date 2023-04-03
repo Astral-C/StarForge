@@ -360,6 +360,7 @@ Makefile
 cmake_install.cmake
 imgui.ini
 starbit
-lib/*
+lib/
+lib
 *.bin
 starforge
