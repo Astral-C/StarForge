@@ -1,9 +1,11 @@
 #pragma once
 
 #include "../lib/bStream/bstream.h"
+#include "DOM/DOMNodeSerializable.hpp"
 #include "GenUtil.hpp"
 #include <memory>
 #include <vector>
+#include <map>
 
 constexpr size_t JMP_HEADER_SIZE = 16;
 constexpr size_t JMP_FIELD_DEF_SIZE = 12;
@@ -25,12 +27,12 @@ public:
 enum class EJmpFieldType : uint8_t
 {
 	Integer,
-	UNUSED,
+	String,
 	Float,
 	Integer2, //what. why?
 	Short,
 	Byte,
-	String
+	StringOffset
 };
 
 // Definition of a field making up an entry in the JMP files.
@@ -48,6 +50,10 @@ struct SBcsvFieldInfo
 	EJmpFieldType Type;
 };
 
+typedef std::tuple<uint32_t, float, std::string> SBcsvValue; 
+
+typedef std::map<uint32_t, SBcsvValue> SBcsvEntry;
+
 // Handles reading and writing data from the map JMP files.
 class SBcsvIO
 {
@@ -60,15 +66,15 @@ class SBcsvIO
 	// Size of an entry in this JMP file.
 	uint32_t mEntrySize { 0 };
 
-	// Size of a string. Can vary between 16 and 32.
+	// Size of a string. Can vary between 16 and 32. BCSV uses this for _inline_ strings!
 	size_t mStringSize { 32 };
+
+	size_t mStringTableSize { 0 };
 
 	// A vector of the fields that define the data within the JMP entries.
 	std::vector<SBcsvFieldInfo> mFields;
 
-	// Pointer to the data blob containing the entries in this JMP file.
-	uint8_t* mData { nullptr };
-	uint8_t* mStringTable { nullptr };
+	std::vector<SBcsvEntry> mData;
 
 	// Hashes the given field name so that the field can be found from the list of loaded instances.
 	uint32_t HashFieldName(std::string name) const;
@@ -79,16 +85,7 @@ class SBcsvIO
 	// Returns a pointer to the field info corresponding to the given hash if it exists within this JMP file,
 	// or nullptr if it does not exist.
 	const SBcsvFieldInfo* FetchJmpFieldInfo(uint32_t hash);
-	// Retrieves the unsigned integer at the given offset from this JMP file's entry data.
-	uint32_t PeekU32(uint32_t offset);
-	// Retrieves the signed integer at the given offset from this JMP file's entry data.
-	int32_t PeekS32(uint32_t offset);
-	// Retrieves the float at the given offset from this JMP file's entry data.
-	float PeekF32(uint32_t offset);
 
-	bool PokeU32(uint32_t offset, uint32_t value);
-	bool PokeS32(uint32_t offset, int32_t value);
-	bool PokeF32(uint32_t offset, float value);
 
 	// Recalculates the size of each entry by examining the fields defining the entry data.
 	uint32_t CalculateNewEntrySize();
@@ -104,7 +101,9 @@ public:
 	size_t GetStringSize() const { return mStringSize; }
 	void SetStringSize(uint32_t newStringSize) { mStringSize = newStringSize; }
 
-	size_t CalculateNewFileSize(size_t entityCount) { return LGenUtility::PadToBoundary(JMP_HEADER_SIZE + (mFieldCount * JMP_FIELD_DEF_SIZE) + (entityCount * mEntrySize), 32); }
+	size_t CalculateNewFileSize(size_t entityCount) {
+		return JMP_HEADER_SIZE + (mFieldCount * JMP_FIELD_DEF_SIZE) + (entityCount * mEntrySize);
+	}
 
 /*== Input ==*/
 	// Attempts to load a JMP file from the given stream. Returns
@@ -137,7 +136,7 @@ public:
 
 /*== Output ==*/
 	// Saves the current JMP data to the given stream.
-	//bool Save(std::vector<std::shared_ptr<LEntityDOMNode>> entities, bStream::CMemoryStream& stream);
+	bool Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, bStream::CMemoryStream& stream);
 
 	// Writes an unsigned int to the given field in the specified JMP entry,
 	// packing into a bitfield if required.

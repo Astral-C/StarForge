@@ -21,6 +21,7 @@ enum EDOMNodeState
 enum class EDOMNodeType
 {
 	Base,
+	Serializable,
     Galaxy,
     Scenario,
 	Zone,
@@ -75,7 +76,7 @@ public:
 	std::weak_ptr<SDOMNodeBase> Parent;
 	std::vector<std::shared_ptr<SDOMNodeBase>> Children;
 
-    virtual void RenderHeirarchyUI() = 0;
+    virtual void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected) = 0;
     virtual void RenderDetailsUI() = 0;
 
 	virtual std::string GetName() { return mName; }
@@ -182,7 +183,7 @@ public:
 
 	void RemoveChild(std::shared_ptr<SDOMNodeBase> child)
 	{
-		ptrdiff_t index = LGenUtility::VectorIndexOf(Children, child);
+		ptrdiff_t index = SGenUtility::VectorIndexOf(Children, child);
 		if (index == -1)
 			return;
 

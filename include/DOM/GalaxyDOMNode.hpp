@@ -8,6 +8,7 @@ class SGalaxyDOMNode : public SDOMNodeBase {
     EGameType mGame;
     std::string mGalaxyName;
     GCarchive mScenarioArchive;
+    bool mGalaxyLoaded { false };
 
 
 public:
@@ -16,12 +17,14 @@ public:
     SGalaxyDOMNode();
     ~SGalaxyDOMNode();
 
-    void RenderScenarios();
-    void RenderZones();
+    void RenderScenarios(std::shared_ptr<SDOMNodeBase>& selected);
+    void RenderZones(std::shared_ptr<SDOMNodeBase>& selected);
+    void Render(float dt);
 
-    void RenderHeirarchyUI();
+    void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
 
+    void SaveGalaxy();
     bool LoadGalaxy(std::filesystem::path galaxy_path, EGameType game);
 
     virtual bool IsNodeType(EDOMNodeType type) const override {

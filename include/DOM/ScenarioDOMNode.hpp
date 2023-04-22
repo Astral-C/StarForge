@@ -5,7 +5,7 @@
 
 //TODO Load Power Star Type names for UI rendering from JSON and or ini
 
-class SScenarioDOMNode : public SDOMNodeBase {
+class SScenarioDOMNode : public SDOMNodeSerializable {
     unsigned int mScenarioNo;
     unsigned int mPowerStarId; // Bitfield, what power stars exist in scenario. TODO: make this a list that is generated on load?
     unsigned int mPowerStarType;
@@ -23,9 +23,9 @@ class SScenarioDOMNode : public SDOMNodeBase {
 
 
 public:
-    typedef SDOMNodeBase Super; 
+    typedef SDOMNodeSerializable Super; 
 
-    void RenderHeirarchyUI();
+    void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
 
     SScenarioDOMNode();
@@ -40,6 +40,6 @@ public:
     }
 
     void Deserialize(SBcsvIO* bcsv, int entry);
-    void Serialize();
+    void Serialize(SBcsvIO* bcsv, int entry);
 
 };

@@ -4,54 +4,43 @@
 #include "io/BcsvIO.hpp"
 #include "ResUtil.hpp"
 #include "imgui.h"
+#include <map>
 
 SGalaxyDOMNode::SGalaxyDOMNode() : Super("galaxy") {
     mType = EDOMNodeType::Galaxy;
 }
 
 SGalaxyDOMNode::~SGalaxyDOMNode(){
-    if(mScenarioArchive.ctx != nullptr){
+    if(mGalaxyLoaded){
         gcFreeArchive(&mScenarioArchive);
     }
 }
 
-void SGalaxyDOMNode::RenderScenarios(){
-    auto scenarios = GetChildrenOfType<SScenarioDOMNode>(EDOMNodeType::Scenario);  
+void SGalaxyDOMNode::SaveGalaxy(){
+    for(auto& zone : GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone)){
+        zone->SaveZone();
+    }
+}
 
-    for (int i = 0; i < scenarios.size(); i++){
-        scenarios.at(i)->RenderHeirarchyUI();
+void SGalaxyDOMNode::RenderScenarios(std::shared_ptr<SDOMNodeBase>& selected){
+    for (auto& scenario : GetChildrenOfType<SScenarioDOMNode>(EDOMNodeType::Scenario)){
+        scenario->RenderHeirarchyUI(selected);
     }
         
 }
 
-void SGalaxyDOMNode::RenderZones(){
-    auto zone = GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone);    
-
-    for (int i = 0; i < zone.size(); i++){
-        zone.at(i)->RenderHeirarchyUI();
+void SGalaxyDOMNode::RenderZones(std::shared_ptr<SDOMNodeBase>& selected){
+    for (auto& zone : GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone)){
+        zone->RenderHeirarchyUI(selected);
     }
 }
 
-void SGalaxyDOMNode::RenderHeirarchyUI(){
-	if (ImGui::TreeNode(mName.c_str())){
-        auto scenarios = GetChildrenOfType<SScenarioDOMNode>(EDOMNodeType::Scenario);
-        auto zone = GetChildrenOfType<SScenarioDOMNode>(EDOMNodeType::Zone);
-        
-        if(ImGui::TreeNode("Scenarios")){
-            for (int i = 0; i < scenarios.size(); i++){
-                scenarios.at(i)->RenderHeirarchyUI();
-            }
-            ImGui::TreePop();
-        }
-        
-        if(ImGui::TreeNode("Zones")){
-            for (int i = 0; i < zone.size(); i++){
-                zone.at(i)->RenderHeirarchyUI();
-            }
-            ImGui::TreePop();
-        }
-        
-        ImGui::TreePop();
+void SGalaxyDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
+}
+
+void SGalaxyDOMNode::Render(float dt){
+    for (auto& zone : GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone)){
+        zone->Render(dt);
     }
 }
 
@@ -70,6 +59,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 
     //Get scenario bcsv (its the only file in galaxy_path)
     GCResourceManager.LoadArchive((galaxy_path / (mName + "Scenario.arc")).c_str(), &mScenarioArchive);
+    mGalaxyLoaded = true;
 
     for(GCarcfile* file = mScenarioArchive.files; file < mScenarioArchive.files + mScenarioArchive.filenum; file++){
         
@@ -92,12 +82,25 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
             SBcsvIO ZoneData;
             bStream::CMemoryStream ZoneDataStream((uint8_t*)file->data, (size_t)file->size, bStream::Endianess::Big, bStream::OpenMode::In);
             ZoneData.Load(&ZoneDataStream);
-            for(size_t entry = 0; entry < ZoneData.GetEntryCount(); entry++){
+
+            // Manually load the main galaxy zone so we can get a list of zone transforms
+            auto mainZone = std::make_shared<SZoneDOMNode>();
+            mainZone->Deserialize(&ZoneData, 0);
+            auto zoneTransforms = mainZone->LoadMainZone(galaxy_path.parent_path() / (mainZone->GetName() + ".arc"));
+            AddChild(mainZone);
+
+            for(size_t entry = 1; entry < ZoneData.GetEntryCount(); entry++){
                 auto zone = std::make_shared<SZoneDOMNode>();
                 zone->Deserialize(&ZoneData, entry);
-                zone->LoadZoneArchive((galaxy_path / (mName + ".arc")));
+                zone->LoadZone(galaxy_path.parent_path() / (zone->GetName() + ".arc"));
+
+                if(zoneTransforms.count(zone->GetName())){
+                    zone->SetTransform(zoneTransforms.at(zone->GetName()));\
+                }
+
                 AddChild(zone);
             }
+
         }
     }
 }

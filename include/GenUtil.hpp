@@ -6,8 +6,9 @@
 #include <string>
 #include <sstream>
 #include <climits>
+#include <glm/glm.hpp>
 
-namespace LGenUtility
+namespace SGenUtility
 {
     // Returns the index of the given element in the given vector, or -1 if the element is not in that vector.
     template<typename T>
@@ -78,4 +79,6 @@ namespace LGenUtility
 
     // Converts the given string from Shift-JIS encoding to UTF-8.
     std::string SjisToUtf8(const std::string& value);
+
+    glm::mat4 CreateMTX(glm::vec3 scale, glm::vec3 dir, glm::vec3 pos);
 }

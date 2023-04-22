@@ -13,13 +13,27 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <bstream.h>
+#include <ResUtil.hpp>
+#include "ImGuizmo.h"
+
+#include "DOM/ZoneDOMNode.hpp"
+#include "DOM/ObjectDOMNode.hpp"
+
 
 UStarForgeContext::UStarForgeContext(){
 	mGrid.Init();
 
+	auto objectDBPath = std::filesystem::current_path() / std::filesystem::path("res/objectdb.json");
+	if(std::filesystem::exists(objectDBPath)){
+		std::ifstream objectDBStream(objectDBPath);
+		SObjectDOMNode::LoadObjectDB(nlohmann::json::parse(objectDBStream));
+	}
+
 	ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontFromFileTTF("res/NotoSansJP-Regular.otf", 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res/NotoSansJP-Regular.otf").c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+	Options.LoadOptions();
 
 	mRoot = std::make_shared<SGalaxyDOMNode>();
 }
@@ -65,15 +79,14 @@ void UStarForgeContext::Render(float deltaTime) {
 	ImGui::Begin("mainWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
 	ImGui::Text("Scenarios");
 		ImGui::Separator();
-		//TODO: Add a dummy Root node that all of these galaxies can be attached to.
-		mRoot->RenderScenarios();
+		mRoot->RenderScenarios(selected);
 	ImGui::End();
 
 	ImGui::SetNextWindowClass(&mainWindowOverride);
 	ImGui::Begin("zoneView", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
 		ImGui::Text("Zones");
 		ImGui::Separator();
-		mRoot->RenderZones();
+		mRoot->RenderZones(selected);
 		if(ImGui::Button("Add Zone")){
 			// mRoot AddZone method. Needs to make sure the added zone has all empty stageobjinfo entries!
 		}
@@ -85,9 +98,28 @@ void UStarForgeContext::Render(float deltaTime) {
 
 	ImGui::SetNextWindowClass(&mainWindowOverride);
 
+	ImGuizmo::BeginFrame();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+
 	ImGui::Begin("detailWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
 		ImGui::Text("Object Settings");
 		ImGui::Separator();
+		if(selected != nullptr){
+			selected->RenderDetailsUI();
+			if(selected->IsNodeType(EDOMNodeType::Object)){
+				std::shared_ptr<SObjectDOMNode> object = std::static_pointer_cast<SObjectDOMNode>(selected);
+				glm::mat4 transform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * object->mTransform, delta;
+
+				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], ImGuizmo::TRANSLATE, ImGuizmo::WORLD, &transform[0][0], &delta[0][0]);
+				
+				object->mTransform = glm::translate(object->mTransform, glm::vec3(delta[3]));
+			} else if (selected->IsNodeType(EDOMNodeType::Zone)){
+				std::shared_ptr<SZoneDOMNode> zone = std::static_pointer_cast<SZoneDOMNode>(selected);
+				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], ImGuizmo::TRANSLATE, ImGuizmo::WORLD, &zone->mTransform[0][0]);
+			}
+		}
+		//TODO: Once selection is set up again call the selected node's render function
 	ImGui::End();
 
 	glm::mat4 projection, view;
@@ -98,6 +130,7 @@ void UStarForgeContext::Render(float deltaTime) {
 	J3DUniformBufferObject::SetProjAndViewMatrices(&projection, &view);
 	
 	//Render Models here
+	mRoot->Render(deltaTime);
 
 	mGrid.Render(mCamera.GetPosition(), mCamera.GetProjectionMatrix(), mCamera.GetViewMatrix());
 }
@@ -115,7 +148,9 @@ void UStarForgeContext::RenderMenuBar() {
 			OpenModelCB();
 		}
 		if (ImGui::MenuItem("Save...")) {
-			SaveModelCB();
+			if(mRoot != nullptr){
+				mRoot->SaveGalaxy();
+			}
 		}
 
 		ImGui::Separator();
@@ -163,7 +198,7 @@ void UStarForgeContext::RenderMenuBar() {
 			try {
 			}
 			catch (std::exception e) {
-				std::cout << "Failed to save model to " << FilePath << "! Exception: " << e.what() << "\n";
+				std::cout << "Failed to save galaxy " << FilePath << "! Exception: " << e.what() << "\n";
 			}
 
 			bIsSaveDialogOpen = false;

@@ -12,14 +12,18 @@ SScenarioDOMNode::~SScenarioDOMNode(){
 }
 
 void SScenarioDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
-    mScenarioName = LGenUtility::SjisToUtf8(bcsv->GetString(entry, "ScenarioName"));
-    mAppearPowerStarObj =  LGenUtility::SjisToUtf8(bcsv->GetString(entry, "AppearPowerStarObj"));
+    mScenarioName = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "ScenarioName"));
+    mAppearPowerStarObj =  SGenUtility::SjisToUtf8(bcsv->GetString(entry, "AppearPowerStarObj"));
     mScenarioNo = bcsv->GetUnsignedInt(entry, "ScenarioNo");
-    mComet = LGenUtility::SjisToUtf8(bcsv->GetString(entry, "Comet"));
+    mComet = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "Comet"));
+}
+
+void SScenarioDOMNode::Serialize(SBcsvIO* bcsv, int entry){
+
 }
 
 
-void SScenarioDOMNode::RenderHeirarchyUI(){
+void SScenarioDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     ImGui::Text(fmt::format("{0} : {1} {2}", mScenarioNo, mScenarioName, mComet.empty() ? "" : "["+mComet+"]").data());
 }
 

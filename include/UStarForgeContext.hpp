@@ -7,16 +7,13 @@
 #include <memory>
 #include <UGrid.hpp>
 #include "DOM/GalaxyDOMNode.hpp"
-
-namespace bStream { class CStream; }
-class J3DModelData;
-class J3DMaterial;
-class J3DModelInstance;
+#include "ModelCache.hpp"
 
 
 class UStarForgeContext {
 	
 	std::shared_ptr<SGalaxyDOMNode> mRoot;
+	std::shared_ptr<SDOMNodeBase> selected;
 
 	USceneCamera mCamera;
 	UGrid mGrid;
@@ -46,7 +43,7 @@ class UStarForgeContext {
 
 public:
 	UStarForgeContext();
-	~UStarForgeContext() {}
+	~UStarForgeContext() { ModelCache.clear(); }
 
 	bool Update(float deltaTime);
 	void Render(float deltaTime);
