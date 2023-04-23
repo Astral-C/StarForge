@@ -47,7 +47,7 @@ std::string SGenUtility::SjisToUtf8(const std::string& value)
         return "";
 
     UErrorCode errorCode;
-    UConverter* conv = ucnv_open("shift_jis", &errorCode);
+    UConverter* conv = ucnv_open("shift_jisx0213", &errorCode);
 
     std::vector<UChar> uCharBuff;
     const char* a = value.c_str();

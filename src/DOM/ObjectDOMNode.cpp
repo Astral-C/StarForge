@@ -22,7 +22,7 @@ SObjectDOMNode::~SObjectDOMNode(){
 }
 
 void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
-    mName = bcsv->GetString(entry, "name");
+    mName = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "name"));
     if(ModelCache.count(mName) == 0){
         GCResourceManager.CacheModel(mName);
     }
@@ -32,10 +32,6 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     glm::vec3 scale = {bcsv->GetFloat(entry, "scale_x"), bcsv->GetFloat(entry, "scale_y"), bcsv->GetFloat(entry, "scale_z")};
 
     mTransform = SGenUtility::CreateMTX(scale, rotation, position);
-
-    mPosition = position;
-    mDirection = rotation;
-    mScale = scale;
 
     for (size_t i = 0; i < 8; i++){
         mObjArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Obj_arg{0}", i));
@@ -56,6 +52,24 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     }
 
     //Collect arg types from object DB and load data accordingly into array of obj/path args
+
+    mLinkID = bcsv->GetSignedInt(entry, "l_id");
+    mCameraSetID = bcsv->GetSignedInt(entry, "CameraSetId");
+    mSW_Appear = bcsv->GetSignedInt(entry, "SW_APPEAR");
+    mSW_Dead = bcsv->GetSignedInt(entry, "SW_DEAD");
+    mSW_A = bcsv->GetSignedInt(entry, "SW_A");
+    mSW_B = bcsv->GetSignedInt(entry, "SW_B");
+    mSW_Sleep = bcsv->GetSignedInt(entry, "SW_SLEEP");
+    mMessageID = bcsv->GetSignedInt(entry, "MessageId");
+    mCastID = bcsv->GetSignedInt(entry, "CastId");
+    mViewGroupID = bcsv->GetSignedInt(entry, "ViewGroupId");
+
+    mShapeModelNo = bcsv->GetShort(entry, "ShapeModelNo");
+    mCommonPathID = bcsv->GetShort(entry, "CommonPath_ID");
+    mClippingGroupID = bcsv->GetShort(entry, "ClippingGroupId");
+    mGroupID = bcsv->GetShort(entry, "GroupId");
+    mDemoGroupID = bcsv->GetShort(entry, "DemoGroupId");
+    mMapPartID = bcsv->GetShort(entry, "MapParts_ID");
 }
 
 void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
@@ -66,21 +80,20 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 
     glm::decompose(mTransform, scale, dir, pos, skew, persp);
 
-    pos = mTransform[3];
     glm::vec3 rotation = glm::eulerAngles(dir);
 
-    bcsv->SetString(entry, "name", mName);
-    bcsv->SetFloat(entry, "pos_x", mPosition.x);
-    bcsv->SetFloat(entry, "pos_y", mPosition.y);
-    bcsv->SetFloat(entry, "pos_z", mPosition.z);
+    bcsv->SetString(entry, "name", SGenUtility::Utf8ToSjis(mName));
+    bcsv->SetFloat(entry, "pos_x", pos.x);
+    bcsv->SetFloat(entry, "pos_y", pos.y);
+    bcsv->SetFloat(entry, "pos_z", pos.z);
 
-    bcsv->SetFloat(entry, "dir_x", mDirection.x);
-    bcsv->SetFloat(entry, "dir_y", mDirection.y);
-    bcsv->SetFloat(entry, "dir_z", mDirection.z);
+    bcsv->SetFloat(entry, "dir_x", dir.x);
+    bcsv->SetFloat(entry, "dir_y", dir.y);
+    bcsv->SetFloat(entry, "dir_z", dir.z);
 
-    bcsv->SetFloat(entry, "scale_x", mScale.x);
-    bcsv->SetFloat(entry, "scale_y", mScale.y);
-    bcsv->SetFloat(entry, "scale_z", mScale.z);
+    bcsv->SetFloat(entry, "scale_x", scale.x);
+    bcsv->SetFloat(entry, "scale_y", scale.y);
+    bcsv->SetFloat(entry, "scale_z", scale.z);
 
     for (size_t i = 0; i < 8; i++){
         bcsv->SetSignedInt(entry, fmt::format("Obj_arg{0}", i), mObjArgs[i]);
@@ -89,6 +102,25 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     for (size_t i = 0; i < 8; i++){
         bcsv->SetSignedInt(entry, fmt::format("Path_arg{0}", i), mPathArgs[i]);
     }
+
+    bcsv->SetSignedInt(entry, "l_id", mLinkID);
+    bcsv->SetSignedInt(entry, "CameraSetId", mCameraSetID);
+    bcsv->SetSignedInt(entry, "SW_APPEAR", mSW_Appear);
+    bcsv->SetSignedInt(entry, "SW_DEAD", mSW_Dead);
+    bcsv->SetSignedInt(entry, "SW_A", mSW_A);
+    bcsv->SetSignedInt(entry, "SW_B", mSW_B);
+    bcsv->SetSignedInt(entry, "SW_SLEEP", mSW_Sleep);
+    bcsv->SetSignedInt(entry, "MessageId", mMessageID);
+    bcsv->SetSignedInt(entry, "CastId", mCastID);
+    bcsv->SetSignedInt(entry, "ViewGroupId", mViewGroupID);
+
+    bcsv->SetShort(entry, "ShapeModelNo", mShapeModelNo);
+    bcsv->SetShort(entry, "CommonPath_ID", mCommonPathID);
+    bcsv->SetShort(entry, "ClippingGroupId", mClippingGroupID);
+    bcsv->SetShort(entry, "GroupId", mGroupID);
+    bcsv->SetShort(entry, "DemoGroupId", mDemoGroupID);
+    bcsv->SetShort(entry, "MapParts_ID", mMapPartID);
+
 }
 
 void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){

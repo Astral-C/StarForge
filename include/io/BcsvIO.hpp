@@ -99,7 +99,7 @@ public:
 	int32_t GetFieldCount() const { return mFieldCount; }
 
 	size_t GetStringSize() const { return mStringSize; }
-	void SetStringSize(uint32_t newStringSize) { mStringSize = newStringSize; }
+	void SetStringSize(uint32_t nestringSize) { mStringSize = nestringSize; }
 
 	size_t CalculateNewFileSize(size_t entityCount) {
 		return JMP_HEADER_SIZE + (mFieldCount * JMP_FIELD_DEF_SIZE) + (entityCount * mEntrySize);
@@ -121,6 +121,10 @@ public:
 	// Attempts to return the value of the given field, using the hash to look up the field.
 	// Returns 0 if invalid.
 	int32_t GetSignedInt(uint32_t entry_index, uint32_t field_hash);
+
+	uint16_t GetShort(uint32_t entry_index, std::string field_name);
+
+	uint8_t GetChar(uint32_t entry_index, std::string field_name);
 
 	// Attempts to return the value of the given field from the given JMP entry
 	// as float; returns 0.0f if the field is invalid.
@@ -147,6 +151,10 @@ public:
 
 	// Writes a signed int to the given field in the specified JMP entry, searching by hash.
 	bool SetSignedInt(uint32_t entry_index, uint32_t field_hash, int32_t value);
+
+	bool SetShort(uint32_t entry_index, std::string field_name, uint16_t value);
+
+	bool SetChar(uint32_t entry_index, std::string field_name, uint8_t value);
 
 	// Writes a float to the given field in the specified JMP entry.
 	bool SetFloat(uint32_t entry_index, std::string field_name, float value);

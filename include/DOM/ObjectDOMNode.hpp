@@ -9,6 +9,23 @@
 
 class SObjectDOMNode : public SDOMNodeSerializable {
     uint32_t mID;
+
+    uint32_t mLinkID;
+    uint32_t mCameraSetID;
+    uint32_t mSW_Appear;
+    uint32_t mSW_Dead;
+    uint32_t mSW_A, mSW_B, mSW_Sleep;
+    uint32_t mMessageID;
+    uint32_t mCastID;
+    uint32_t mViewGroupID;
+
+    uint16_t mShapeModelNo;
+    uint16_t mCommonPathID;
+    uint16_t mClippingGroupID;
+    uint16_t mGroupID;
+    uint16_t mDemoGroupID;
+    uint16_t mMapPartID;
+
     //TODO: this should be a config instead of just a name, that way the UI can dynamically change based on the config
     std::array<std::string, 8> mObjArgNames;
     std::array<int, 8> mObjArgs;
@@ -16,7 +33,6 @@ class SObjectDOMNode : public SDOMNodeSerializable {
     std::array<std::string, 8> mPathArgNames;
     std::array<int, 8> mPathArgs;
 
-    glm::vec3 mPosition, mDirection, mScale;
 
 public:
     glm::mat4 mTransform;

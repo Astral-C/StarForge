@@ -147,7 +147,6 @@ std::map<std::string, glm::mat4> SZoneDOMNode::LoadMainZone(std::string zonePath
 
     mIsMainZone = true;
     mZoneArchivePath = std::filesystem::path(zonePath);
-    
 
     GCResourceManager.LoadArchive(zonePath.data(), &mZoneArchive);
 
@@ -180,7 +179,7 @@ std::map<std::string, glm::mat4> SZoneDOMNode::LoadMainZone(std::string zonePath
 }
 
 void SZoneDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
-    mName = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "ZoneName"));
+    mName = bcsv->GetString(entry, "ZoneName");
 
 }
 
