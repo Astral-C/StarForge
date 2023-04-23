@@ -12,10 +12,10 @@ SScenarioDOMNode::~SScenarioDOMNode(){
 }
 
 void SScenarioDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
-    mScenarioName = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "ScenarioName"));
-    mAppearPowerStarObj =  SGenUtility::SjisToUtf8(bcsv->GetString(entry, "AppearPowerStarObj"));
+    mScenarioName = bcsv->GetString(entry, "ScenarioName");
+    mAppearPowerStarObj =  bcsv->GetString(entry, "AppearPowerStarObj");
     mScenarioNo = bcsv->GetUnsignedInt(entry, "ScenarioNo");
-    mComet = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "Comet"));
+    mComet = bcsv->GetString(entry, "Comet");
 }
 
 void SScenarioDOMNode::Serialize(SBcsvIO* bcsv, int entry){

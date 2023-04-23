@@ -33,6 +33,10 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
     mTransform = SGenUtility::CreateMTX(scale, rotation, position);
 
+    mPosition = position;
+    mDirection = rotation;
+    mScale = scale;
+
     for (size_t i = 0; i < 8; i++){
         mObjArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Obj_arg{0}", i));
     }
@@ -59,24 +63,24 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     glm::quat dir;
     glm::vec4 persp;
 
-    /*
 
     glm::decompose(mTransform, scale, dir, pos, skew, persp);
 
+    pos = mTransform[3];
     glm::vec3 rotation = glm::eulerAngles(dir);
 
-    bcsv->SetString(entry, "name", mName, stringTable);
-    bcsv->SetFloat(entry, "pos_x", pos.x);
-    bcsv->SetFloat(entry, "pos_y", pos.y);
-    bcsv->SetFloat(entry, "pos_z", pos.z);
+    bcsv->SetString(entry, "name", mName);
+    bcsv->SetFloat(entry, "pos_x", mPosition.x);
+    bcsv->SetFloat(entry, "pos_y", mPosition.y);
+    bcsv->SetFloat(entry, "pos_z", mPosition.z);
 
-    bcsv->SetFloat(entry, "dir_x", dir.x);
-    bcsv->SetFloat(entry, "dir_y", dir.y);
-    bcsv->SetFloat(entry, "dir_z", dir.z);
+    bcsv->SetFloat(entry, "dir_x", mDirection.x);
+    bcsv->SetFloat(entry, "dir_y", mDirection.y);
+    bcsv->SetFloat(entry, "dir_z", mDirection.z);
 
-    bcsv->SetFloat(entry, "scale_x", scale.x);
-    bcsv->SetFloat(entry, "scale_y", scale.y);
-    bcsv->SetFloat(entry, "scale_z", scale.z);
+    bcsv->SetFloat(entry, "scale_x", mScale.x);
+    bcsv->SetFloat(entry, "scale_y", mScale.y);
+    bcsv->SetFloat(entry, "scale_z", mScale.z);
 
     for (size_t i = 0; i < 8; i++){
         bcsv->SetSignedInt(entry, fmt::format("Obj_arg{0}", i), mObjArgs[i]);
@@ -85,7 +89,6 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     for (size_t i = 0; i < 8; i++){
         bcsv->SetSignedInt(entry, fmt::format("Path_arg{0}", i), mPathArgs[i]);
     }
-    */
 }
 
 void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
@@ -96,6 +99,8 @@ void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
 }
 
 void SObjectDOMNode::RenderDetailsUI(){
+    glm::vec3 pos(mTransform[3]);
+    ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
     for (size_t i = 0; i < 8; i++){
         ImGui::InputInt(mObjArgNames[i].data(), &mObjArgs[i]);
     }

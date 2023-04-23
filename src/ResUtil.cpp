@@ -166,7 +166,7 @@ bool SResUtility::SGCResourceManager::SaveArchive(const char* path, GCarchive* a
 
 void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "DATA" / "files" / "ObjectData" / (modelName + ".arc");
-	
+	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		GCarchive modelArc;
 		GCResourceManager.LoadArchive(modelPath.c_str(), &modelArc);

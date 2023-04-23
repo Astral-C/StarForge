@@ -23,7 +23,6 @@ void SZoneLayerDOMNode::SaveLayer(GCarchive* zoneArchive){
 
     std::vector<std::shared_ptr<SDOMNodeSerializable>> objects = GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Object);
     if(objects.size() == 0) {
-        std::cout << "No Children in layer " << mName << "????" << std::endl;
         return;
     }
 

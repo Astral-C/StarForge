@@ -156,7 +156,7 @@ uint32_t SBcsvIO::GetUnsignedInt(uint32_t entry_index, std::string field_name){
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);
 
 	if(entry_index < mData.size() && field != nullptr){
-		return (std::get<0>(mData.at(entry_index).at(field->Hash)) & field->Bitmask) >> field->Shift;
+		return (std::get<uint32_t>(mData.at(entry_index).at(field->Hash)) & field->Bitmask) >> field->Shift;
 	} else {
 		return 0;
 	}
@@ -167,7 +167,7 @@ int32_t SBcsvIO::GetSignedInt(uint32_t entry_index, std::string field_name){
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);
 
 	if(entry_index < mData.size() && field != nullptr){
-		return std::get<0>(mData.at(entry_index).at(HashFieldName(field_name)));
+		return (int32_t)std::get<uint32_t>(mData.at(entry_index).at(HashFieldName(field_name)));
 	} else {
 		return 0;
 	}
@@ -177,7 +177,7 @@ int32_t SBcsvIO::GetSignedInt(uint32_t entry_index, uint32_t field_hash){
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_hash);
 
 	if(entry_index < mData.size() && field != nullptr){
-		return std::get<0>(mData.at(entry_index).at(field_hash));
+		return (int32_t)std::get<uint32_t>(mData.at(entry_index).at(field_hash));
 	} else {
 		return 0;
 	}
@@ -187,7 +187,7 @@ float SBcsvIO::GetFloat(uint32_t entry_index, std::string field_name){
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);
 
 	if(entry_index < mData.size() && field != nullptr){
-		return std::get<1>(mData.at(entry_index).at(field->Hash));
+		return std::get<float>(mData.at(entry_index).at(field->Hash));
 	} else {
 		return 0.0f;
 	}
@@ -197,7 +197,7 @@ bool SBcsvIO::GetBoolean(uint32_t entry_index, std::string field_name){
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);
 
 	if(entry_index < mData.size() && field != nullptr){
-		return std::get<0>(mData.at(entry_index).at(field->Hash)) != 0;
+		return std::get<uint32_t>(mData.at(entry_index).at(field->Hash)) != 0;
 	} else {
 		return false;
 	}
@@ -207,7 +207,7 @@ std::string SBcsvIO::GetString(uint32_t entry_index, std::string field_name){
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);
 
 	if(entry_index < mData.size() && field != nullptr){
-		return std::get<2>(mData.at(entry_index).at(field->Hash));
+		return std::get<std::string>(mData.at(entry_index).at(field->Hash));
 	} else {
 		return "";
 	}
@@ -219,7 +219,7 @@ bool SBcsvIO::SetUnsignedInt(uint32_t entry_index, std::string field_name, uint3
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);
 
 	if(entry_index < mData.size() && field != nullptr){
-		std::get<0>(mData.at(entry_index).at(field->Hash)) = (std::get<0>(mData.at(entry_index).at(field->Hash)) & ~field->Bitmask) | (value << field->Shift) & field->Bitmask;
+		std::get<uint32_t>(mData.at(entry_index).at(field->Hash)) = (std::get<0>(mData.at(entry_index).at(field->Hash)) & ~field->Bitmask) | (value << field->Shift) & field->Bitmask;
 		return true;
 	} else {
 		return false;
@@ -230,7 +230,7 @@ bool SBcsvIO::SetSignedInt(uint32_t entry_index, std::string field_name, int32_t
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);
 
 	if(entry_index < mData.size() && field != nullptr){
-		std::get<0>(mData.at(entry_index).at(field->Hash)) = value;
+		std::get<uint32_t>(mData.at(entry_index).at(field->Hash)) = value;
 		return true;
 	} else {
 		return false;
@@ -241,7 +241,7 @@ bool SBcsvIO::SetSignedInt(uint32_t entry_index, uint32_t field_hash, int32_t va
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_hash);
 
 	if(entry_index < mData.size() && field != nullptr){
-		std::get<0>(mData.at(entry_index).at(field->Hash)) = value;
+		std::get<uint32_t>(mData.at(entry_index).at(field->Hash)) = value;
 		return true;
 	} else {
 		return false;
@@ -252,7 +252,7 @@ bool SBcsvIO::SetFloat(uint32_t entry_index, std::string field_name, float value
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);
 
 	if(entry_index < mData.size() && field != nullptr){
-		std::get<1>(mData.at(entry_index).at(field->Hash)) = value;
+		std::get<float>(mData.at(entry_index).at(field->Hash)) = value;
 		return true;
 	} else {
 		return false;
@@ -274,7 +274,7 @@ bool SBcsvIO::SetString(uint32_t entry_index, std::string field_name, std::strin
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);
 
 	if(entry_index < mData.size() && field != nullptr){
-		std::get<2>(mData.at(entry_index).at(field->Hash)) = value;
+		std::get<std::string>(mData.at(entry_index).at(field->Hash)) = SGenUtility::SjisToUtf8(value);
 		return true;
 	} else {
 		return false;
@@ -282,12 +282,20 @@ bool SBcsvIO::SetString(uint32_t entry_index, std::string field_name, std::strin
 }
 
 bool SBcsvIO::Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, bStream::CMemoryStream& stream){
+	if(entities.size() <= 0){
+		return false; // Don't bother trying to write 0 entries
+	}
+
+	mEntryCount = entities.size();
+
 	stream.writeInt32((int32_t)entities.size());
 	stream.writeInt32(mFieldCount);
 	stream.writeUInt32(mFieldCount * sizeof(SBcsvFieldInfo) + JMP_HEADER_SIZE);
 
 	uint32_t newEntrySize = CalculateNewEntrySize();
 	stream.writeUInt32(newEntrySize);
+
+	SBcsvEntry entry; //empty entry data
 
 	// Write the field info data
 	for (const SBcsvFieldInfo f : mFields)
@@ -297,55 +305,64 @@ bool SBcsvIO::Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, 
 		stream.writeUInt16(f.Start);
 		stream.writeUInt8(f.Shift);
 		stream.writeUInt8((uint8_t)f.Type);
+
+		entry.insert({f.Hash, SBcsvValue()});
 	}
 
+	mData.clear();
+	mData.reserve(entities.size());
 
 	for (uint32_t i = 0; i < entities.size(); i++)
 	{
-		entities[i]->Serialize(this, i);
+		mData.push_back(entry); //Add empty dummy entry
+		std::cout << "Serializing node " << entities[i]->GetName() << std::endl;
+		entities[i]->Serialize(this, i); // set entry data
 	}
 
 	std::map<uint32_t, std::string> StringTable;
+	uint32_t StringTableOffset = 0;
 
-	for (int32_t i = 0; i < mEntryCount; i++)
+	for (uint32_t i = 0; i < entities.size(); i++)
 	{
 		for (const SBcsvFieldInfo& f : mFields)
 		{
+			uint32_t offset = -1;
+			std::string str = std::get<std::string>(mData.at(i).at(f.Hash));
 			stream.seek(mEntryStartOffset + (mEntrySize * i) + f.Start);
 			switch(f.Type){
 				case EJmpFieldType::Integer:
 				case EJmpFieldType::Integer2:
-					stream.writeUInt32(std::get<0>(mData.at(i).at(f.Hash)));
+					stream.writeUInt32(std::get<uint32_t>(mData.at(i).at(f.Hash)));
 					break;
 				case EJmpFieldType::Float:
-					stream.writeFloat(std::get<1>(mData.at(i).at(f.Hash)));
-					break;
-				case EJmpFieldType::String:
-					//broken lol, unused though
-					stream.writeString(SGenUtility::Utf8ToSjis(std::get<2>(mData.at(i).at(f.Hash))));
+					std::cout << "set float as " << std::get<1>(mData.at(i).at(f.Hash)) << std::endl;
+					stream.writeFloat(std::get<float>(mData.at(i).at(f.Hash)));
 					break;
 				case EJmpFieldType::StringOffset:
-					uint32_t offset = -1;
-					std::string str = SGenUtility::Utf8ToSjis(std::get<2>(mData.at(i).at(f.Hash)));
-
 					if(StringTable.empty()){
 						offset = 0;
 						StringTable.insert({offset, str});
+						StringTableOffset += str.length() + 1;
 					} else {
 						for(auto& [k, v] : StringTable){
 							if(v == str){
+								//std::cout << "Found " << str << " w/ str table entry " << k << ":" << v << std::endl;
 								offset = k;
 								break;
 							}
 						}
 
 						if(offset == -1){
-							offset = StringTable.end()->first + StringTable.end()->second.size() + 1;
+							offset = StringTableOffset;
 							StringTable.insert({offset, str});
+							StringTableOffset += str.length() + 1;
 						}
 					}
 
 					stream.writeUInt32(offset);
+					break;
+				default:
+					stream.writeUInt32(0);
 					break;
 			}
 		}

@@ -16,6 +16,8 @@ class SObjectDOMNode : public SDOMNodeSerializable {
     std::array<std::string, 8> mPathArgNames;
     std::array<int, 8> mPathArgs;
 
+    glm::vec3 mPosition, mDirection, mScale;
+
 public:
     glm::mat4 mTransform;
     typedef SDOMNodeSerializable Super; 
