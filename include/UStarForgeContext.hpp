@@ -15,6 +15,8 @@ class UStarForgeContext {
 	std::shared_ptr<SGalaxyDOMNode> mRoot;
 	std::shared_ptr<SDOMNodeBase> selected;
 
+	uint32_t mGizmoOperation { 0 };
+
 	USceneCamera mCamera;
 	UGrid mGrid;
 

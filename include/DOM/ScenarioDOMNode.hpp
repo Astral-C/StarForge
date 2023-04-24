@@ -3,6 +3,23 @@
 #include "DOM/DOMNodeBase.hpp"
 #include "io/BcsvIO.hpp"
 
+enum EStarType {
+    Normal,
+    Hidden,
+    Green
+};
+
+enum ECometType {
+    None,
+    Red,
+    Purple,
+    Dark,
+    Exterminate,
+    Mimic,
+    Quick
+};
+
+
 //TODO Load Power Star Type names for UI rendering from JSON and or ini
 
 class SScenarioDOMNode : public SDOMNodeSerializable {
@@ -20,6 +37,8 @@ class SScenarioDOMNode : public SDOMNodeSerializable {
 
     // SMG1 Specific
     unsigned int mIsHidden;
+
+    std::map<std::string, uint32_t> mZoneLayers;
 
 
 public:

@@ -20,6 +20,7 @@ public:
     void LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName);
     void SaveLayer(GCarchive* zoneArchive);
     bool GetVisible(){ return mVisible; }
+    void SetVisible(bool v) { mVisible = v; }
 
     SZoneLayerDOMNode();
     ~SZoneLayerDOMNode();

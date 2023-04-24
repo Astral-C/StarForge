@@ -61,47 +61,47 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
     GCResourceManager.LoadArchive((galaxy_path / (mName + "Scenario.arc")).c_str(), &mScenarioArchive);
     mGalaxyLoaded = true;
 
-    for(GCarcfile* file = mScenarioArchive.files; file < mScenarioArchive.files + mScenarioArchive.filenum; file++){
-        
-        // Load Scenarios
+    GCarcfile* zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("zonelist.bcsv"));
+    GCarcfile* scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
 
-        if(strcmp(file->name, "scenariodata.bcsv") == 0){
-            SBcsvIO ScenarioData;
-            bStream::CMemoryStream ScenarioDataStream((uint8_t*)file->data, (size_t)file->size, bStream::Endianess::Big, bStream::OpenMode::In);
-            ScenarioData.Load(&ScenarioDataStream);
-            for(size_t entry = 0; entry < ScenarioData.GetEntryCount(); entry++){
-                auto scenario = std::make_shared<SScenarioDOMNode>();
-                scenario->Deserialize(&ScenarioData, entry);
-                AddChild(scenario);
+
+    // Load all zones and all zone layers
+    {
+        SBcsvIO ZoneData;
+        bStream::CMemoryStream ZoneDataStream((uint8_t*)zoneFile->data, (size_t)zoneFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
+        ZoneData.Load(&ZoneDataStream);
+
+        // Manually load the main galaxy zone so we can get a list of zone transforms
+        auto mainZone = std::make_shared<SZoneDOMNode>();
+        mainZone->Deserialize(&ZoneData, 0);
+        auto zoneTransforms = mainZone->LoadMainZone(galaxy_path.parent_path() / (mainZone->GetName() + ".arc"));
+        AddChild(mainZone);
+
+        for(size_t entry = 1; entry < ZoneData.GetEntryCount(); entry++){
+            auto zone = std::make_shared<SZoneDOMNode>();
+            zone->Deserialize(&ZoneData, entry);
+            zone->LoadZone(galaxy_path.parent_path() / (zone->GetName() + ".arc"));
+
+            if(zoneTransforms.count(zone->GetName())){
+                zone->SetTransform(zoneTransforms.at(zone->GetName()).first);
+                zone->SetLinkID(zoneTransforms.at(zone->GetName()).second); 
             }
+
+            AddChild(zone);
         }
+    }
 
-        // Load all zones and all zone layers
+    // Load Scenarios
+    {
+        SBcsvIO ScenarioData;
+        bStream::CMemoryStream ScenarioDataStream((uint8_t*)scenarioFile->data, (size_t)scenarioFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
+        ScenarioData.Load(&ScenarioDataStream);
+        for(size_t entry = 0; entry < ScenarioData.GetEntryCount(); entry++){
 
-        if(strcmp(file->name, "zonelist.bcsv") == 0){
-            SBcsvIO ZoneData;
-            bStream::CMemoryStream ZoneDataStream((uint8_t*)file->data, (size_t)file->size, bStream::Endianess::Big, bStream::OpenMode::In);
-            ZoneData.Load(&ZoneDataStream);
+            auto scenario = std::make_shared<SScenarioDOMNode>();
+            AddChild(scenario);
 
-            // Manually load the main galaxy zone so we can get a list of zone transforms
-            auto mainZone = std::make_shared<SZoneDOMNode>();
-            mainZone->Deserialize(&ZoneData, 0);
-            auto zoneTransforms = mainZone->LoadMainZone(galaxy_path.parent_path() / (mainZone->GetName() + ".arc"));
-            AddChild(mainZone);
-
-            for(size_t entry = 1; entry < ZoneData.GetEntryCount(); entry++){
-                auto zone = std::make_shared<SZoneDOMNode>();
-                zone->Deserialize(&ZoneData, entry);
-                zone->LoadZone(galaxy_path.parent_path() / (zone->GetName() + ".arc"));
-
-                if(zoneTransforms.count(zone->GetName())){
-                    zone->SetTransform(zoneTransforms.at(zone->GetName()).first);
-                    zone->SetLinkID(zoneTransforms.at(zone->GetName()).second); 
-                }
-
-                AddChild(zone);
-            }
-
+            scenario->Deserialize(&ScenarioData, entry);
         }
     }
 }

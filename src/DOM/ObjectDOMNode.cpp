@@ -124,10 +124,15 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 }
 
 void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
-    ImGui::Text(fmt::format("{0}", mName.data()).c_str());
+    if(selected == GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object)){
+        ImGui::TextColored(ImColor(0,255,0), fmt::format("{0}", mName.data()).c_str());
+    } else {
+        ImGui::Text(fmt::format("{0}", mName.data()).c_str());
+    }
     if(ImGui::IsItemClicked(0)){
         selected = GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object);
     }
+
 }
 
 void SObjectDOMNode::RenderDetailsUI(){

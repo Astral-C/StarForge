@@ -35,11 +35,29 @@ UStarForgeContext::UStarForgeContext(){
 
 	Options.LoadOptions();
 
+	mGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+
 	mRoot = std::make_shared<SGalaxyDOMNode>();
 }
 
 bool UStarForgeContext::Update(float deltaTime) {
 	mCamera.Update(deltaTime);
+
+	if(ImGui::IsKeyPressed(ImGuiKey_1)){
+		mGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+	}
+
+	if(ImGui::IsKeyPressed(ImGuiKey_2)){
+		mGizmoOperation = ImGuizmo::OPERATION::ROTATE;
+	}
+
+	if(ImGui::IsKeyPressed(ImGuiKey_3)){
+		mGizmoOperation = ImGuizmo::OPERATION::SCALE;
+	}
+
+	if(ImGui::IsKeyPressed(ImGuiKey_Escape)){
+		selected = nullptr;
+	}
 
 	return true;
 }
@@ -112,12 +130,12 @@ void UStarForgeContext::Render(float deltaTime) {
 				glm::mat4 zoneTransform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
 				glm::mat4 transform = zoneTransform * object->mTransform, delta;
 
-				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], ImGuizmo::TRANSLATE, ImGuizmo::WORLD, &transform[0][0], &delta[0][0]);
+				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0]);
 
 				object->mTransform = glm::inverse(zoneTransform) * transform;
 			} else if (selected->IsNodeType(EDOMNodeType::Zone)){
 				std::shared_ptr<SZoneDOMNode> zone = std::static_pointer_cast<SZoneDOMNode>(selected);
-				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], ImGuizmo::TRANSLATE, ImGuizmo::WORLD, &zone->mTransform[0][0]);
+				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &zone->mTransform[0][0]);
 			}
 		}
 		//TODO: Once selection is set up again call the selected node's render function

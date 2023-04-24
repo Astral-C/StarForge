@@ -13,7 +13,7 @@ class SGalaxyDOMNode : public SDOMNodeBase {
 
 public:
     typedef SDOMNodeBase Super;
-
+    
     SGalaxyDOMNode();
     ~SGalaxyDOMNode();
 
