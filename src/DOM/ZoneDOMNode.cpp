@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "UStarForgeContext.hpp"
 #include <fmt/core.h>
+#include <glm/gtx/matrix_decompose.hpp>
 
 SZoneLayerDOMNode::SZoneLayerDOMNode() : Super("Layer") {
     mType = EDOMNodeType::ZoneLayer;
@@ -130,6 +131,16 @@ void SZoneDOMNode::SaveZone(){
 
     if(!mZoneArchiveLoaded) return;
 
+    /*if(mIsMainZone){
+        GCarcfile* stageObjInfo = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/placement/common/stageobjinfo"));
+
+        std::vector<std::shared_ptr<SDOMNodeSerializable>> zones = Parent.lock()->GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Zone);
+        bStream::CMemoryStream saveStream(mStageObjInfo.CalculateNewFileSize(zones.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+        mStageObjInfo.Save(zones, saveStream);
+
+        gcReplaceFileData(stageObjInfo, saveStream.getBuffer(), saveStream.getSize());
+    }*/
+
     std::cout << "Saving Zone " << mName << std::endl;
     for(auto& layer : GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer)){
         layer->SaveLayer(&mZoneArchive);
@@ -139,7 +150,7 @@ void SZoneDOMNode::SaveZone(){
 
 }
 
-std::map<std::string, glm::mat4> SZoneDOMNode::LoadMainZone(std::string zonePath){
+std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(std::string zonePath){
     if(!std::filesystem::exists(zonePath)){
         std::cout << "Couldn't find zone " << zonePath << std::endl;
         return {};
@@ -150,19 +161,20 @@ std::map<std::string, glm::mat4> SZoneDOMNode::LoadMainZone(std::string zonePath
 
     GCResourceManager.LoadArchive(zonePath.data(), &mZoneArchive);
 
-    std::map<std::string, glm::mat4> zoneTransforms;
+    mZoneArchiveLoaded = true;
+
+    std::map<std::string, std::pair<glm::mat4, int32_t>> zoneTransforms;
 
     GCarcfile* file = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/placement/common/stageobjinfo"));
     
-    SBcsvIO StageObjInfo;
     bStream::CMemoryStream StageObjInfoStream((uint8_t*)file->data, (size_t)file->size, bStream::Endianess::Big, bStream::OpenMode::In);
-    StageObjInfo.Load(&StageObjInfoStream);
-    for(size_t stageObjEntry = 0; stageObjEntry < StageObjInfo.GetEntryCount(); stageObjEntry++){
-        std::string zoneName = StageObjInfo.GetString(stageObjEntry, "name");
-        glm::vec3 position = {StageObjInfo.GetFloat(stageObjEntry, "pos_x"), StageObjInfo.GetFloat(stageObjEntry, "pos_y"), StageObjInfo.GetFloat(stageObjEntry, "pos_z")};
-        glm::vec3 rotation = {StageObjInfo.GetFloat(stageObjEntry, "dir_x"), StageObjInfo.GetFloat(stageObjEntry, "dir_y"), StageObjInfo.GetFloat(stageObjEntry, "dir_z")};
+    mStageObjInfo.Load(&StageObjInfoStream);
+    for(size_t stageObjEntry = 0; stageObjEntry < mStageObjInfo.GetEntryCount(); stageObjEntry++){
+        std::string zoneName = mStageObjInfo.GetString(stageObjEntry, "name");
+        glm::vec3 position = {mStageObjInfo.GetFloat(stageObjEntry, "pos_x"), mStageObjInfo.GetFloat(stageObjEntry, "pos_y"), mStageObjInfo.GetFloat(stageObjEntry, "pos_z")};
+        glm::vec3 rotation = {mStageObjInfo.GetFloat(stageObjEntry, "dir_x"), mStageObjInfo.GetFloat(stageObjEntry, "dir_y"), mStageObjInfo.GetFloat(stageObjEntry, "dir_z")};
 
-        zoneTransforms.insert({zoneName, SGenUtility::CreateMTX({1,1,1}, rotation, position)});
+        zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), mStageObjInfo.GetSignedInt(stageObjEntry, "l_id")}});
     }
 
 	for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
@@ -180,11 +192,28 @@ std::map<std::string, glm::mat4> SZoneDOMNode::LoadMainZone(std::string zonePath
 
 void SZoneDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mName = bcsv->GetString(entry, "ZoneName");
-
 }
 
 void SZoneDOMNode::Serialize(SBcsvIO* bcsv, int entry){
-    
+    glm::vec3 pos, scale, skew;
+    glm::quat dir;
+    glm::vec4 persp;
+
+
+    glm::decompose(mTransform, scale, dir, pos, skew, persp);
+
+    glm::vec3 rotation = glm::eulerAngles(dir);
+
+    bcsv->SetString(entry, "name", mName);
+    bcsv->SetSignedInt(entry, "l_id", mLinkID);
+
+    bcsv->SetFloat(entry, "pos_x", pos.x);
+    bcsv->SetFloat(entry, "pos_y", pos.y);
+    bcsv->SetFloat(entry, "pos_z", pos.z);
+
+    bcsv->SetFloat(entry, "dir_x", glm::degrees(dir.x));
+    bcsv->SetFloat(entry, "dir_y", glm::degrees(dir.y));
+    bcsv->SetFloat(entry, "dir_z", glm::degrees(dir.z));
 }
 
 

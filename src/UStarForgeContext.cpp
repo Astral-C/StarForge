@@ -109,11 +109,12 @@ void UStarForgeContext::Render(float deltaTime) {
 			selected->RenderDetailsUI();
 			if(selected->IsNodeType(EDOMNodeType::Object)){
 				std::shared_ptr<SObjectDOMNode> object = std::static_pointer_cast<SObjectDOMNode>(selected);
-				glm::mat4 transform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * object->mTransform, delta;
+				glm::mat4 zoneTransform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+				glm::mat4 transform = zoneTransform * object->mTransform, delta;
 
 				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], ImGuizmo::TRANSLATE, ImGuizmo::WORLD, &transform[0][0], &delta[0][0]);
-				
-				object->mTransform = glm::translate(object->mTransform, glm::vec3(delta[3]));
+
+				object->mTransform = glm::inverse(zoneTransform) * transform;
 			} else if (selected->IsNodeType(EDOMNodeType::Zone)){
 				std::shared_ptr<SZoneDOMNode> zone = std::static_pointer_cast<SZoneDOMNode>(selected);
 				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], ImGuizmo::TRANSLATE, ImGuizmo::WORLD, &zone->mTransform[0][0]);

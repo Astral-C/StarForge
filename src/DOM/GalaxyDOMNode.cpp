@@ -95,7 +95,8 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
                 zone->LoadZone(galaxy_path.parent_path() / (zone->GetName() + ".arc"));
 
                 if(zoneTransforms.count(zone->GetName())){
-                    zone->SetTransform(zoneTransforms.at(zone->GetName()));\
+                    zone->SetTransform(zoneTransforms.at(zone->GetName()).first);
+                    zone->SetLinkID(zoneTransforms.at(zone->GetName()).second); 
                 }
 
                 AddChild(zone);

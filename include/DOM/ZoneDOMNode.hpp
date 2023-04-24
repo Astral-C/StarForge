@@ -39,9 +39,12 @@ public:
 class SZoneDOMNode : public SDOMNodeSerializable {
     bool mIsMainZone { false };
     bool mZoneArchiveLoaded { false };
-
+    int32_t mLinkID;
+    
+    SBcsvIO mStageObjInfo;
     GCarchive mZoneArchive;
     std::filesystem::path mZoneArchivePath;
+    
 
 public:
     glm::mat4 mTransform;
@@ -65,9 +68,10 @@ public:
     void LoadZone(std::string zonePath);
     void SaveZone();
     void SetTransform(glm::mat4 transform) { mTransform = transform; }
+    void SetLinkID(int32_t link_id) { mLinkID = link_id; }
 
     // Special loader function for loading the main zone archive
-    std::map<std::string, glm::mat4> LoadMainZone(std::string zonePath);
+    std::map<std::string, std::pair<glm::mat4, int32_t>> LoadMainZone(std::string zonePath);
 
     void Deserialize(SBcsvIO* bcsv, int entry);
     void Serialize(SBcsvIO* bcsv, int entry);
