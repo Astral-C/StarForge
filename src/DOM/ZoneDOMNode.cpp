@@ -19,6 +19,7 @@ SZoneLayerDOMNode::~SZoneLayerDOMNode() {
 }
 
 void SZoneLayerDOMNode::SaveLayer(GCarchive* zoneArchive){
+    // hop up two parents to sgalaxydomnode and check game type
     std::string layerPath = fmt::format("jmp/placement/{0}/objinfo", mName);
     GCarcfile* objInfoFile = GCResourceManager.GetFile(zoneArchive, std::filesystem::path(layerPath));
 
@@ -134,6 +135,8 @@ void SZoneDOMNode::SaveZone(){
 
     if(mIsMainZone){
 
+        //get parent and check game type
+
         GCarcfile* stageObjInfo = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/placement/common/stageobjinfo"));
 
         std::vector<std::shared_ptr<SZoneDOMNode>> zoneNodes = Parent.lock()->GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone);
@@ -177,6 +180,7 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
 
     std::map<std::string, std::pair<glm::mat4, int32_t>> zoneTransforms;
 
+    // get parent and check game type
     GCarcfile* file = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/placement/common/stageobjinfo"));
     
     bStream::CMemoryStream StageObjInfoStream((uint8_t*)file->data, (size_t)file->size, bStream::Endianess::Big, bStream::OpenMode::In);

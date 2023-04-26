@@ -25,6 +25,8 @@ class UStarForgeContext {
 	uint32_t mDockNodeUpLeftID;
 	uint32_t mDockNodeDownLeftID;
 	
+	bool mOptionsOpen { false };
+
 	bool bIsDockingSetUp { false };
 	bool bIsFileDialogOpen { false };
 	bool bIsSaveDialogOpen { false };
@@ -34,9 +36,6 @@ class UStarForgeContext {
 	void RenderMainWindow(float deltaTime);
 	void RenderPanels(float deltaTime);
 	void RenderMenuBar();
-
-	void OpenModelCB();
-	void SaveModelCB();
 
 	void SetLights();
 	void LoadFromPath(std::filesystem::path filePath);

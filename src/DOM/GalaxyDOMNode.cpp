@@ -20,7 +20,12 @@ void SGalaxyDOMNode::SaveGalaxy(){
         zone->SaveZone();
     }
 
-    GCarcfile* scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
+    GCarcfile* scenarioFile;
+    if(mGame == EGameType::SMG1){
+        scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
+    } else {
+        scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ScenarioData.bcsv"));
+    }
     auto scenarios = GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Scenario);
 
 
@@ -72,6 +77,11 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 
     mScenarioArchivePath = (galaxy_path / (mName + "Scenario.arc")).c_str();
 
+	if(!std::filesystem::exists(mScenarioArchivePath)){
+		std::cout << "Couldn't open scenario archive " << mScenarioArchivePath << std::endl;
+		return false;
+	}
+
     GCResourceManager.LoadArchive((galaxy_path / (mName + "Scenario.arc")).c_str(), &mScenarioArchive);
     mGalaxyLoaded = true;
 
@@ -83,7 +93,6 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ZoneList.bcsv"));
         scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ScenarioData.bcsv"));
     }
-
 
 
     // Load all zones and all zone layers

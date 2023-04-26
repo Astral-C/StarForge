@@ -181,11 +181,12 @@ void UStarForgeContext::RenderMainWindow(float deltaTime) {
 }
 
 void UStarForgeContext::RenderMenuBar() {
+	mOptionsOpen = false;
 	ImGui::BeginMainMenuBar();
 
 	if (ImGui::BeginMenu("File")) {
 		if (ImGui::MenuItem("Open...")) {
-			OpenModelCB();
+			bIsFileDialogOpen = true;
 		}
 		if (ImGui::MenuItem("Save...")) {
 			if(mRoot != nullptr){
@@ -199,6 +200,9 @@ void UStarForgeContext::RenderMenuBar() {
 		ImGui::EndMenu();
 	}
 	if (ImGui::BeginMenu("Edit")) {
+		if(ImGui::MenuItem("Settings")){
+			mOptionsOpen = true;
+		}
 		ImGui::EndMenu();
 	}
 	if (ImGui::BeginMenu("About")) {
@@ -208,18 +212,19 @@ void UStarForgeContext::RenderMenuBar() {
 	ImGui::EndMainMenuBar();
 
 	if (bIsFileDialogOpen) {
-		ImGuiFileDialog::Instance()->OpenDialog("OpenFileDialog", "Choose Folder", nullptr, ".");
-	}
-	if (bIsSaveDialogOpen) {
-		ImGuiFileDialog::Instance()->OpenDialog("SaveFileDialog", "Choose File", "J3D Models (*.bmd *.bdl){.bmd,.bdl}", ".", 1, nullptr, ImGuiFileDialogFlags_ConfirmOverwrite);
+		ImGuiFileDialog::Instance()->OpenDialog("OpenGalaxyDialog", "Choose Stage Directory", nullptr, Options.mRootPath == "" ? "." : Options.mRootPath / "DATA" / "files" / "StageData" / ".", "");
 	}
 
-	if (ImGuiFileDialog::Instance()->Display("OpenFileDialog")) {
+	if (ImGuiFileDialog::Instance()->Display("OpenGalaxyDialog")) {
 		if (ImGuiFileDialog::Instance()->IsOk()) {
 			std::string FilePath = ImGuiFileDialog::Instance()->GetFilePathName();
 
 			try {
-				LoadFromPath(FilePath);
+				// TODO: add way to set galaxy type
+				// copy from cammie again? or infer based on root structure
+				if(!mRoot->LoadGalaxy(FilePath, EGameType::SMG1)){
+					ImGui::OpenPopup("Galaxy Load Error");
+				}
 			}
 			catch (std::exception e) {
 				std::cout << "Failed to load galaxy " << FilePath << "! Exception: " << e.what() << "\n";
@@ -231,29 +236,22 @@ void UStarForgeContext::RenderMenuBar() {
 		ImGuiFileDialog::Instance()->Close();
 	}
 
-	if (ImGuiFileDialog::Instance()->Display("SaveFileDialog")) {
-		if (ImGuiFileDialog::Instance()->IsOk()) {
-			std::string FilePath = ImGuiFileDialog::Instance()->GetFilePathName();
+	if (ImGui::BeginPopupModal("Galaxy Load Error", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse)){
+		ImGui::Text("Error Loading Stage\n\n");
+		ImGui::Separator();
 
-			try {
-			}
-			catch (std::exception e) {
-				std::cout << "Failed to save galaxy " << FilePath << "! Exception: " << e.what() << "\n";
-			}
-
-			bIsSaveDialogOpen = false;
+		if (ImGui::Button("OK", ImVec2(120,0))) {
+			ImGui::CloseCurrentPopup();
 		}
-
-		ImGuiFileDialog::Instance()->Close();
+		ImGui::EndPopup();
 	}
-}
 
-void UStarForgeContext::OpenModelCB() {
-	bIsFileDialogOpen = true;
-}
+	if(mOptionsOpen){
+		ImGui::OpenPopup("Options");
+	}
 
-void UStarForgeContext::SaveModelCB() {
-	bIsSaveDialogOpen = true;
+	Options.RenderOptionMenu();
+
 }
 
 void UStarForgeContext::SetLights() {
@@ -277,9 +275,4 @@ void UStarForgeContext::SetLights() {
 		lights[i].Color = glm::vec4(1, 1, 1, 1);
 
 	J3DUniformBufferObject::SetLights(lights);
-}
-
-void UStarForgeContext::LoadFromPath(std::filesystem::path filePath) {
-	//TODO: Make game a setting
-	mRoot->LoadGalaxy(filePath, EGameType::SMG1);
 }
