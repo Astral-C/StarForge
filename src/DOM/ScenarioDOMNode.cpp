@@ -43,6 +43,7 @@ void SScenarioDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
             mZoneLayers.insert({zone->GetName(), bcsv->GetUnsignedInt(entry, zone->GetName())});
         }
     }
+    mSelectedZone = mZoneLayers.begin()->first;
 }
 
 void SScenarioDOMNode::Serialize(SBcsvIO* bcsv, int entry){
@@ -97,7 +98,7 @@ void SScenarioDOMNode::RenderDetailsUI(){
     }
     */
 
-    ImGui::Text("Comet Type");
+    ImGui::Text("Comet Type"); 
     ImGui::SameLine();
     if(ImGui::BeginCombo("##cometType", mComet.c_str(), 0)){
         for(auto cometType : CometTypeNames){
@@ -110,5 +111,50 @@ void SScenarioDOMNode::RenderDetailsUI(){
             }
         }
         ImGui::EndCombo();
+    }
+
+    ImGui::Text("Enabled Layers");
+    ImGui::Separator();
+    if(ImGui::BeginCombo("##zoneSelected", mSelectedZone.c_str(), 0)){
+        for(auto [zoneName, enabled] : mZoneLayers){
+            bool is_selected = (mSelectedZone == zoneName);
+            if (ImGui::Selectable(zoneName.c_str(), is_selected)){
+                mSelectedZone = zoneName;
+            }
+            if (is_selected){
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+
+    if(ImGui::BeginTable("##layerEnable", 4)){
+        for(int layer = 0; layer < 16; layer++){
+
+            ImGui::TableNextColumn();
+
+            bool enabled = mZoneLayers[mSelectedZone] & (1 << layer);
+            if(ImGui::Checkbox(fmt::format("{}", char('A' + layer)).c_str(), &enabled)){
+                mZoneLayers[mSelectedZone] ^= (1 << layer);
+
+                // Reshow-hide layers
+                auto zones = GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone);
+                for(auto& zone : zones){
+                    if(zone->GetName() == mSelectedZone){
+                        auto layers = zone->GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer);
+                        // assume theyre in order for now. they should be.
+                        uint32_t l = 0;
+                        for(auto& layer : layers){
+                            if(layer->GetName() != "common" && layer->GetName() != "Common"){
+                                layer->SetVisible(mZoneLayers[mSelectedZone] & (1 << l++));
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+        ImGui::EndTable();
     }
 }

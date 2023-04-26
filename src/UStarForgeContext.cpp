@@ -121,7 +121,28 @@ void UStarForgeContext::Render(float deltaTime) {
 	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
 	ImGui::Begin("detailWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
-		ImGui::Text("Object Settings");
+		if(selected != nullptr){
+			switch (selected->GetNodeType())
+			{
+			case EDOMNodeType::Scenario:
+				ImGui::Text("Scenario Properties");
+				break;
+
+			case EDOMNodeType::Zone:
+				ImGui::Text("Zone Properties");
+				break;
+
+			case EDOMNodeType::Object:
+				ImGui::Text("Object Properties");
+				break;
+			
+			default:
+				ImGui::Text("Selection Properties");
+				break;
+			}
+		} else {
+			ImGui::Text("Properties");
+		}
 		ImGui::Separator();
 		if(selected != nullptr){
 			selected->RenderDetailsUI();

@@ -74,6 +74,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         // Manually load the main galaxy zone so we can get a list of zone transforms
         auto mainZone = std::make_shared<SZoneDOMNode>();
         mainZone->Deserialize(&ZoneData, 0);
+        
         auto zoneTransforms = mainZone->LoadMainZone(galaxy_path.parent_path() / (mainZone->GetName() + ".arc"));
         AddChild(mainZone);
 

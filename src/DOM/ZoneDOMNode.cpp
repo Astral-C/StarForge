@@ -27,7 +27,6 @@ void SZoneLayerDOMNode::SaveLayer(GCarchive* zoneArchive){
         return;
     }
 
-
     bStream::CMemoryStream saveStream(mObjInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
     mObjInfo.Save(objects, saveStream);
 
@@ -92,7 +91,7 @@ void SZoneDOMNode::RenderDetailsUI(){
 
 void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     bool opened = ImGui::TreeNodeEx(mName.data(), GetIsSelected() ? ImGuiTreeNodeFlags_Selected : 0);
-    if(ImGui::IsItemClicked()){
+    if(ImGui::IsItemClicked() && !mIsMainZone){
         SetIsSelected(true);
         selected = GetSharedPtr<SZoneDOMNode>(EDOMNodeType::Zone);
     } else {
@@ -108,6 +107,8 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
 
 void SZoneDOMNode::LoadZone(std::string zonePath){
     if(!std::filesystem::exists(zonePath)) return;
+
+    mIsMainZone = false;
 
     mZoneArchivePath = std::filesystem::path(zonePath);
 
@@ -131,15 +132,26 @@ void SZoneDOMNode::SaveZone(){
 
     if(!mZoneArchiveLoaded) return;
 
-    /*if(mIsMainZone){
+    if(mIsMainZone){
+
         GCarcfile* stageObjInfo = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/placement/common/stageobjinfo"));
 
-        std::vector<std::shared_ptr<SDOMNodeSerializable>> zones = Parent.lock()->GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Zone);
+        std::vector<std::shared_ptr<SZoneDOMNode>> zoneNodes = Parent.lock()->GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone);
+        std::vector<std::shared_ptr<SDOMNodeSerializable>> zones;
+
+        for(auto& zone : zoneNodes){
+            if(zone->mLinkID != 0) zones.push_back(zone);
+        }
+
+
+        std::cout << "Saving Stage Object Info" << std::endl;
         bStream::CMemoryStream saveStream(mStageObjInfo.CalculateNewFileSize(zones.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
         mStageObjInfo.Save(zones, saveStream);
 
-        gcReplaceFileData(stageObjInfo, saveStream.getBuffer(), saveStream.getSize());
-    }*/
+        if(stageObjInfo != nullptr){
+            gcReplaceFileData(stageObjInfo, saveStream.getBuffer(), saveStream.tell());
+        }
+    }
 
     std::cout << "Saving Zone " << mName << std::endl;
     for(auto& layer : GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer)){
@@ -174,8 +186,10 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
         glm::vec3 position = {mStageObjInfo.GetFloat(stageObjEntry, "pos_x"), mStageObjInfo.GetFloat(stageObjEntry, "pos_y"), mStageObjInfo.GetFloat(stageObjEntry, "pos_z")};
         glm::vec3 rotation = {mStageObjInfo.GetFloat(stageObjEntry, "dir_x"), mStageObjInfo.GetFloat(stageObjEntry, "dir_y"), mStageObjInfo.GetFloat(stageObjEntry, "dir_z")};
 
-        zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), mStageObjInfo.GetSignedInt(stageObjEntry, "l_id")}});
+        zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), mStageObjInfo.GetUnsignedInt(stageObjEntry, "l_id")}});
     }
+
+
 
 	for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
 		if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, ".") != 0 && strcmp(file->name, "..") != 0){
@@ -205,15 +219,15 @@ void SZoneDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     glm::vec3 rotation = glm::eulerAngles(dir);
 
     bcsv->SetString(entry, "name", mName);
-    bcsv->SetSignedInt(entry, "l_id", mLinkID);
+    bcsv->SetUnsignedInt(entry, "l_id", mLinkID);
 
     bcsv->SetFloat(entry, "pos_x", pos.x);
     bcsv->SetFloat(entry, "pos_y", pos.y);
     bcsv->SetFloat(entry, "pos_z", pos.z);
 
     bcsv->SetFloat(entry, "dir_x", glm::degrees(dir.x));
-    bcsv->SetFloat(entry, "dir_y", glm::degrees(dir.y));
-    bcsv->SetFloat(entry, "dir_z", glm::degrees(dir.z));
+    bcsv->SetFloat(entry, "dir_y", -glm::degrees(dir.z));
+    bcsv->SetFloat(entry, "dir_z", glm::degrees(dir.y));
 }
 
 

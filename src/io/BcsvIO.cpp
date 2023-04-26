@@ -441,16 +441,16 @@ bool SBcsvIO::Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, 
 	stream.seek(mEntryStartOffset);
 	stream.writeBytes((char*)tempBuffer, mEntryCount * mEntrySize);
 
-	stream.seek(mEntryStartOffset + (mEntrySize * mEntryCount));
+	stream.seek(mEntryStartOffset + (mEntryCount * mEntrySize));
 
 	for(auto& [k, v] : StringTable){
 		stream.writeString(v);
 		stream.writeUInt8(0);
 	}
 
-	size_t padding_size = SGenUtility::PadToBoundary(stream.tell(), 32) - stream.tell();
-	std::cout << "Padding to " << padding_size << " bytes" << std::endl;
-	for(int i = 0; i < padding_size; i++) stream.writeUInt8(0);
+	size_t padded_size = SGenUtility::PadToBoundary(stream.tell(), 4);
+	std::cout << "Padding to " << padded_size << " bytes" << std::endl;
+	for(int i = 0; stream.tell() < padded_size; i++) stream.writeUInt8(0x40);
 
 	delete[] tempBuffer;
 

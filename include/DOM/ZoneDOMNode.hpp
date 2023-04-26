@@ -40,7 +40,7 @@ public:
 class SZoneDOMNode : public SDOMNodeSerializable {
     bool mIsMainZone { false };
     bool mZoneArchiveLoaded { false };
-    int32_t mLinkID;
+    uint32_t mLinkID { 0 };
     
     SBcsvIO mStageObjInfo;
     GCarchive mZoneArchive;

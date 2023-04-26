@@ -23,23 +23,25 @@ enum ECometType {
 //TODO Load Power Star Type names for UI rendering from JSON and or ini
 
 class SScenarioDOMNode : public SDOMNodeSerializable {
-    unsigned int mScenarioNo;
-    unsigned int mPowerStarId; // Bitfield, what power stars exist in scenario. TODO: make this a list that is generated on load?
-    unsigned int mPowerStarType;
+    uint32_t mScenarioNo;
+    uint32_t mPowerStarId; // Bitfield, what power stars exist in scenario. TODO: make this a list that is generated on load?
+    uint32_t mPowerStarType;
     std::string mAppearPowerStarObj; // Name of object that spawns the power star associate w/ scenario #
     std::string mComet; // Comet Type
-    unsigned int mCometLimitTimer;
+    uint32_t mCometLimitTimer;
 
     //Unused
     std::string mScenarioName;
-    unsigned int mLuigiModeTimer;
-    unsigned int mErrorCheck;
+    uint32_t mLuigiModeTimer;
+    uint32_t mErrorCheck;
 
     // SMG1 Specific
-    unsigned int mIsHidden;
+    uint32_t mIsHidden;
 
     std::map<std::string, uint32_t> mZoneLayers;
 
+    // Selected node
+    std::string mSelectedZone;
 
 public:
     typedef SDOMNodeSerializable Super; 

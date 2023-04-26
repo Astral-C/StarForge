@@ -88,8 +88,8 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     bcsv->SetFloat(entry, "pos_z", pos.z);
 
     bcsv->SetFloat(entry, "dir_x", glm::degrees(dir.x));
-    bcsv->SetFloat(entry, "dir_y", glm::degrees(dir.z));
-    bcsv->SetFloat(entry, "dir_z", -glm::degrees(dir.y));
+    bcsv->SetFloat(entry, "dir_y", glm::degrees(dir.y));
+    bcsv->SetFloat(entry, "dir_z", glm::degrees(dir.z));
 
     bcsv->SetFloat(entry, "scale_x", scale.x);
     bcsv->SetFloat(entry, "scale_y", scale.y);
