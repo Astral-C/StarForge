@@ -2,12 +2,15 @@
 #include "context.h"
 #include "archive.h"
 #include "DOM/DOMNodeBase.hpp"
+#include "io/BcsvIO.hpp"
 #include <filesystem>
 
 class SGalaxyDOMNode : public SDOMNodeBase {
     EGameType mGame;
     std::string mGalaxyName;
+    std::string mScenarioArchivePath;
     GCarchive mScenarioArchive;
+    SBcsvIO mScenarioData;
     bool mGalaxyLoaded { false };
 
 
