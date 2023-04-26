@@ -26,6 +26,14 @@ class SObjectDOMNode : public SDOMNodeSerializable {
     uint16_t mDemoGroupID;
     uint16_t mMapPartID;
 
+    // Galaxy 2
+    uint32_t mSwitchAwake;
+    uint32_t mSwitchParam;
+    float mParamScale;
+    uint16_t mObjID;
+    uint16_t mGeneratorID;
+    
+
     //TODO: this should be a config instead of just a name, that way the UI can dynamically change based on the config
     std::array<std::string, 8> mObjArgNames;
     std::array<int, 8> mObjArgs;

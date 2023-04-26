@@ -31,10 +31,11 @@ SScenarioDOMNode::~SScenarioDOMNode(){
 
 void SScenarioDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mScenarioName = bcsv->GetString(entry, "ScenarioName");
+    mScenarioNo = bcsv->GetUnsignedInt(entry, "ScenarioNo");
     mPowerStarId = bcsv->GetUnsignedInt(entry, "PowerStarId");
     mAppearPowerStarObj =  bcsv->GetString(entry, "AppearPowerStarObj");
-    mScenarioNo = bcsv->GetUnsignedInt(entry, "ScenarioNo");
-    mPowerStarType = bcsv->GetUnsignedInt(entry, "Type");
+    mCometLimitTimer = bcsv->GetUnsignedInt(entry, "CometLimitTimer");
+    mPowerStarType = bcsv->GetUnsignedInt(entry, "PowerStarType");
     mComet = bcsv->GetString(entry, "Comet");
 
     mLuigiModeTimer = bcsv->GetUnsignedInt(entry, "LuigiModeTimer");
@@ -55,10 +56,11 @@ void SScenarioDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
 void SScenarioDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     bcsv->SetString(entry, "ScenarioName", mScenarioName);
+    bcsv->SetUnsignedInt(entry, "ScenarioNo", mScenarioNo);
     bcsv->SetUnsignedInt(entry, "PowerStarId", mPowerStarId);
     bcsv->SetString(entry, "AppearPowerStarObj", mAppearPowerStarObj);
-    bcsv->SetUnsignedInt(entry, "ScenarioNo", mScenarioNo);
-    bcsv->SetUnsignedInt(entry, "Type", mPowerStarType);
+    bcsv->SetUnsignedInt(entry, "CometLimitTimer", mCometLimitTimer);
+    bcsv->SetUnsignedInt(entry, "PowerStarType", mPowerStarType);
     bcsv->SetString(entry, "Comet", mComet);
     
     bcsv->SetUnsignedInt(entry, "LuigiModeTimer", mLuigiModeTimer);
@@ -107,6 +109,7 @@ void SScenarioDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
 
 void SScenarioDOMNode::RenderDetailsUI(){
     /*
+    //Get game type and show star type if galaxy 1
     if(ImGui::BeginCombo("Star Type", StarTypeNames[mPowerStarType], 0)){
         for(int type = 0; type < IM_ARRAYSIZE(StarTypeNames); type++){
             bool is_selected = (mPowerStarType == type);

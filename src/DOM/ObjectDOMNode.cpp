@@ -2,6 +2,7 @@
 #include "ModelCache.hpp"
 #include "ResUtil.hpp"
 #include "imgui.h"
+#include "misc/cpp/imgui_stdlib.h"
 #include <fmt/core.h>
 #include <glm/gtx/matrix_decompose.hpp>
 
@@ -70,6 +71,12 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mGroupID = bcsv->GetShort(entry, "GroupId");
     mDemoGroupID = bcsv->GetShort(entry, "DemoGroupId");
     mMapPartID = bcsv->GetShort(entry, "MapParts_ID");
+
+    mSwitchAwake = bcsv->GetSignedInt(entry, "SW_AWAKE");
+    mSwitchParam = bcsv->GetSignedInt(entry, "SW_PARAM");
+    mParamScale = bcsv->GetFloat(entry, "ParamScale");
+    mObjID = bcsv->GetShort(entry, "Obj_ID");
+    mGeneratorID = bcsv->GetShort(entry, "GeneratorID");
 }
 
 void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
@@ -87,9 +94,9 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     bcsv->SetFloat(entry, "pos_y", pos.y);
     bcsv->SetFloat(entry, "pos_z", pos.z);
 
-    bcsv->SetFloat(entry, "dir_x", glm::degrees(dir.x));
-    bcsv->SetFloat(entry, "dir_y", glm::degrees(dir.y));
-    bcsv->SetFloat(entry, "dir_z", glm::degrees(dir.z));
+    bcsv->SetFloat(entry, "dir_x", dir.x);
+    bcsv->SetFloat(entry, "dir_y", dir.y);
+    bcsv->SetFloat(entry, "dir_z", dir.z);
 
     bcsv->SetFloat(entry, "scale_x", scale.x);
     bcsv->SetFloat(entry, "scale_y", scale.y);
@@ -121,6 +128,13 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     bcsv->SetShort(entry, "DemoGroupId", mDemoGroupID);
     bcsv->SetShort(entry, "MapParts_ID", mMapPartID);
 
+
+    bcsv->SetSignedInt(entry, "SW_AWAKE", mSwitchAwake);
+    bcsv->SetSignedInt(entry, "SW_PARAM", mSwitchParam);
+    bcsv->SetFloat(entry, "ParamScale", mParamScale);
+    bcsv->SetShort(entry, "Obj_ID", mObjID);
+    bcsv->SetShort(entry, "GeneratorID", mGeneratorID);
+
 }
 
 void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
@@ -138,6 +152,9 @@ void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
 void SObjectDOMNode::RenderDetailsUI(){
     glm::vec3 pos(mTransform[3]);
     ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
+
+    ImGui::InputText("Name", &mName);
+
     for (size_t i = 0; i < 8; i++){
         ImGui::InputInt(mObjArgNames[i].data(), &mObjArgs[i]);
     }

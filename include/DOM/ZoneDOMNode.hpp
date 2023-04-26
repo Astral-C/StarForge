@@ -66,13 +66,13 @@ public:
         return Super::IsNodeType(type);
     }
 
-    void LoadZone(std::string zonePath);
+    void LoadZone(std::filesystem::path zonePath);
     void SaveZone();
     void SetTransform(glm::mat4 transform) { mTransform = transform; }
     void SetLinkID(int32_t link_id) { mLinkID = link_id; }
 
     // Special loader function for loading the main zone archive
-    std::map<std::string, std::pair<glm::mat4, int32_t>> LoadMainZone(std::string zonePath);
+    std::map<std::string, std::pair<glm::mat4, int32_t>> LoadMainZone(std::filesystem::path zonePath);
 
     void Deserialize(SBcsvIO* bcsv, int entry);
     void Serialize(SBcsvIO* bcsv, int entry);

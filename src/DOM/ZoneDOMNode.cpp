@@ -19,10 +19,6 @@ SZoneLayerDOMNode::~SZoneLayerDOMNode() {
 }
 
 void SZoneLayerDOMNode::SaveLayer(GCarchive* zoneArchive){
-    // hop up two parents to sgalaxydomnode and check game type
-    std::string layerPath = fmt::format("jmp/placement/{0}/objinfo", mName);
-    GCarcfile* objInfoFile = GCResourceManager.GetFile(zoneArchive, std::filesystem::path(layerPath));
-
     std::vector<std::shared_ptr<SDOMNodeSerializable>> objects = GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Object);
     if(objects.size() == 0) {
         return;
@@ -31,9 +27,8 @@ void SZoneLayerDOMNode::SaveLayer(GCarchive* zoneArchive){
     bStream::CMemoryStream saveStream(mObjInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
     mObjInfo.Save(objects, saveStream);
 
-    if(objInfoFile != nullptr){
-        std::cout << "Replacing file " << layerPath << std::endl;
-        gcReplaceFileData(objInfoFile, saveStream.getBuffer(), saveStream.getSize());
+    if(mObjInfoFile != nullptr){
+        gcReplaceFileData(mObjInfoFile, saveStream.getBuffer(), saveStream.getSize());
     }
 
 }
@@ -43,6 +38,7 @@ void SZoneLayerDOMNode::LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, s
     
 	for (GCarcfile* layer_file = &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff]; layer_file < &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff] + zoneArchive->dirs[layerDir->size].filenum; layer_file++){
 		if((strcmp(layer_file->name, "objinfo") == 0 || strcmp(layer_file->name, "ObjInfo") == 0) && layer_file->data != nullptr){
+            mObjInfoFile = layer_file;
 			bStream::CMemoryStream ObjInfoStream((uint8_t*)layer_file->data, (size_t)layer_file->size, bStream::Endianess::Big, bStream::OpenMode::In);
 			mObjInfo.Load(&ObjInfoStream);
 			for(size_t objEntry = 0; objEntry < mObjInfo.GetEntryCount(); objEntry++){
@@ -62,6 +58,13 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
             node->RenderHeirarchyUI(selected);
         }
         ImGui::TreePop();
+    }
+
+    ImGui::SameLine();
+
+    if(ImGui::Button("+")){
+        auto object = std::make_shared<SObjectDOMNode>();
+        AddChild(object);
     }
 }
 
@@ -98,6 +101,7 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     } else {
         SetIsSelected(false);
     }
+
     if(opened){
         for (auto node : GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer)){
             node->RenderHeirarchyUI(selected);
@@ -106,14 +110,14 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     }
 }
 
-void SZoneDOMNode::LoadZone(std::string zonePath){
+void SZoneDOMNode::LoadZone(std::filesystem::path zonePath){
     if(!std::filesystem::exists(zonePath)) return;
 
     mIsMainZone = false;
 
-    mZoneArchivePath = std::filesystem::path(zonePath);
+    mZoneArchivePath = zonePath;
 
-    GCResourceManager.LoadArchive(zonePath.data(), &mZoneArchive);
+    GCResourceManager.LoadArchive(zonePath.c_str(), &mZoneArchive);
 
 	for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
 		if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, ".") != 0 && strcmp(file->name, "..") != 0){
@@ -134,10 +138,10 @@ void SZoneDOMNode::SaveZone(){
     if(!mZoneArchiveLoaded) return;
 
     if(mIsMainZone){
-
-        //get parent and check game type
-
         GCarcfile* stageObjInfo = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/placement/common/stageobjinfo"));
+        if(stageObjInfo == nullptr){
+            stageObjInfo = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/Placement/Common/StageObjInfo"));
+        }
 
         std::vector<std::shared_ptr<SZoneDOMNode>> zoneNodes = Parent.lock()->GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone);
         std::vector<std::shared_ptr<SDOMNodeSerializable>> zones;
@@ -165,16 +169,16 @@ void SZoneDOMNode::SaveZone(){
 
 }
 
-std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(std::string zonePath){
+std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(std::filesystem::path zonePath){
     if(!std::filesystem::exists(zonePath)){
         std::cout << "Couldn't find zone " << zonePath << std::endl;
         return {};
     }
 
     mIsMainZone = true;
-    mZoneArchivePath = std::filesystem::path(zonePath);
+    mZoneArchivePath = zonePath;
 
-    GCResourceManager.LoadArchive(zonePath.data(), &mZoneArchive);
+    GCResourceManager.LoadArchive(zonePath.c_str(), &mZoneArchive);
 
     mZoneArchiveLoaded = true;
 
@@ -182,7 +186,15 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
 
     // get parent and check game type
     GCarcfile* file = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/placement/common/stageobjinfo"));
-    
+    if(file == nullptr){
+        file = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/Placement/Common/StageObjInfo"));
+    }
+
+    if(file == nullptr){
+        std::cout << "Couldn't find stageobjinfo for galaxy 1 or 2" << std::endl;
+        return zoneTransforms;
+    }
+
     bStream::CMemoryStream StageObjInfoStream((uint8_t*)file->data, (size_t)file->size, bStream::Endianess::Big, bStream::OpenMode::In);
     mStageObjInfo.Load(&StageObjInfoStream);
     for(size_t stageObjEntry = 0; stageObjEntry < mStageObjInfo.GetEntryCount(); stageObjEntry++){

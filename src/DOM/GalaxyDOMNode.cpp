@@ -86,7 +86,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
     mGalaxyLoaded = true;
 
     GCarcfile* zoneFile = nullptr, *scenarioFile = nullptr;
-    if(game == EGameType::SMG1){
+    if(mGame == EGameType::SMG1){
         zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("zonelist.bcsv"));
         scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
     } else {
@@ -105,13 +105,26 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         auto mainZone = std::make_shared<SZoneDOMNode>();
         mainZone->Deserialize(&ZoneData, 0);
         
-        auto zoneTransforms = mainZone->LoadMainZone(galaxy_path.parent_path() / (mainZone->GetName() + ".arc"));
+        std::filesystem::path mainZonePath;
+
+        if(mGame == EGameType::SMG1){
+            mainZonePath = galaxy_path.parent_path() / (mainZone->GetName() + ".arc");
+        } else {
+            mainZonePath = galaxy_path.parent_path() / mainZone->GetName() / (mainZone->GetName() + "Map.arc");
+        }
+
+        auto zoneTransforms = mainZone->LoadMainZone(mainZonePath);
         AddChild(mainZone);
 
         for(size_t entry = 1; entry < ZoneData.GetEntryCount(); entry++){
             auto zone = std::make_shared<SZoneDOMNode>();
             zone->Deserialize(&ZoneData, entry);
-            zone->LoadZone(galaxy_path.parent_path() / (zone->GetName() + ".arc"));
+
+            if(mGame == EGameType::SMG1){
+                zone->LoadZone(galaxy_path.parent_path() / (zone->GetName() + ".arc"));
+            } else {
+                zone->LoadZone(galaxy_path.parent_path() / zone->GetName() / (zone->GetName() + "Map.arc"));
+            }
 
             if(zoneTransforms.count(zone->GetName())){
                 zone->SetTransform(zoneTransforms.at(zone->GetName()).first);
@@ -134,4 +147,5 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
             scenario->Deserialize(&mScenarioData, entry);
         }
     }
+    return true;
 }
