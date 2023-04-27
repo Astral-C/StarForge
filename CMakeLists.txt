@@ -14,6 +14,8 @@ file(GLOB_RECURSE STARFORGE_SRC
     "include/*.hpp"
     "include/*.h"
     
+    "lib/imgui/misc/cpp/*.cpp"
+
     # ImGuiFileDialog
     "lib/ImGuiFileDialog/ImGuiFileDialog/*.cpp"
 )
