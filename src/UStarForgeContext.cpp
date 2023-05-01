@@ -23,14 +23,14 @@
 UStarForgeContext::UStarForgeContext(){
 	mGrid.Init();
 
-	auto objectDBPath = std::filesystem::current_path() / std::filesystem::path("res/objectdb.json");
+	auto objectDBPath = std::filesystem::current_path() / "res" / "objectdb.json";
 	if(std::filesystem::exists(objectDBPath)){
 		std::ifstream objectDBStream(objectDBPath);
 		SObjectDOMNode::LoadObjectDB(nlohmann::json::parse(objectDBStream));
 	}
 
 	ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res/NotoSansJP-Regular.otf").c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf").c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	Options.LoadOptions();

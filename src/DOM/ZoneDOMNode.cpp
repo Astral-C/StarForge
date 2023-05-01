@@ -54,18 +54,20 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
     ImGui::Checkbox(fmt::format("##isVisible{}", mName).data(), &mVisible);
     ImGui::SameLine();
     if(ImGui::TreeNode(mName.data())){
+        ImGui::SameLine();
+
+        if(ImGui::Button("+")){
+            auto object = std::make_shared<SObjectDOMNode>();
+            AddChild(object);
+        }
+
         for (auto node : GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
             node->RenderHeirarchyUI(selected);
         }
+        
         ImGui::TreePop();
     }
 
-    ImGui::SameLine();
-
-    if(ImGui::Button("+")){
-        auto object = std::make_shared<SObjectDOMNode>();
-        AddChild(object);
-    }
 }
 
 void SZoneLayerDOMNode::RenderDetailsUI() {

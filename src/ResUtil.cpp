@@ -1,5 +1,6 @@
 #include "ResUtil.hpp"
 #include "imgui.h"
+#include "misc/cpp/imgui_stdlib.h"
 #include <filesystem>
 #include <fmt/core.h>
 #include <bstream.h>
@@ -11,6 +12,10 @@
 #include <J3D/J3DLight.hpp>
 #include <J3D/J3DModelInstance.hpp>
 #include "ModelCache.hpp"
+
+#include <curl/curl.h>
+
+#include "DOM/ObjectDOMNode.hpp"
 
 #include "ini.h"
 
@@ -191,8 +196,53 @@ void SResUtility::SOptions::LoadOptions(){
 
 		const char* path = ini_get(config, "settings", "root");
 		if(path != nullptr) mRootPath = std::filesystem::path(path);
+
+		const char* url = ini_get(config, "settings", "objectdb_url");
+		if(path != nullptr) mObjectDBUrl = std::string(url);
+
 		ini_free(config);
 	}
+}
+
+void WriteObjectDBChunk(void* ptr, size_t size, size_t nmemb, FILE* file){
+	fwrite(ptr, size, nmemb, file);
+}
+
+// I need to add proper error codes to this
+void SResUtility::SOptions::UpdateObjectDB(){
+	if(mObjectDBUrl == "") return;
+
+	CURL* curl;
+	CURLcode result;
+
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+	curl = curl_easy_init();
+
+	if(!curl){
+		curl_global_cleanup();
+		return;
+	}
+
+	FILE* objectDBFile = fopen((std::filesystem::current_path() / "res" / "objectdb.json").string().c_str(), "w");
+
+	curl_easy_setopt(curl, CURLOPT_URL, mObjectDBUrl.c_str());
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteObjectDBChunk);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, objectDBFile);
+
+	result = curl_easy_perform(curl);
+
+	fclose(objectDBFile);
+
+	if(result == CURLE_OK){
+		auto objectDBPath = std::filesystem::current_path() / "res" / "objectdb.json";
+		if(std::filesystem::exists(objectDBPath)){
+			std::ifstream objectDBStream(objectDBPath);
+			SObjectDOMNode::LoadObjectDB(nlohmann::json::parse(objectDBStream));
+		}
+	}
+
+	curl_easy_cleanup(curl);
+	curl_global_cleanup();
 }
 
 void SResUtility::SOptions::RenderOptionMenu(){
@@ -206,9 +256,16 @@ void SResUtility::SOptions::RenderOptionMenu(){
 			mSelectRootDialogOpen = true;
 		}
 
+		ImGui::Text("ObjectDB Url");
+		ImGui::InputText("##objDBUrl", &mObjectDBUrl);
+		ImGui::SameLine();
+		if(ImGui::Button("Update")){
+			UpdateObjectDB();
+		}
+
 		if(ImGui::Button("Save")){
 			std::ofstream settingsFile(std::filesystem::current_path() / "settings.ini");
-			settingsFile << fmt::format("[settings]\nroot={0}", mRootPath.string());
+			settingsFile << fmt::format("[settings]\nroot={0}\nobjectdb_url={1}", mRootPath.string(), mObjectDBUrl);
 			settingsFile.close();
 			ImGui::CloseCurrentPopup();
 		}

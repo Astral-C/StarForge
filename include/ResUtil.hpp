@@ -29,12 +29,15 @@ namespace SResUtility
 	class SOptions
 	{
 		bool mSelectRootDialogOpen;
-		
+		std::string mObjectDBUrl;
+
 		public:
 			std::filesystem::path mRootPath;
 
 			void RenderOptionMenu();
 			void LoadOptions();
+
+			void UpdateObjectDB();
 	};
 }
 

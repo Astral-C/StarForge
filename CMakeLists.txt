@@ -19,7 +19,10 @@ file(GLOB_RECURSE STARFORGE_SRC
     # ImGuiFileDialog
     "lib/ImGuiFileDialog/ImGuiFileDialog/*.cpp"
 )
-find_package(ICU 61.0 COMPONENTS uc i18n REQUIRED)
+
+find_package(Iconv REQUIRED)
+find_package(CURL REQUIRED)
+
 add_executable(starforge ${STARFORGE_SRC})
-target_include_directories(starforge PUBLIC include include/util lib/glfw/include lib/ImGuiFileDialog/ImGuiFileDialog/ lib/libgctools/include lib/fmt/include)
-target_link_libraries(starforge PUBLIC j3dultra imgui glfw gctools ICU::uc ICU::i18n fmt stdc++fs)
+target_include_directories(starforge PUBLIC include include/util lib/glfw/include lib/ImGuiFileDialog/ImGuiFileDialog/ lib/libgctools/include lib/fmt/include ${Iconv_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
+target_link_libraries(starforge PUBLIC j3dultra imgui glfw gctools fmt stdc++fs ${ICONV_LIBRARIES} ${CURL_LIBRARIES})
