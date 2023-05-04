@@ -1,16 +1,16 @@
 [submodule "lib/glfw"]
 	path = lib/glfw
-	url = git@github.com:glfw/glfw.git
+	url = https://github.com/glfw/glfw.git
 [submodule "lib/J3DUltra"]
 	path = lib/J3DUltra
-	url = git@github.com:Sage-of-Mirrors/J3DUltra.git
+	url = https://github.com/Sage-of-Mirrors/J3DUltra.git
 [submodule "lib/imgui"]
 	path = lib/imgui
-	url = git@github.com:ocornut/imgui.git
+	url = https://github.com/ocornut/imgui.git
 	branch = docking
 [submodule "lib/ImGuiFileDialog"]
 	path = lib/ImGuiFileDialog
-	url = git@github.com:aiekick/ImGuiFileDialog.git
+	url = https://github.com/aiekick/ImGuiFileDialog.git
 [submodule "lib/libgctools"]
 	path = lib/libgctools
 	url = https://github.com/Astral-C/libgctools.git
