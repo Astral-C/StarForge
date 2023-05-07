@@ -20,12 +20,12 @@ enum ECometType {
 };
 
 
-//TODO Load Power Star Type names for UI rendering from JSON and or ini
+//TODO: Make sure everything here has the proper signedness and update reading/writing accordingly
 
 class SScenarioDOMNode : public SDOMNodeSerializable {
     uint32_t mScenarioNo;
     uint32_t mPowerStarId; // Bitfield, what power stars exist in scenario. TODO: make this a list that is generated on load?
-    uint32_t mPowerStarType;
+    std::string mPowerStarType;
     std::string mAppearPowerStarObj; // Name of object that spawns the power star associate w/ scenario #
     std::string mComet; // Comet Type
     uint32_t mCometLimitTimer;

@@ -222,7 +222,7 @@ void UStarForgeContext::RenderMenuBar() {
 			try {
 				// TODO: add way to set galaxy type
 				// copy from cammie again? or infer based on root structure
-				if(!mRoot->LoadGalaxy(FilePath, EGameType::SMG1)){
+				if(!mRoot->LoadGalaxy(FilePath, EGameType::SMG2)){
 					ImGui::OpenPopup("Galaxy Load Error");
 				}
 			}

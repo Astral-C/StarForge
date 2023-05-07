@@ -31,24 +31,24 @@ SScenarioDOMNode::~SScenarioDOMNode(){
 
 void SScenarioDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mScenarioName = bcsv->GetString(entry, "ScenarioName");
-    mScenarioNo = bcsv->GetUnsignedInt(entry, "ScenarioNo");
-    mPowerStarId = bcsv->GetUnsignedInt(entry, "PowerStarId");
+    mScenarioNo = bcsv->GetSignedInt(entry, "ScenarioNo");
+    mPowerStarId = bcsv->GetSignedInt(entry, "PowerStarId");
     mAppearPowerStarObj =  bcsv->GetString(entry, "AppearPowerStarObj");
-    mCometLimitTimer = bcsv->GetUnsignedInt(entry, "CometLimitTimer");
-    mPowerStarType = bcsv->GetUnsignedInt(entry, "PowerStarType");
+    mCometLimitTimer = bcsv->GetSignedInt(entry, "CometLimitTimer");
+    mPowerStarType = bcsv->GetString(entry, "PowerStarType");
     mComet = bcsv->GetString(entry, "Comet");
 
-    mLuigiModeTimer = bcsv->GetUnsignedInt(entry, "LuigiModeTimer");
+    mLuigiModeTimer = bcsv->GetSignedInt(entry, "LuigiModeTimer");
 
-    mIsHidden = bcsv->GetUnsignedInt(entry, "IsHidden");
-    mErrorCheck = bcsv->GetUnsignedInt(entry, "ErrorCheck");
+    mIsHidden = bcsv->GetSignedInt(entry, "IsHidden");
+    mErrorCheck = bcsv->GetSignedInt(entry, "ErrorCheck");
 
 
     auto zones = GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone);
 
     for(auto& zone : zones){
         if(!mZoneLayers.contains(zone->GetName())){
-            mZoneLayers.insert({zone->GetName(), bcsv->GetUnsignedInt(entry, zone->GetName())});
+            mZoneLayers.insert({zone->GetName(), bcsv->GetSignedInt(entry, zone->GetName())});
         }
     }
     mSelectedZone = mZoneLayers.begin()->first;
@@ -56,11 +56,11 @@ void SScenarioDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
 void SScenarioDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     bcsv->SetString(entry, "ScenarioName", mScenarioName);
-    bcsv->SetUnsignedInt(entry, "ScenarioNo", mScenarioNo);
-    bcsv->SetUnsignedInt(entry, "PowerStarId", mPowerStarId);
+    bcsv->SetSignedInt(entry, "ScenarioNo", mScenarioNo);
+    bcsv->SetSignedInt(entry, "PowerStarId", mPowerStarId);
     bcsv->SetString(entry, "AppearPowerStarObj", mAppearPowerStarObj);
-    bcsv->SetUnsignedInt(entry, "CometLimitTimer", mCometLimitTimer);
-    bcsv->SetUnsignedInt(entry, "PowerStarType", mPowerStarType);
+    bcsv->SetSignedInt(entry, "CometLimitTimer", mCometLimitTimer);
+    bcsv->SetString(entry, "PowerStarType", mPowerStarType);
     bcsv->SetString(entry, "Comet", mComet);
     
     bcsv->SetUnsignedInt(entry, "LuigiModeTimer", mLuigiModeTimer);
@@ -68,11 +68,15 @@ void SScenarioDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     auto zones = GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone);
 
     for(auto& zone : zones){
-        bcsv->SetUnsignedInt(entry, zone->GetName(), mZoneLayers[zone->GetName()]);
+        if(mZoneLayers.contains(zone->GetName())){
+            bcsv->SetSignedInt(entry, zone->GetName(), mZoneLayers[zone->GetName()]);
+        } else {
+            std::cout << "Tried to write non positioned zone " << zone->GetName() << std::endl;
+        }
     }
 
-    bcsv->SetUnsignedInt(entry, "IsHidden", mIsHidden);
-    bcsv->SetUnsignedInt(entry, "ErrorCheck", mErrorCheck);
+    bcsv->SetSignedInt(entry, "IsHidden", mIsHidden);
+    bcsv->SetSignedInt(entry, "ErrorCheck", mErrorCheck);
 }
 
 

@@ -149,7 +149,7 @@ void SZoneDOMNode::SaveZone(){
         std::vector<std::shared_ptr<SDOMNodeSerializable>> zones;
 
         for(auto& zone : zoneNodes){
-            if(zone->mLinkID != 0) zones.push_back(zone);
+            zones.push_back(zone);
         }
 
 
