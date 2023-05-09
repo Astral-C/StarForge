@@ -212,7 +212,7 @@ void UStarForgeContext::RenderMenuBar() {
 	ImGui::EndMainMenuBar();
 
 	if (bIsFileDialogOpen) {
-		ImGuiFileDialog::Instance()->OpenDialog("OpenGalaxyDialog", "Choose Stage Directory", nullptr, Options.mRootPath == "" ? "." : Options.mRootPath / "DATA" / "files" / "StageData" / ".", "");
+		ImGuiFileDialog::Instance()->OpenDialog("OpenGalaxyDialog", "Choose Stage Directory", nullptr, Options.mRootPath == "" ? "." : Options.mRootPath / "files" / "StageData" / ".", "");
 	}
 
 	if (ImGuiFileDialog::Instance()->Display("OpenGalaxyDialog")) {
@@ -222,7 +222,7 @@ void UStarForgeContext::RenderMenuBar() {
 			try {
 				// TODO: add way to set galaxy type
 				// copy from cammie again? or infer based on root structure
-				if(!mRoot->LoadGalaxy(FilePath, EGameType::SMG2)){
+				if(!mRoot->LoadGalaxy(FilePath, std::filesystem::exists(Options.mRootPath / "files" / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
 					ImGui::OpenPopup("Galaxy Load Error");
 				}
 			}

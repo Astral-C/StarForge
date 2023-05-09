@@ -46,6 +46,7 @@ void SZoneLayerDOMNode::LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, s
                 object->Deserialize(&mObjInfo, objEntry);
                 AddChild(object);
 			}
+
 		}
 	}
 }

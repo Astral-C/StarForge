@@ -1,5 +1,6 @@
 #include "DOM/GalaxyDOMNode.hpp"
 #include "DOM/ScenarioDOMNode.hpp"
+#include "DOM/ObjectDOMNode.hpp"
 #include "DOM/ZoneDOMNode.hpp"
 #include "ResUtil.hpp"
 #include "imgui.h"
@@ -133,6 +134,23 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 
             AddChild(zone);
         }
+
+        //Link Objects
+        std::vector<std::shared_ptr<SObjectDOMNode>> objects = GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object);
+
+        for(auto& object : objects){
+
+            auto linked = std::find_if(objects.begin(), objects.end(), [&object](std::shared_ptr<SObjectDOMNode> searchObj){
+                //This should really check for connection ID in the objects argument list
+                return searchObj->GetLinkID() == object->GetLinkID() || (searchObj->GetName() == "EarthenPipe" && searchObj->mObjArgs[3] == object->mObjArgs[3]);
+            });
+
+            if(linked != objects.end()){
+                object->SetLinked(*linked);
+                (*linked)->SetLinked(object);
+            }
+        }
+
     }
 
     // Load Scenarios

@@ -35,14 +35,16 @@ class SObjectDOMNode : public SDOMNodeSerializable {
     
 
     //TODO: this should be a config instead of just a name, that way the UI can dynamically change based on the config
-    std::array<std::string, 8> mObjArgNames;
-    std::array<int, 8> mObjArgs;
 
     std::array<std::string, 8> mPathArgNames;
     std::array<int, 8> mPathArgs;
 
+    std::weak_ptr<SObjectDOMNode> mLinkedObject;
 
 public:
+    std::array<std::string, 8> mObjArgNames;
+    std::array<int, 8> mObjArgs;
+
     glm::mat4 mTransform;
     typedef SDOMNodeSerializable Super; 
 
@@ -64,6 +66,10 @@ public:
     void Serialize(SBcsvIO* bcsv, int entry);
 
     void Render(glm::mat4 transform, float dt);
+    uint32_t GetLinkID() { return mLinkID; }
+
+    std::weak_ptr<SObjectDOMNode> GetLinked() { return mLinkedObject; }
+    void SetLinked(std::shared_ptr<SObjectDOMNode> node) { mLinkedObject = node; }
 
     static void LoadObjectDB(nlohmann::json db);
 

@@ -140,6 +140,8 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     if(selected == GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object)){
         ImGui::TextColored(ImColor(0,255,0), fmt::format("{0}", mName.data()).c_str());
+    } else if(selected == mLinkedObject.lock()) {
+        ImGui::TextColored(ImColor(0,255,150), fmt::format("{0} [Linked]", mName.data()).c_str());
     } else {
         ImGui::Text(fmt::format("{0}", mName.data()).c_str());
     }
@@ -162,6 +164,7 @@ void SObjectDOMNode::RenderDetailsUI(){
 
 void SObjectDOMNode::Render(glm::mat4 transform, float dt){
     if(ModelCache.count(mName) != 0) {
+        
 		J3DUniformBufferObject::SetEnvelopeMatrices(ModelCache.at(mName)->GetRestPose().data(), ModelCache.at(mName)->GetRestPose().size());
 
         glm::mat4 drawTransform = transform * mTransform;
