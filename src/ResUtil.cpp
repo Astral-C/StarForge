@@ -183,6 +183,7 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 				auto data = std::make_shared<J3DModelData>();
 				data = Loader.Load(&modelStream, NULL);
 				ModelCache.insert({modelName, data});
+				std::cout << "Loaded Model " << modelName << std::endl;
 			}
 		}
 	} else {

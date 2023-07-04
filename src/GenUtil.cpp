@@ -1,7 +1,7 @@
-#include <iconv.h>
-
 #include "GenUtil.hpp"
 #include <glm/gtc/type_ptr.hpp>
+
+#include <iconv.h>
 
 std::string SGenUtility::Utf8ToSjis(const std::string& value) {
     iconv_t conv = iconv_open("SHIFT-JIS", "UTF-8");
