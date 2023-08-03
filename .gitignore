@@ -349,20 +349,23 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
-build/
+# Editor settings
 .vscode
 .fleet
 
+# Configs and CMake
 CMakeCache.txt
 CMakeFiles
 CMakeD*
 Makefile
 cmake_install.cmake
 imgui.ini
-starbit
-lib/
-lib
-*.bin
-starforge
 *.json
 *.ini
+
+# Binaries and Builds
+
+build/
+starforge
+*.a
+*.bin

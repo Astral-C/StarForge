@@ -8,7 +8,6 @@ set(CMAKE_BUILD_TYPE Debug)
 add_subdirectory(lib)
 
 file(GLOB_RECURSE STARFORGE_SRC
-    # Starbit
     "src/*.cpp"
     "src/*.c"
     "include/*.hpp"
@@ -25,4 +24,11 @@ find_package(CURL REQUIRED)
 
 add_executable(starforge ${STARFORGE_SRC})
 target_include_directories(starforge PUBLIC include include/util lib/glfw/include lib/ImGuiFileDialog/ImGuiFileDialog/ lib/libgctools/include lib/fmt/include ${Iconv_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
-target_link_libraries(starforge PUBLIC j3dultra imgui glfw gctools fmt stdc++fs ${ICONV_LIBRARIES} ${CURL_LIBRARIES})
+
+if(UNIX)
+target_link_libraries(cammie PUBLIC j3dultra imgui glfw gctools fmt ${ICONV_LIBRARIES} ${CURL_LIBRARIES})
+endif(UNIX)
+
+if(WIN32)
+target_link_libraries(cammie PUBLIC j3dultra imgui glfw gctools fmt ${ICONV_LIBRARIES} ${CURL_LIBRARIES} ssp)
+endif(WIN32)
