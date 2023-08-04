@@ -26,9 +26,9 @@ add_executable(starforge ${STARFORGE_SRC})
 target_include_directories(starforge PUBLIC include include/util lib/glfw/include lib/ImGuiFileDialog/ImGuiFileDialog/ lib/libgctools/include lib/fmt/include ${Iconv_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
 
 if(UNIX)
-target_link_libraries(cammie PUBLIC j3dultra imgui glfw gctools fmt ${ICONV_LIBRARIES} ${CURL_LIBRARIES})
+target_link_libraries(starforge PUBLIC j3dultra imgui glfw gctools fmt ${ICONV_LIBRARIES} ${CURL_LIBRARIES})
 endif(UNIX)
 
 if(WIN32)
-target_link_libraries(cammie PUBLIC j3dultra imgui glfw gctools fmt ${ICONV_LIBRARIES} ${CURL_LIBRARIES} ssp)
+target_link_libraries(starforge PUBLIC j3dultra imgui glfw gctools fmt ${ICONV_LIBRARIES} ${CURL_LIBRARIES} ssp)
 endif(WIN32)
