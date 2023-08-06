@@ -33,9 +33,11 @@ cd StarForge
 git submodule update --init --recursive
 ```
 
-**Install the Iconv and CURL libraries for your system**.
 
 ### Linux
+
+**Install the Iconv and CURL dev libraries for your system**.
+
 ```
 cd StarForge
 cmake -S. -Bbuild
@@ -45,16 +47,6 @@ make
 
 ### Windows
 
-MinGW is reccomended for Windows builds. VisualStudio is untested.
+Install Visual Studio with the "Desktop Development with C++" component, make sure your installation has CMake and vcpkg set up.
 
-#### Cross Compiling
-
-Cross compiling is currently known to work properly.
-
-Ensure all MinGW Packages for zlib, libpng, glfw, iconv, and curl are installed.
-```
-cd StarForge
-cmake -S. -Bbuild -DCMAKE_TOOLCHAIN_FILE=mingw=w64-x86_64.cmake
-cd build
-make
-```
+Open the cloned reposity in Visual Studio, generate the build files with CMake, then you can compile and run the project.

@@ -352,6 +352,7 @@ MigrationBackup/
 # Editor settings
 .vscode
 .fleet
+.vs
 
 # Configs and CMake
 CMakeCache.txt
@@ -360,12 +361,13 @@ CMakeD*
 Makefile
 cmake_install.cmake
 imgui.ini
-*.json
+objectdb.json
 *.ini
 
 # Binaries and Builds
 
 build/
+out/
 starforge
 *.a
 *.bin
