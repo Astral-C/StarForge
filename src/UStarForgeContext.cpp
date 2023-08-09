@@ -31,7 +31,7 @@ UStarForgeContext::UStarForgeContext(){
 	}
 
 	ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf").c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+    io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf").string().c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	Options.LoadOptions();
