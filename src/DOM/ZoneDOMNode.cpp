@@ -120,7 +120,7 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath){
 
     mZoneArchivePath = zonePath;
 
-    GCResourceManager.LoadArchive(zonePath.c_str(), &mZoneArchive);
+    GCResourceManager.LoadArchive(zonePath.string().c_str(), &mZoneArchive);
 
 	for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
 		if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, ".") != 0 && strcmp(file->name, "..") != 0){
@@ -168,7 +168,7 @@ void SZoneDOMNode::SaveZone(){
         layer->SaveLayer(&mZoneArchive);
     }
 
-    GCResourceManager.SaveArchive(mZoneArchivePath.c_str(), &mZoneArchive);
+    GCResourceManager.SaveArchive(mZoneArchivePath.string().c_str(), &mZoneArchive);
 
 }
 
@@ -181,7 +181,7 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
     mIsMainZone = true;
     mZoneArchivePath = zonePath;
 
-    GCResourceManager.LoadArchive(zonePath.c_str(), &mZoneArchive);
+    GCResourceManager.LoadArchive(zonePath.string().c_str(), &mZoneArchive);
 
     mZoneArchiveLoaded = true;
 

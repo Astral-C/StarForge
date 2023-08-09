@@ -36,12 +36,12 @@ void SResUtility::SGCResourceManager::Init()
 
 GCarcfile* SResUtility::SGCResourceManager::GetFile(GCarchive* archive, std::filesystem::path filepath){
 	int dirID = 0;
-	for(std::string component : filepath){
+	for(auto component : filepath){
 		for (GCarcfile* file = &archive->files[archive->dirs[dirID].fileoff]; file < &archive->files[archive->dirs[dirID].fileoff] + archive->dirs[dirID].filenum; file++){
-			if(strcmp(file->name, component.c_str()) == 0 && (file->attr & 0x02)){
+			if(strcmp(file->name, component.string().c_str()) == 0 && (file->attr & 0x02)){
 				dirID = file->size;
 				break;
-			} else if(strcmp(file->name, component.c_str()) == 0 && !(file->attr & 0x02)) {
+			} else if(strcmp(file->name, component.string().c_str()) == 0 && !(file->attr & 0x02)) {
 				return file;
 			}
 		}
@@ -175,7 +175,7 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		GCarchive modelArc;
-		if(!GCResourceManager.LoadArchive(modelPath.c_str(), &modelArc)){
+		if(!GCResourceManager.LoadArchive(modelPath.string().c_str(), &modelArc)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
 			return;
 		}
@@ -200,7 +200,7 @@ std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourc
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		GCarchive modelArc;
-		if(!GCResourceManager.LoadArchive(modelPath.c_str(), &modelArc)){
+		if(!GCResourceManager.LoadArchive(modelPath.string().c_str(), &modelArc)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
 			return nullptr;
 		}
@@ -227,7 +227,7 @@ std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourc
 void SResUtility::SOptions::LoadOptions(){
 	auto optionsPath = std::filesystem::current_path() / "settings.ini";
 	if(std::filesystem::exists(optionsPath)){
-		ini_t* config = ini_load(optionsPath.c_str());
+		ini_t* config = ini_load(optionsPath.string().c_str());
 		if(config == nullptr) return;
 
 		const char* path = ini_get(config, "settings", "root");
