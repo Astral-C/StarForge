@@ -7,6 +7,10 @@
 #include <tuple>
 #include <array>
 
+#include <J3D/Animation/J3DColorAnimationInstance.hpp>
+#include <J3D/Animation/J3DAnimationInstance.hpp>
+#include <J3D/J3DModelInstance.hpp>
+
 class SObjectDOMNode : public SDOMNodeSerializable {
     uint32_t mID;
 
@@ -41,6 +45,8 @@ class SObjectDOMNode : public SDOMNodeSerializable {
 
     std::weak_ptr<SObjectDOMNode> mLinkedObject;
 
+    std::shared_ptr<J3DModelInstance> mRenderable;
+
 public:
     std::array<std::string, 8> mObjArgNames;
     std::array<int, 8> mObjArgs;
@@ -65,7 +71,7 @@ public:
     void Deserialize(SBcsvIO* bcsv, int entry);
     void Serialize(SBcsvIO* bcsv, int entry);
 
-    void Render(glm::mat4 transform, float dt);
+   void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
     uint32_t GetLinkID() { return mLinkID; }
 
     std::weak_ptr<SObjectDOMNode> GetLinked() { return mLinkedObject; }

@@ -7,6 +7,7 @@
 #include <J3D/J3DUniformBufferObject.hpp>
 #include <J3D/J3DLight.hpp>
 #include <J3D/J3DModelInstance.hpp>
+#include <J3D/J3DRendering.hpp>
 
 #include <ImGuiFileDialog.h>
 #include <glad/glad.h>
@@ -170,7 +171,11 @@ void UStarForgeContext::Render(float deltaTime) {
 	J3DUniformBufferObject::SetProjAndViewMatrices(&projection, &view);
 	
 	//Render Models here
-	mRoot->Render(deltaTime);
+	std::vector<std::shared_ptr<J3DModelInstance>> renderables;
+	
+	mRoot->Render(renderables, deltaTime);
+
+	J3DRendering::Render(deltaTime, mCamera.GetPosition(), renderables);
 
 	mGrid.Render(mCamera.GetPosition(), mCamera.GetProjectionMatrix(), mCamera.GetViewMatrix());
 }
@@ -258,26 +263,22 @@ void UStarForgeContext::SetLights() {
 
 	J3DLight lights[8];
 
-	J3DLight light1;
-	J3DLight light2;
 
-	light1.Position = glm::vec4(0, 0, 0, 1);
-	light1.Direction = glm::vec4(0, 0, 0, 1);
-	light1.Color = glm::vec4(1, 1, 1, 1);
-	light1.AngleAtten = glm::vec4(1.0, 1.0, 1.0, 1);
-	light1.DistAtten = glm::vec4(1.0, 1.0, 1.0, 1);
+    lights[0].Position = glm::vec4(-5000, 4000, 5000, 1);
+    lights[0].Color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    lights[0].AngleAtten = glm::vec4(1.0, 0.0, 0.0, 1);
+    lights[0].DistAtten = glm::vec4(1.0, 0.0, 0.0, 1);
 
-	light2.Position = glm::vec4(0.0, 5.0, 0.0, 1);
-	light2.Direction = glm::vec4(1, -0.868448, 0.239316, 1);
-	light2.Color = glm::vec4(1, 1, 1, 1);
-	light2.AngleAtten = glm::vec4(1.0, 1.0, 1.0, 1);
-	light2.DistAtten = glm::vec4(1.0, 1.0, 1.0, 1);
+    lights[1].Position = glm::vec4(5000, -4000, -5000, 1);
+    lights[1].Color = glm::vec4(0.15f, 0.15f, 0.15f, 1.0f);
+    lights[1].AngleAtten = glm::vec4(1.0, 0.0, 0.0, 1);
+    lights[1].DistAtten = glm::vec4(1.0, 0.0, 0.0, 1);
 
-	lights[0] = light1;
-	lights[1] = light2;
-
-	for (int i = 2; i < 8; i++)
-		lights[i] = light1;
+    lights[2].Position = glm::vec4(0, 0, 1000, 1);
+    lights[2].AngleAtten = glm::vec4(0.25, 0, 0, 1);
+    lights[2].DistAtten = glm::vec4(0.25, 0.0, 0.0, 1);
+    lights[2].Direction = glm::vec4(0, 0, -1, 1);
+    lights[2].Color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	J3DUniformBufferObject::SetLights(lights);
 }

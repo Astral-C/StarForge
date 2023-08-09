@@ -10,6 +10,8 @@
 #include <string>
 #include <map>
 
+#include <J3D/Animation/J3DColorAnimationInstance.hpp>
+
 namespace SResUtility
 {
 	class SGCResourceManager
@@ -22,6 +24,7 @@ namespace SResUtility
 			bool SaveArchive(const char* path, GCarchive* archive);
 			bool ReplaceArchiveFileData(GCarcfile* file, uint8_t* new_data, size_t new_data_size);
 			void CacheModel(std::string modelName);
+			std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> LoadAnimation(std::string modelName, std::string animName);
 			GCarcfile* GetFile(GCarchive* archive, std::filesystem::path filepath);
 			void Init();
 	};

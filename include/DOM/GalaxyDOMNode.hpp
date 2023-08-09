@@ -1,6 +1,7 @@
 #pragma once
 #include "context.h"
 #include "archive.h"
+#include <J3D/J3DModelInstance.hpp>
 #include "DOM/DOMNodeBase.hpp"
 #include "io/BcsvIO.hpp"
 #include <filesystem>
@@ -22,7 +23,7 @@ public:
 
     void RenderScenarios(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderZones(std::shared_ptr<SDOMNodeBase>& selected);
-    void Render(float dt);
+    void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, float dt);
 
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();

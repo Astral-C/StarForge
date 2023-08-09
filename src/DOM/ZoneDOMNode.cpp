@@ -75,9 +75,9 @@ void SZoneLayerDOMNode::RenderDetailsUI() {
 
 }
 
-void SZoneLayerDOMNode::Render(glm::mat4 transform, float dt){
+void SZoneLayerDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     for(auto& object : GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
-        object->Render(transform, dt);
+        object->Render(renderables, transform, dt);
     }
 }
 
@@ -250,10 +250,10 @@ void SZoneDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 }
 
 
-void SZoneDOMNode::Render(float dt){
+void SZoneDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, float dt){
     std::vector<std::shared_ptr<SZoneLayerDOMNode>> zoneLayers = GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer);
 
     for(auto& layer : zoneLayers){
-        if(layer->GetVisible()) layer->Render(mTransform, dt);
+        if(layer->GetVisible()) layer->Render(renderables, mTransform, dt);
     }
 }

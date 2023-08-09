@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include "DOM/DOMNodeBase.hpp"
+#include <J3D/J3DModelInstance.hpp>
 #include "io/BcsvIO.hpp"
 #include <map>
 
@@ -15,7 +16,7 @@ public:
 
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
-    void Render(glm::mat4 transform, float dt);
+    void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
 
     void LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName);
     void SaveLayer(GCarchive* zoneArchive);
@@ -53,7 +54,7 @@ public:
 
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
-    void Render(float dt);
+    void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, float dt);
 
     SZoneDOMNode();
     ~SZoneDOMNode();

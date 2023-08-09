@@ -20,7 +20,7 @@ file(GLOB_RECURSE STARFORGE_SRC
 )
 
 find_package(Iconv REQUIRED)
-find_package(CURL CONFIG REQUIRED)
+find_package(CURL REQUIRED)
 
 add_executable(starforge ${STARFORGE_SRC})
 target_include_directories(starforge PUBLIC include include/util lib/glfw/include lib/ImGuiFileDialog/ImGuiFileDialog/ lib/libgctools/include lib/fmt/include ${Iconv_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})

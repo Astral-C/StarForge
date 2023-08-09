@@ -7,6 +7,7 @@
 #include <ImGuiFileDialog.h>
 
 #include <J3D/J3DModelLoader.hpp>
+#include <J3D/Animation/J3DAnimationLoader.hpp>
 #include <J3D/J3DModelData.hpp>
 #include <J3D/J3DUniformBufferObject.hpp>
 #include <J3D/J3DLight.hpp>
@@ -174,21 +175,53 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		GCarchive modelArc;
-		GCResourceManager.LoadArchive(modelPath.c_str(), &modelArc);
+		if(!GCResourceManager.LoadArchive(modelPath.c_str(), &modelArc)){
+			std::cout << "Couldn't load archive " << modelPath << std::endl; 
+			return;
+		}
 		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
 			if(std::filesystem::path(file->name).extension() == ".bdl"){
 				J3DModelLoader Loader;
 				bStream::CMemoryStream modelStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
 				
-				auto data = std::make_shared<J3DModelData>();
-				data = Loader.Load(&modelStream, NULL);
+				std::shared_ptr<J3DModelData> data = Loader.Load(&modelStream, NULL);
 				ModelCache.insert({modelName, data});
 				std::cout << "Loaded Model " << modelName << std::endl;
 			}
 		}
+		gcFreeArchive(&modelArc);
 	} else {
 		std::cout << "Couldn't find model " << modelName << std::endl;
 	}
+}
+
+std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourceManager::LoadAnimation(std::string modelName, std::string animName){
+	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
+	//std::cout << "Trying to load archive" << modelPath << std::endl;
+	if(std::filesystem::exists(modelPath)){
+		GCarchive modelArc;
+		if(!GCResourceManager.LoadArchive(modelPath.c_str(), &modelArc)){
+			std::cout << "Couldn't load archive " << modelPath << std::endl; 
+			return nullptr;
+		}
+		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
+			if(std::string(file->name) == animName && std::filesystem::path(animName).extension() == ".brk"){
+				J3DAnimation::J3DAnimationLoader Loader;
+				bStream::CMemoryStream animStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
+
+				std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DColorAnimationInstance>(animStream);
+
+				std::cout << "Loaded Animation for color change " << instance.get() << std::endl;
+
+				return instance;
+			}
+		}
+		gcFreeArchive(&modelArc);
+	} else {
+		std::cout << "Couldn't find archive " << modelName << std::endl;
+	}
+
+	return nullptr;
 }
 
 void SResUtility::SOptions::LoadOptions(){

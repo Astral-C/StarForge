@@ -6,6 +6,7 @@
 #include <fmt/core.h>
 #include <glm/gtx/matrix_decompose.hpp>
 
+
 static nlohmann::json objectDB;
 
 void SObjectDOMNode::LoadObjectDB(nlohmann::json db){
@@ -24,6 +25,9 @@ SObjectDOMNode::~SObjectDOMNode(){
 
 void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mName = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "name"));
+    
+    mRenderable = nullptr;
+    
     if(ModelCache.count(mName) == 0){
         GCResourceManager.CacheModel(mName);
     }
@@ -41,7 +45,6 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     for (size_t i = 0; i < 8; i++){
         mPathArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Path_arg{0}", i));
     }
-
 
     for(auto& obj : objectDB["Classes"]){
         if(obj["InternalName"] == mName){
@@ -77,6 +80,16 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mParamScale = bcsv->GetFloat(entry, "ParamScale");
     mObjID = bcsv->GetShort(entry, "Obj_ID");
     mGeneratorID = bcsv->GetShort(entry, "GeneratorID");
+
+    if(ModelCache.count(mName) != 0){
+        mRenderable = ModelCache[mName]->GetInstance();
+
+        if(mName == "Tico"){
+            mRenderable->SetRegisterColorAnimation(GCResourceManager.LoadAnimation("Tico", "colorchange.brk"));
+            mRenderable->GetRegisterColorAnimation()->SetFrame(mObjArgs[0] + 1, true);
+        }
+    }
+
 }
 
 void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
@@ -160,17 +173,16 @@ void SObjectDOMNode::RenderDetailsUI(){
     for (size_t i = 0; i < 8; i++){
         ImGui::InputInt(mObjArgNames[i].data(), &mObjArgs[i]);
     }
+    
+    if(mName == "Tico"){
+        mRenderable->GetRegisterColorAnimation()->SetFrame(mObjArgs[0] + 1, true);
+    }
 }
 
-void SObjectDOMNode::Render(glm::mat4 transform, float dt){
-    if(ModelCache.count(mName) != 0) {
-        
-		J3DUniformBufferObject::SetEnvelopeMatrices(ModelCache.at(mName)->GetRestPose().data(), ModelCache.at(mName)->GetRestPose().size());
-
-        glm::mat4 drawTransform = transform * mTransform;
-
-		J3DUniformBufferObject::SetModelMatrix(&drawTransform);
-
-		ModelCache.at(mName)->Render(dt);
+void SObjectDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+    if(mRenderable != nullptr) {
+        mRenderable->SetReferenceFrame(transform * mTransform);
+        mRenderable->UpdateAnimations(dt);
+        renderables.push_back(mRenderable);
     }
 }
