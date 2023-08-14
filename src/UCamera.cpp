@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <GLFW/glfw3.h>
 
-USceneCamera::USceneCamera() : mNearPlane(0.1f), mFarPlane(10000000.f), mFovy(glm::radians(60.f)),
+USceneCamera::USceneCamera() : mNearPlane(1.0f), mFarPlane(1000000.f), mFovy(glm::radians(60.f)),
     mCenter(ZERO), mEye(ZERO), mPitch(0.f), mYaw(glm::half_pi<float>()), mUp(UNIT_Y), mRight(UNIT_X), mForward(UNIT_Z),
     mAspectRatio(16.f / 9.f), mMoveSpeed(1000.f), mMouseSensitivity(0.25f)
 {
