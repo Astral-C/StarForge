@@ -6,6 +6,8 @@
 #include "imgui.h"
 #include <map>
 
+#include <LightConfigs.hpp>
+
 SGalaxyDOMNode::SGalaxyDOMNode() : Super("galaxy") {
     mType = EDOMNodeType::Galaxy;
 }
@@ -90,6 +92,27 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
     if(mGame == EGameType::SMG1){
         zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("zonelist.bcsv"));
         scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
+
+        // Load Lighting Configs
+        GCarchive lightDataArc = {0};
+        GCResourceManager.LoadArchive((Options.mRootPath / "files" / "ObjectData" / "LightData.arc").string().c_str(), &lightDataArc);
+
+        GCarcfile* lightDataFile = GCResourceManager.GetFile(&lightDataArc, std::filesystem::path("lightdata.bcsv"));
+        if(lightDataFile != nullptr){
+            SBcsvIO lightData;
+            bStream::CMemoryStream LightDataStream((uint8_t*)lightDataFile->data, (size_t)lightDataFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
+            lightData.Load(&LightDataStream);
+
+            LoadLightConfig("Weak", &lightData);
+            LoadLightConfig("Strong", &lightData);
+            LoadLightConfig("Planet", &lightData);
+            LoadLightConfig("Player", &lightData);
+
+        }
+        
+
+        gcFreeArchive(&lightDataArc);
+
     } else {
         zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ZoneList.bcsv"));
         scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ScenarioData.bcsv"));

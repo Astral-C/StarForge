@@ -5,7 +5,7 @@
 #include "GenUtil.hpp"
 #include "imgui.h"
 
-const char* StarTypeNames[] = {
+std::string StarTypeNames[] = {
     "Normal",
     "Hidden",
     "Green"
@@ -98,10 +98,9 @@ void SScenarioDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
             if(mZoneLayers.contains(zone->GetName())){
                 auto layers = zone->GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer);
                 // assume theyre in order for now. they should be.
-                uint32_t l = 0;
                 for(auto& layer : layers){
                     if(layer->GetName() != "common" && layer->GetName() != "Common"){
-                        layer->SetVisible(mZoneLayers[zone->GetName()] & (1 << l++));
+                        layer->SetVisible(mZoneLayers[zone->GetName()] & (1 << (std::tolower(layer->GetName().back()) - 'a')));
                     }
                 }
             }
@@ -112,21 +111,26 @@ void SScenarioDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
 }
 
 void SScenarioDOMNode::RenderDetailsUI(){
-    /*
-    //Get game type and show star type if galaxy 1
-    if(ImGui::BeginCombo("Star Type", StarTypeNames[mPowerStarType], 0)){
-        for(int type = 0; type < IM_ARRAYSIZE(StarTypeNames); type++){
-            bool is_selected = (mPowerStarType == type);
-            if (ImGui::Selectable(StarTypeNames[type], is_selected)){
-                mPowerStarType = type;
-            }
-            if (is_selected){
-                ImGui::SetItemDefaultFocus();
+    
+    std::shared_ptr<SGalaxyDOMNode> galaxy;
+    if(galaxy = GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()){
+        //Get game type and show star type if galaxy 1
+        if(galaxy->GetGame() == EGameType::SMG2){
+            if(ImGui::BeginCombo("Star Type", mPowerStarType.data(), 0)){
+                for(int type = 0; type < IM_ARRAYSIZE(StarTypeNames); type++){
+                    bool is_selected = (mPowerStarType == StarTypeNames[type]);
+                    if (ImGui::Selectable(StarTypeNames[type].data(), is_selected)){
+                        mPowerStarType = StarTypeNames[type];
+                    }
+                    if (is_selected){
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
             }
         }
-        ImGui::EndCombo();
     }
-    */
+    
 
     ImGui::Text("Comet Type"); 
     ImGui::SameLine();
@@ -167,17 +171,16 @@ void SScenarioDOMNode::RenderDetailsUI(){
             bool enabled = mZoneLayers[mSelectedZone] & (1 << layer);
             if(ImGui::Checkbox(fmt::format("{}", char('A' + layer)).c_str(), &enabled)){
                 mZoneLayers[mSelectedZone] ^= (1 << layer);
-
+                
                 // Reshow-hide layers
                 auto zones = GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone);
                 for(auto& zone : zones){
                     if(zone->GetName() == mSelectedZone){
                         auto layers = zone->GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer);
                         // assume theyre in order for now. they should be.
-                        uint32_t l = 0;
                         for(auto& layer : layers){
                             if(layer->GetName() != "common" && layer->GetName() != "Common"){
-                                layer->SetVisible(mZoneLayers[mSelectedZone] & (1 << l++));
+                                layer->SetVisible(mZoneLayers[mSelectedZone] & (1 << (std::tolower(layer->GetName().back()) - 'a')));
                             }
                         }
                     }

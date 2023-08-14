@@ -5,7 +5,7 @@
 #include "misc/cpp/imgui_stdlib.h"
 #include <fmt/core.h>
 #include <glm/gtx/matrix_decompose.hpp>
-
+#include <LightConfigs.hpp>
 
 static nlohmann::json objectDB;
 
@@ -83,11 +83,9 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
     if(ModelCache.count(mName) != 0){
         mRenderable = ModelCache[mName]->GetInstance();
-
-        if(mName == "Tico"){
-            mRenderable->SetRegisterColorAnimation(GCResourceManager.LoadAnimation("Tico", "colorchange.brk"));
-            mRenderable->GetRegisterColorAnimation()->SetFrame(mObjArgs[0] + 1, true);
-        }
+        mRenderable->SetLight(LightingConfigs["Strong"].Light0, 0);
+        mRenderable->SetLight(LightingConfigs["Strong"].Light1, 1);
+        mRenderable->SetLight(LightingConfigs["Strong"].Light2, 2);
     }
 
 }
@@ -173,16 +171,11 @@ void SObjectDOMNode::RenderDetailsUI(){
     for (size_t i = 0; i < 8; i++){
         ImGui::InputInt(mObjArgNames[i].data(), &mObjArgs[i]);
     }
-    
-    if(mName == "Tico"){
-        mRenderable->GetRegisterColorAnimation()->SetFrame(mObjArgs[0] + 1, true);
-    }
 }
 
 void SObjectDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     if(mRenderable != nullptr) {
         mRenderable->SetReferenceFrame(transform * mTransform);
-        mRenderable->UpdateAnimations(dt);
         renderables.push_back(mRenderable);
     }
 }

@@ -20,6 +20,19 @@
 #include "DOM/ZoneDOMNode.hpp"
 #include "DOM/ObjectDOMNode.hpp"
 
+void GalaxySort(J3DRendering::SortFunctionArgs packets) {
+    std::sort(
+        packets.begin(),
+        packets.end(),
+        [](const J3DRenderPacket& a, const J3DRenderPacket& b) -> bool {
+			if((a.SortKey & 0x01000000) != (b.SortKey & 0x01000000)){
+				return (a.SortKey & 0x01000000) > (b.SortKey & 0x01000000);
+			} else {
+            	return a.Material->Name < b.Material->Name;
+			}
+        }
+    );
+}
 
 UStarForgeContext::UStarForgeContext(){
 	mGrid.Init();
@@ -31,12 +44,14 @@ UStarForgeContext::UStarForgeContext(){
 	}
 
 	ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf").string().c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+	io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf").string().c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	Options.LoadOptions();
 
 	mGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+
+	J3DRendering::SetSortFunction(GalaxySort);
 
 	mRoot = std::make_shared<SGalaxyDOMNode>();
 }
@@ -150,11 +165,11 @@ void UStarForgeContext::Render(float deltaTime) {
 			if(selected->IsNodeType(EDOMNodeType::Object)){
 				std::shared_ptr<SObjectDOMNode> object = std::static_pointer_cast<SObjectDOMNode>(selected);
 				glm::mat4 zoneTransform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
-				glm::mat4 transform = zoneTransform * object->mTransform, delta;
+				glm::mat4 transform = (zoneTransform * object->mTransform), delta = glm::identity<glm::mat4>();
 
-				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0]);
-
-				object->mTransform = glm::inverse(zoneTransform) * transform;
+				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+					object->mTransform = glm::inverse(zoneTransform) * transform;
+				}
 			} else if (selected->IsNodeType(EDOMNodeType::Zone)){
 				std::shared_ptr<SZoneDOMNode> zone = std::static_pointer_cast<SZoneDOMNode>(selected);
 				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &zone->mTransform[0][0]);
@@ -167,7 +182,7 @@ void UStarForgeContext::Render(float deltaTime) {
 	projection = mCamera.GetProjectionMatrix();
 	view = mCamera.GetViewMatrix();
 
-	if(!mSetLights) SetLights();
+	//if(!mSetLights) SetLights();
 	J3DUniformBufferObject::SetProjAndViewMatrices(&projection, &view);
 	
 	//Render Models here
@@ -177,7 +192,7 @@ void UStarForgeContext::Render(float deltaTime) {
 
 	J3DRendering::Render(deltaTime, mCamera.GetPosition(), renderables);
 
-	mGrid.Render(mCamera.GetPosition(), mCamera.GetProjectionMatrix(), mCamera.GetViewMatrix());
+	//mGrid.Render(mCamera.GetPosition(), mCamera.GetProjectionMatrix(), mCamera.GetViewMatrix());
 }
 
 void UStarForgeContext::RenderMainWindow(float deltaTime) {
@@ -225,6 +240,8 @@ void UStarForgeContext::RenderMenuBar() {
 			std::string FilePath = ImGuiFileDialog::Instance()->GetFilePathName();
 
 			try {
+				selected = nullptr;
+				mRoot = std::make_shared<SGalaxyDOMNode>();
 				// TODO: add way to set galaxy type
 				// copy from cammie again? or infer based on root structure
 				if(!mRoot->LoadGalaxy(FilePath, std::filesystem::exists(Options.mRootPath / "files" / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
@@ -263,22 +280,23 @@ void UStarForgeContext::SetLights() {
 
 	J3DLight lights[8];
 
+	lights[0].Position = glm::vec4(100000.0f, 100000.0f, 100000.0f, 1);
+	lights[0].Color = glm::vec4(0.5f, 0.5f, 0.5f, 0.0f);
+	lights[0].AngleAtten = glm::vec4(1.0, 0.0, 0.0, 1);
+	lights[0].DistAtten = glm::vec4(1.0, 0.0, 0.0, 1);
+	lights[0].Direction = glm::vec4(1.0, 0.0, 0.0, 1);
 
-    lights[0].Position = glm::vec4(-5000, 4000, 5000, 1);
-    lights[0].Color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-    lights[0].AngleAtten = glm::vec4(1.0, 0.0, 0.0, 1);
-    lights[0].DistAtten = glm::vec4(1.0, 0.0, 0.0, 1);
+	lights[1].Position = glm::vec4(-100000.0f, -100000.0f, 100000.0f, 1);
+	lights[1].Color = glm::vec4(64/255, 62/255, 64/255, 0.0f);
+	lights[1].AngleAtten = glm::vec4(1.0, 0.0, 0.0, 1);
+	lights[1].DistAtten = glm::vec4(1.0, 0.0, 0.0, 1);
+	lights[1].Direction = glm::vec4(1.0, 0.0, 0.0, 1);
 
-    lights[1].Position = glm::vec4(5000, -4000, -5000, 1);
-    lights[1].Color = glm::vec4(0.15f, 0.15f, 0.15f, 1.0f);
-    lights[1].AngleAtten = glm::vec4(1.0, 0.0, 0.0, 1);
-    lights[1].DistAtten = glm::vec4(1.0, 0.0, 0.0, 1);
-
-    lights[2].Position = glm::vec4(0, 0, 1000, 1);
-    lights[2].AngleAtten = glm::vec4(0.25, 0, 0, 1);
-    lights[2].DistAtten = glm::vec4(0.25, 0.0, 0.0, 1);
-    lights[2].Direction = glm::vec4(0, 0, -1, 1);
-    lights[2].Color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	lights[2].Position = glm::vec4(0, 0, 0, 0);
+	lights[2].AngleAtten = glm::vec4(1.0, 0, 0, 1);
+	lights[2].DistAtten = glm::vec4(1.0, 0.0, 0.0, 1);
+	lights[2].Direction = glm::vec4(0, -1, 0, 1);
+	lights[2].Color = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
 
 	J3DUniformBufferObject::SetLights(lights);
 }

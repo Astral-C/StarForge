@@ -13,7 +13,7 @@ class SGalaxyDOMNode : public SDOMNodeBase {
     GCarchive mScenarioArchive;
     SBcsvIO mScenarioData;
     bool mGalaxyLoaded { false };
-
+    //std::map<uint32_t, > mLightingConfigs;
 
 public:
     typedef SDOMNodeBase Super;
@@ -30,6 +30,8 @@ public:
 
     void SaveGalaxy();
     bool LoadGalaxy(std::filesystem::path galaxy_path, EGameType game);
+
+    EGameType GetGame() { return mGame; }
 
     virtual bool IsNodeType(EDOMNodeType type) const override {
         if(type == EDOMNodeType::Galaxy){

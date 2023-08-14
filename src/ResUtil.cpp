@@ -179,7 +179,9 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
 			return;
 		}
+
 		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
+
 			if(std::filesystem::path(file->name).extension() == ".bdl"){
 				J3DModelLoader Loader;
 				bStream::CMemoryStream modelStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
@@ -205,7 +207,9 @@ std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourc
 			return nullptr;
 		}
 		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
-			if(std::string(file->name) == animName && std::filesystem::path(animName).extension() == ".brk"){
+			std::string name = std::string(file->name);
+			std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+			if(name == animName && std::filesystem::path(animName).extension() == ".brk"){
 				J3DAnimation::J3DAnimationLoader Loader;
 				bStream::CMemoryStream animStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
 

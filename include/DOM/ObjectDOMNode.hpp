@@ -13,6 +13,7 @@
 
 class SObjectDOMNode : public SDOMNodeSerializable {
     uint32_t mID;
+protected:
 
     uint32_t mLinkID;
     uint32_t mCameraSetID;
@@ -44,7 +45,6 @@ class SObjectDOMNode : public SDOMNodeSerializable {
     std::array<int, 8> mPathArgs;
 
     std::weak_ptr<SObjectDOMNode> mLinkedObject;
-
     std::shared_ptr<J3DModelInstance> mRenderable;
 
 public:
@@ -71,7 +71,7 @@ public:
     void Deserialize(SBcsvIO* bcsv, int entry);
     void Serialize(SBcsvIO* bcsv, int entry);
 
-   void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
+    virtual void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
     uint32_t GetLinkID() { return mLinkID; }
 
     std::weak_ptr<SObjectDOMNode> GetLinked() { return mLinkedObject; }

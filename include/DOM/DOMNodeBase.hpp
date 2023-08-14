@@ -29,7 +29,12 @@ enum class EDOMNodeType
 
 	// Entities
 	Entity,
-    Object
+    Object,
+	Tico,
+	Planet,
+	Toad,
+	Boo,
+	AstroObject
 };
 
 // Base class for all DOM (Document Object Model) nodes.

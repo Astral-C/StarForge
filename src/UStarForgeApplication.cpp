@@ -32,6 +32,8 @@ bool UStarForgeApplication::Setup() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
+	glfwWindowHint(GLFW_SAMPLES, 4);
+
 	mWindow = glfwCreateWindow(1280, 720, "StarForge", nullptr, nullptr);
 	if (mWindow == nullptr) {
 		glfwTerminate();
@@ -59,6 +61,8 @@ bool UStarForgeApplication::Setup() {
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
 	ImGui_ImplOpenGL3_Init("#version 150");
+
+	glEnable(GL_MULTISAMPLE);
 
 	GCResourceManager.Init();
 	
@@ -109,7 +113,7 @@ bool UStarForgeApplication::Execute(float deltaTime) {
 	glViewport(0, 0, width, height);
 
 	// Clear buffers
-	glClearColor(0.6, 0.6, 0.6, 1.0f);
+	glClearColor(0.100f, 0.261f, 0.402f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Render viewer context

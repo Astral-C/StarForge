@@ -40,6 +40,7 @@ public:
 	void Update(float deltaTime);
 
 	glm::vec3 GetPosition() { return mEye; }
+	glm::vec3 GetForward() { return mForward; }
 	glm::mat4 GetViewMatrix() { return glm::lookAt(mEye, mCenter, mUp); }
 	glm::mat4 GetProjectionMatrix() { return glm::perspective(mFovy, mAspectRatio, mNearPlane, mFarPlane); }
 };

@@ -2,6 +2,11 @@
 #include "ResUtil.hpp"
 #include "DOM/ZoneDOMNode.hpp"
 #include "DOM/ObjectDOMNode.hpp"
+#include "DOM/PlanetDOMNode.hpp"
+#include "DOM/ToadDOMNode.hpp"
+#include "DOM/TicoDOMNode.hpp"
+#include "DOM/AstroObjectDOMNode.hpp"
+#include "DOM/BooDOMNode.hpp"
 #include "compression.h"
 #include "archive.h"
 #include "imgui.h"
@@ -42,9 +47,33 @@ void SZoneLayerDOMNode::LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, s
 			bStream::CMemoryStream ObjInfoStream((uint8_t*)layer_file->data, (size_t)layer_file->size, bStream::Endianess::Big, bStream::OpenMode::In);
 			mObjInfo.Load(&ObjInfoStream);
 			for(size_t objEntry = 0; objEntry < mObjInfo.GetEntryCount(); objEntry++){
-                auto object = std::make_shared<SObjectDOMNode>();
-                object->Deserialize(&mObjInfo, objEntry);
-                AddChild(object);
+                // This section needs to be redone to actually properly load models somehow. Maybe a premape map for name->archive?
+                std::string ActorName = SGenUtility::SjisToUtf8(mObjInfo.GetString(objEntry, "name"));
+                if(ActorName.find("Tico") != std::string::npos && ActorName != "TicoCoin" && ActorName != "TicoComet"){
+                    auto object = std::make_shared<STicoDOMNode>();
+                    object->Deserialize(&mObjInfo, objEntry);
+                    AddChild(object);
+                } else if(ActorName.find("Kinopio") != std::string::npos){
+                    auto object = std::make_shared<SToadDOMNode>();
+                    object->Deserialize(&mObjInfo, objEntry);
+                    AddChild(object);
+                } else if(ActorName.find("Teresa") != std::string::npos){
+                    auto object = std::make_shared<SBooDOMNode>();
+                    object->Deserialize(&mObjInfo, objEntry);
+                    AddChild(object);
+                } else if(ActorName.find("Astro") != std::string::npos){
+                    auto object = std::make_shared<SAstroObjectDOMNode>();
+                    object->Deserialize(&mObjInfo, objEntry);
+                    AddChild(object);
+                } else if (ActorName.find("Planet") != std::string::npos) {
+                    auto object = std::make_shared<SPlanetDOMNode>();
+                    object->Deserialize(&mObjInfo, objEntry);
+                    AddChild(object);                    
+                } else {
+                    auto object = std::make_shared<SObjectDOMNode>();
+                    object->Deserialize(&mObjInfo, objEntry);
+                    AddChild(object);
+                }
 			}
 
 		}
@@ -194,18 +223,20 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
     }
 
     if(file == nullptr){
-        std::cout << "Couldn't find stageobjinfo for galaxy 1 or 2" << std::endl;
+        std::cout << "Couldn't find " << std::string(file->name) << " for Galaxy" << std::endl;
         return zoneTransforms;
     }
 
-    bStream::CMemoryStream StageObjInfoStream((uint8_t*)file->data, (size_t)file->size, bStream::Endianess::Big, bStream::OpenMode::In);
-    mStageObjInfo.Load(&StageObjInfoStream);
-    for(size_t stageObjEntry = 0; stageObjEntry < mStageObjInfo.GetEntryCount(); stageObjEntry++){
-        std::string zoneName = mStageObjInfo.GetString(stageObjEntry, "name");
-        glm::vec3 position = {mStageObjInfo.GetFloat(stageObjEntry, "pos_x"), mStageObjInfo.GetFloat(stageObjEntry, "pos_y"), mStageObjInfo.GetFloat(stageObjEntry, "pos_z")};
-        glm::vec3 rotation = {mStageObjInfo.GetFloat(stageObjEntry, "dir_x"), mStageObjInfo.GetFloat(stageObjEntry, "dir_y"), mStageObjInfo.GetFloat(stageObjEntry, "dir_z")};
+    if(file->size != 0) {
+        bStream::CMemoryStream StageObjInfoStream((uint8_t*)file->data, (size_t)file->size, bStream::Endianess::Big, bStream::OpenMode::In);
+        mStageObjInfo.Load(&StageObjInfoStream);
+        for(size_t stageObjEntry = 0; stageObjEntry < mStageObjInfo.GetEntryCount(); stageObjEntry++){
+            std::string zoneName = mStageObjInfo.GetString(stageObjEntry, "name");
+            glm::vec3 position = {mStageObjInfo.GetFloat(stageObjEntry, "pos_x"), mStageObjInfo.GetFloat(stageObjEntry, "pos_y"), mStageObjInfo.GetFloat(stageObjEntry, "pos_z")};
+            glm::vec3 rotation = {mStageObjInfo.GetFloat(stageObjEntry, "dir_x"), mStageObjInfo.GetFloat(stageObjEntry, "dir_y"), mStageObjInfo.GetFloat(stageObjEntry, "dir_z")};
 
-        zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), mStageObjInfo.GetUnsignedInt(stageObjEntry, "l_id")}});
+            zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), mStageObjInfo.GetUnsignedInt(stageObjEntry, "l_id")}});
+        }
     }
 
 
