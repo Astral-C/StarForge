@@ -30,6 +30,7 @@ enum class EDOMNodeType
 	// Entities
 	Entity,
     Object,
+	AreaObject,
 	Tico,
 	Planet,
 	Toad,

@@ -186,11 +186,11 @@ void UStarForgeContext::Render(float deltaTime) {
 	J3DUniformBufferObject::SetProjAndViewMatrices(&projection, &view);
 	
 	//Render Models here
-	std::vector<std::shared_ptr<J3DModelInstance>> renderables;
 	
-	mRoot->Render(renderables, deltaTime);
+	mRenderables.clear();
+	mRoot->Render(mRenderables, deltaTime);
 
-	J3DRendering::Render(deltaTime, mCamera.GetPosition(), renderables);
+	J3DRendering::Render(deltaTime, mCamera.GetPosition(), view, projection, mRenderables);
 
 	//mGrid.Render(mCamera.GetPosition(), mCamera.GetProjectionMatrix(), mCamera.GetViewMatrix());
 }
@@ -246,6 +246,16 @@ void UStarForgeContext::RenderMenuBar() {
 				// copy from cammie again? or infer based on root structure
 				if(!mRoot->LoadGalaxy(FilePath, std::filesystem::exists(Options.mRootPath / "files" / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
 					ImGui::OpenPopup("Galaxy Load Error");
+				} else {
+					mRenderables.erase(mRenderables.begin(), mRenderables.end());
+
+					// Get a good enough guesstimation of how many renderables we will need so we aren't reallocating a bunch every frame 
+					size_t renderableCountEstimation = 0;
+					for(auto& child : mRoot->Children){
+						renderableCountEstimation += child->Children.size();
+					}
+
+					mRenderables.reserve(renderableCountEstimation*3);
 				}
 			}
 			catch (std::exception e) {

@@ -2,6 +2,7 @@
 #include "ResUtil.hpp"
 #include "DOM/ZoneDOMNode.hpp"
 #include "DOM/ObjectDOMNode.hpp"
+#include "DOM/AreaObjectDOMNode.hpp"
 #include "DOM/PlanetDOMNode.hpp"
 #include "DOM/ToadDOMNode.hpp"
 #include "DOM/TicoDOMNode.hpp"
@@ -61,14 +62,14 @@ void SZoneLayerDOMNode::LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, s
                     auto object = std::make_shared<SBooDOMNode>();
                     object->Deserialize(&mObjInfo, objEntry);
                     AddChild(object);
+                } else if (ActorName.find("Planet") != std::string::npos || ActorName == "AstroDomeComet") {
+                    auto object = std::make_shared<SPlanetDOMNode>();
+                    object->Deserialize(&mObjInfo, objEntry);
+                    AddChild(object);                    
                 } else if(ActorName.find("Astro") != std::string::npos){
                     auto object = std::make_shared<SAstroObjectDOMNode>();
                     object->Deserialize(&mObjInfo, objEntry);
                     AddChild(object);
-                } else if (ActorName.find("Planet") != std::string::npos) {
-                    auto object = std::make_shared<SPlanetDOMNode>();
-                    object->Deserialize(&mObjInfo, objEntry);
-                    AddChild(object);                    
                 } else {
                     auto object = std::make_shared<SObjectDOMNode>();
                     object->Deserialize(&mObjInfo, objEntry);
@@ -77,22 +78,53 @@ void SZoneLayerDOMNode::LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, s
 			}
 
 		}
-	}
+		if((strcmp(layer_file->name, "areaobjinfo") == 0 || strcmp(layer_file->name, "AreaObjInfo") == 0) && layer_file->data != nullptr){
+            mAreaObjInfoFile = layer_file;
+			bStream::CMemoryStream mAreaObjInfoFile((uint8_t*)layer_file->data, (size_t)layer_file->size, bStream::Endianess::Big, bStream::OpenMode::In);
+			mAreaObjInfo.Load(&mAreaObjInfoFile);
+			for(size_t areaObjEntry = 0; areaObjEntry < mAreaObjInfo.GetEntryCount(); areaObjEntry++){
+                auto object = std::make_shared<SAreaObjectDOMNode>();
+                object->Deserialize(&mAreaObjInfo, areaObjEntry);
+                AddChild(object);  
+            }
+        }
+    }
 }
 
 void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected) {
     ImGui::Checkbox(fmt::format("##isVisible{}", mName).data(), &mVisible);
     ImGui::SameLine();
     if(ImGui::TreeNode(mName.data())){
-        ImGui::SameLine();
 
+        bool treeOpen = ImGui::TreeNode("Objects");
+        ImGui::SameLine();
         if(ImGui::Button("+")){
             auto object = std::make_shared<SObjectDOMNode>();
             AddChild(object);
+            selected = object;
+        }
+        
+        if(treeOpen){
+            for (auto node : GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
+                node->RenderHeirarchyUI(selected);
+            }
+            ImGui::TreePop();
         }
 
-        for (auto node : GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
-            node->RenderHeirarchyUI(selected);
+        treeOpen = ImGui::TreeNode("Area Objects");
+        ImGui::SameLine();
+        if(ImGui::Button("+")){
+            auto object = std::make_shared<SAreaObjectDOMNode>();
+            AddChild(object);
+            selected = object;
+        }
+
+        if(treeOpen){
+            for (auto node : GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
+                node->RenderHeirarchyUI(selected);
+            }
+            
+            ImGui::TreePop();
         }
         
         ImGui::TreePop();
@@ -104,7 +136,7 @@ void SZoneLayerDOMNode::RenderDetailsUI() {
 
 }
 
-void SZoneLayerDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+void SZoneLayerDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     for(auto& object : GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
         object->Render(renderables, transform, dt);
     }
@@ -281,7 +313,7 @@ void SZoneDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 }
 
 
-void SZoneDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, float dt){
+void SZoneDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, float dt){
     std::vector<std::shared_ptr<SZoneLayerDOMNode>> zoneLayers = GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer);
 
     for(auto& layer : zoneLayers){

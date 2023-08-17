@@ -8,15 +8,15 @@
 
 class SZoneLayerDOMNode : public SDOMNodeBase {
     bool mVisible;
-    SBcsvIO mObjInfo;
-    GCarcfile* mObjInfoFile;
+    SBcsvIO mObjInfo, mAreaObjInfo;
+    GCarcfile* mObjInfoFile, *mAreaObjInfoFile;
 
 public:
     typedef SDOMNodeBase Super; 
 
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
-    void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
+    void Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
 
     void LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName);
     void SaveLayer(GCarchive* zoneArchive);
@@ -54,7 +54,7 @@ public:
 
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
-    void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, float dt);
+    void Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, float dt);
 
     SZoneDOMNode();
     ~SZoneDOMNode();

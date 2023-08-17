@@ -31,7 +31,7 @@ bool UStarForgeApplication::Setup() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-
+	glfwWindowHint(GLFW_DEPTH_BITS, 32);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
 	mWindow = glfwCreateWindow(1280, 720, "StarForge", nullptr, nullptr);

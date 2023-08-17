@@ -59,7 +59,7 @@ void SGalaxyDOMNode::RenderZones(std::shared_ptr<SDOMNodeBase>& selected){
 void SGalaxyDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
 }
 
-void SGalaxyDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, float dt){
+void SGalaxyDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, float dt){
     for (auto& zone : GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone)){
         zone->Render(renderables, dt);
     }

@@ -24,6 +24,7 @@ void SPlanetDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     if(ModelCache.count(mName) == 0){
         GCResourceManager.CacheModel(mName);
         GCResourceManager.CacheModel(mName+"Water");
+        GCResourceManager.CacheModel(mName+"Bloom");
     }
 
     glm::vec3 position = {bcsv->GetFloat(entry, "pos_x"), bcsv->GetFloat(entry, "pos_y"), bcsv->GetFloat(entry, "pos_z")};
@@ -83,9 +84,17 @@ void SPlanetDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         mRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);
         mRenderable->SetLight(LightingConfigs["Planet"].Light2, 2);
     }
+
+    if(ModelCache.count(mName+"Bloom")){
+        mWaterRenderable = ModelCache[mName+"Bloom"]->GetInstance();
+        
+        mRenderable->SetLight(LightingConfigs["Planet"].Light0, 0);
+        mRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);
+        mRenderable->SetLight(LightingConfigs["Planet"].Light2, 2);
+    }
 }
 
-void SPlanetDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+void SPlanetDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     if(mRenderable != nullptr) {
         glm::mat4 drawPos = transform * mTransform;
         
@@ -94,6 +103,11 @@ void SPlanetDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& rend
         if(mWaterRenderable != nullptr){
             mWaterRenderable->SetReferenceFrame(drawPos);
             renderables.push_back(mWaterRenderable);
+        }
+
+         if(mBloomRenderable != nullptr){
+            mBloomRenderable->SetReferenceFrame(drawPos);
+            renderables.push_back(mBloomRenderable);
         }
 
         renderables.push_back(mRenderable);

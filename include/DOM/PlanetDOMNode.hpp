@@ -13,7 +13,7 @@
 #include <J3D/J3DModelInstance.hpp>
 
 class SPlanetDOMNode : public SObjectDOMNode {
-    std::shared_ptr<J3DModelInstance> mWaterRenderable; // add bloom and indirect
+    std::shared_ptr<J3DModelInstance> mWaterRenderable, mBloomRenderable; // add bloom and indirect
 public:
     typedef SObjectDOMNode Super; 
 
@@ -31,6 +31,6 @@ public:
 
     void Deserialize(SBcsvIO* bcsv, int entry) override;
 
-    void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt) override;
+    void Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt) override;
 
 };

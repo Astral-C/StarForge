@@ -75,12 +75,12 @@ void SBooDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         auto anim = GCResourceManager.LoadAnimation("Teresa", "teresa.brk");
 
         mRenderable->SetRegisterColorAnimation(anim);
-        mRenderable->GetRegisterColorAnimation()->SetFrame(1, true);
+        mRenderable->GetRegisterColorAnimation()->SetFrame(0, true);
     }
 
 }
 
-void SBooDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+void SBooDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     if(mRenderable != nullptr) {
         mRenderable->SetReferenceFrame(transform * mTransform);
      
