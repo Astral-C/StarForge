@@ -238,7 +238,7 @@ void SResUtility::SOptions::LoadOptions(){
 		if(path != nullptr) mRootPath = std::filesystem::path(path);
 
 		const char* url = ini_get(config, "settings", "objectdb_url");
-		if(path != nullptr) mObjectDBUrl = std::string(url);
+		if(url != nullptr) mObjectDBUrl = std::string(url);
 
 		ini_free(config);
 	}
