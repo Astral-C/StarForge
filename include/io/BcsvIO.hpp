@@ -99,11 +99,13 @@ public:
 	int32_t GetFieldCount() const { return mFieldCount; }
 
 	size_t GetStringSize() const { return mStringSize; }
-	void SetStringSize(uint32_t nestringSize) { mStringSize = nestringSize; }
+	void SetStringSize(uint32_t newStringSize) { mStringSize = newStringSize; }
 
 	size_t CalculateNewFileSize(size_t entityCount) {
 		return JMP_HEADER_SIZE + (mFieldCount * JMP_FIELD_DEF_SIZE) + (entityCount * mEntrySize);
 	}
+
+	void AddField(std::string name, EJmpFieldType type);
 
 /*== Input ==*/
 	// Attempts to load a JMP file from the given stream. Returns
@@ -140,7 +142,7 @@ public:
 
 /*== Output ==*/
 	// Saves the current JMP data to the given stream.
-	bool Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, bStream::CMemoryStream& stream);
+	bool Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, bStream::CMemoryStream& stream, std::function<void(SBcsvIO*, int, std::shared_ptr<SDOMNodeSerializable> node)> Serializer = {});
 
 	// Writes an unsigned int to the given field in the specified JMP entry,
 	// packing into a bitfield if required.
