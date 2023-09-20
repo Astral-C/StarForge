@@ -39,6 +39,7 @@ public:
 };
 
 class SZoneDOMNode : public SDOMNodeSerializable {
+    bool mVisible { true };
     bool mIsMainZone { false };
     bool mZoneArchiveLoaded { false };
     uint32_t mLinkID { 0 };
@@ -57,6 +58,7 @@ public:
     void Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, float dt);
 
     SZoneDOMNode();
+    SZoneDOMNode(std::string name);
     ~SZoneDOMNode();
 
     virtual bool IsNodeType(EDOMNodeType type) const override {

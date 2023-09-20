@@ -330,7 +330,19 @@ bool SBcsvIO::SetString(uint32_t entry_index, std::string field_name, std::strin
 	}	
 }
 
-bool SBcsvIO::Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, bStream::CMemoryStream& stream){
+void SBcsvIO::AddField(std::string name, EJmpFieldType type){
+	SBcsvFieldInfo fieldInfo;
+	
+	fieldInfo.Hash = HashFieldName(name);
+	fieldInfo.Bitmask = 0;
+	fieldInfo.Shift = 0;
+	fieldInfo.Type = type;
+	fieldInfo.Start = (uint16_t)CalculateNewEntrySize();
+
+	mFields.push_back(fieldInfo);
+}
+
+bool SBcsvIO::Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, bStream::CMemoryStream& stream, std::function<void(SBcsvIO*, int, std::shared_ptr<SDOMNodeSerializable> node)> Serializer){
 	if(entities.size() <= 0){
 		return false; // Don't bother trying to write 0 entries
 	}
@@ -366,7 +378,11 @@ bool SBcsvIO::Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, 
 	for (uint32_t i = 0; i < entities.size(); i++)
 	{
 		mData.push_back(entry); //Add empty dummy entry
-		entities[i]->Serialize(this, i); // set entry data
+		if(!Serializer){
+			entities[i]->Serialize(this, i); // set entry data
+		} else {
+			Serializer(this, i, entities[i]);
+		}
 	}
 
 	std::map<uint32_t, std::string> StringTable;

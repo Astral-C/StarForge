@@ -14,6 +14,7 @@
 class SObjectDOMNode : public SDOMNodeSerializable {
     uint32_t mID;
 protected:
+    bool mVisible;
 
     uint32_t mLinkID;
     uint32_t mCameraSetID;

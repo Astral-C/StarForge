@@ -11,8 +11,10 @@ class SGalaxyDOMNode : public SDOMNodeBase {
     std::string mGalaxyName;
     std::string mScenarioArchivePath;
     GCarchive mScenarioArchive;
-    SBcsvIO mScenarioData;
     bool mGalaxyLoaded { false };
+
+    SBcsvIO mScenarioData, mZoneListData;
+
     //std::map<uint32_t, > mLightingConfigs;
 
 public:
@@ -29,7 +31,9 @@ public:
     void RenderDetailsUI();
 
     void SaveGalaxy();
+    void AddZone(std::filesystem::path zonePath);
     bool LoadGalaxy(std::filesystem::path galaxy_path, EGameType game);
+    bool GetGalaxyLoaded() { return mGalaxyLoaded; }
 
     EGameType GetGame() { return mGame; }
 

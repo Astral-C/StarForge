@@ -6,6 +6,7 @@
 #include <fmt/core.h>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
+#include "IconsForkAwesome.h"
 
 enum ToadColors {
 	Blue,
@@ -99,6 +100,11 @@ void SToadDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 }
 
 void SToadDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
+    ImGui::Text((mVisible ? ICON_FK_EYE : ICON_FK_EYE_SLASH));
+    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+        mVisible = !mVisible;
+    }
+    ImGui::SameLine();
 	if(selected == GetSharedPtr<SToadDOMNode>(EDOMNodeType::Object)){
 		ImGui::TextColored(ImColor(0,255,0), fmt::format("{0} Toad", ToadColorNames[glm::max(mObjArgs[0], 0)]).c_str());
 	} else if(selected == mLinkedObject.lock()) {
@@ -136,10 +142,18 @@ void SToadDOMNode::RenderDetailsUI(){
 	for (size_t i = 2; i < 8; i++){
 		ImGui::InputInt(mObjArgNames[i].data(), &mObjArgs[i]);
 	}
+
+    ImGui::SameLine();
+
+    ImGui::Text(ICON_FK_MINUS_CIRCLE);
+    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+        //should check this lock but whatever
+        GetParentOfType<SDOMNodeBase>(EDOMNodeType::ZoneLayer).lock()->RemoveChild(GetSharedPtr<SToadDOMNode>(EDOMNodeType::Toad));
+    }
 }
 
 void SToadDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
-	if(mRenderable != nullptr) {
+	if(mRenderable != nullptr && mVisible) {
 		mRenderable->SetReferenceFrame(transform * mTransform);
 		
 		mRenderable->UpdateAnimations(dt);

@@ -12,6 +12,7 @@
 #include "archive.h"
 #include "imgui.h"
 #include "UStarForgeContext.hpp"
+#include "IconsForkAwesome.h"
 #include <fmt/core.h>
 #include <glm/gtx/matrix_decompose.hpp>
 
@@ -92,13 +93,19 @@ void SZoneLayerDOMNode::LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, s
 }
 
 void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected) {
-    ImGui::Checkbox(fmt::format("##isVisible{}", mName).data(), &mVisible);
+    //ImGui::Checkbox(fmt::format("##isVisible{}", mName).data(), &mVisible);
+    ImGui::Text((mVisible ? ICON_FK_EYE : ICON_FK_EYE_SLASH));
+    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+        mVisible = !mVisible;
+    }
+
     ImGui::SameLine();
     if(ImGui::TreeNode(mName.data())){
 
         bool treeOpen = ImGui::TreeNode("Objects");
         ImGui::SameLine();
-        if(ImGui::Button("+")){
+        ImGui::Text(ICON_FK_PLUS_CIRCLE);
+        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
             auto object = std::make_shared<SObjectDOMNode>();
             AddChild(object);
             selected = object;
@@ -113,7 +120,8 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
 
         treeOpen = ImGui::TreeNode("Area Objects");
         ImGui::SameLine();
-        if(ImGui::Button("+")){
+        ImGui::Text(ICON_FK_PLUS_CIRCLE);
+        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
             auto object = std::make_shared<SAreaObjectDOMNode>();
             AddChild(object);
             selected = object;
@@ -142,6 +150,12 @@ void SZoneLayerDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& ren
     }
 }
 
+SZoneDOMNode::SZoneDOMNode(std::string name) : Super("Zone") {
+    mTransform = glm::mat4(1);
+    mType = EDOMNodeType::Zone;
+    mName = name;
+}
+
 SZoneDOMNode::SZoneDOMNode() : Super("Zone") {
     mTransform = glm::mat4(1);
     mType = EDOMNodeType::Zone;
@@ -158,6 +172,21 @@ void SZoneDOMNode::RenderDetailsUI(){
 }
 
 void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
+    ImGui::Text((mVisible ? ICON_FK_EYE : ICON_FK_EYE_SLASH));
+    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+        mVisible = !mVisible;
+    }
+
+    ImGui::SameLine();
+
+    ImGui::Text(ICON_FK_MINUS_CIRCLE);
+    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+        //Remove Zone Code goes here. Should be a call to Galaxy->RemoveZone
+        GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->RemoveChild(GetSharedPtr<SZoneDOMNode>(EDOMNodeType::Zone));
+    }
+    
+    ImGui::SameLine();
+
     bool opened = ImGui::TreeNodeEx(mName.data(), GetIsSelected() ? ImGuiTreeNodeFlags_Selected : 0);
     if(ImGui::IsItemClicked() && !mIsMainZone){
         SetIsSelected(true);
@@ -211,11 +240,12 @@ void SZoneDOMNode::SaveZone(){
         std::vector<std::shared_ptr<SDOMNodeSerializable>> zones;
 
         for(auto& zone : zoneNodes){
+            std::cout << "[Save Main Zone]: adding zone to stageobjinfo " << zone->GetName() << std::endl;
             zones.push_back(zone);
         }
 
 
-        std::cout << "Saving Stage Object Info" << std::endl;
+        std::cout << "[Save Main Zone]: Saving Stage Object Info" << std::endl;
         bStream::CMemoryStream saveStream(mStageObjInfo.CalculateNewFileSize(zones.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
         mStageObjInfo.Save(zones, saveStream);
 
@@ -224,7 +254,7 @@ void SZoneDOMNode::SaveZone(){
         }
     }
 
-    std::cout << "Saving Zone " << mName << std::endl;
+    std::cout << "[Save Zone]: Saving Zone " << mName << std::endl;
     for(auto& layer : GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer)){
         layer->SaveLayer(&mZoneArchive);
     }
@@ -312,11 +342,12 @@ void SZoneDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     bcsv->SetFloat(entry, "dir_z", glm::degrees(dir.z));
 }
 
-
 void SZoneDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, float dt){
-    std::vector<std::shared_ptr<SZoneLayerDOMNode>> zoneLayers = GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer);
+    if(mVisible){
+        std::vector<std::shared_ptr<SZoneLayerDOMNode>> zoneLayers = GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer);
 
-    for(auto& layer : zoneLayers){
-        if(layer->GetVisible()) layer->Render(renderables, mTransform, dt);
+        for(auto& layer : zoneLayers){
+            if(layer->GetVisible()) layer->Render(renderables, mTransform, dt);
+        }
     }
 }

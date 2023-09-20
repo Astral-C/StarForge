@@ -49,6 +49,7 @@ void SScenarioDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     for(auto& zone : zones){
         if(!mZoneLayers.contains(zone->GetName())){
             mZoneLayers.insert({zone->GetName(), bcsv->GetSignedInt(entry, zone->GetName())});
+            std::cout << "[ScenarioDOMNode::Deserialize]: " << bcsv->GetSignedInt(entry, zone->GetName()) << std::endl;
         }
     }
     mSelectedZone = mZoneLayers.begin()->first;

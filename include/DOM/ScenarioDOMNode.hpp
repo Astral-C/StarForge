@@ -49,6 +49,8 @@ public:
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
 
+    void AddZone(std::string zoneName) { mZoneLayers.insert({zoneName, 1}); }
+
     SScenarioDOMNode();
     ~SScenarioDOMNode();
 

@@ -18,7 +18,10 @@
 #include "ImGuizmo.h"
 
 #include "DOM/ZoneDOMNode.hpp"
+#include "DOM/ScenarioDOMNode.hpp"
 #include "DOM/ObjectDOMNode.hpp"
+
+#include "IconsForkAwesome.h"
 
 void GalaxySort(J3DRendering::SortFunctionArgs packets) {
     std::sort(
@@ -34,6 +37,12 @@ void GalaxySort(J3DRendering::SortFunctionArgs packets) {
     );
 }
 
+UStarForgeContext::~UStarForgeContext(){
+	J3DRendering::Cleanup();
+	mRenderables.erase(mRenderables.begin(), mRenderables.end());
+	ModelCache.clear();
+}
+
 UStarForgeContext::UStarForgeContext(){
 	mGrid.Init();
 
@@ -44,7 +53,20 @@ UStarForgeContext::UStarForgeContext(){
 	}
 
 	ImGuiIO& io = ImGui::GetIO();
-	io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf").string().c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+	
+	if(std::filesystem::exists((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf"))){
+		io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf").string().c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+	}
+
+	if(std::filesystem::exists((std::filesystem::current_path() / "res" / "forkawesome.ttf"))){
+		static const ImWchar icons_ranges[] = { ICON_MIN_FK, ICON_MAX_16_FK, 0 };
+		ImFontConfig icons_config; 
+		icons_config.MergeMode = true; 
+		icons_config.PixelSnapH = true; 
+		icons_config.GlyphMinAdvanceX = 16.0f;
+		io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "forkawesome.ttf").string().c_str(), icons_config.GlyphMinAdvanceX, &icons_config, icons_ranges );
+	}
+	
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	Options.LoadOptions();
@@ -110,23 +132,62 @@ void UStarForgeContext::Render(float deltaTime) {
 	mainWindowOverride.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
 	ImGui::SetNextWindowClass(&mainWindowOverride);
 	
-	ImGui::Begin("mainWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
+	ImGui::Begin("mainWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 	ImGui::Text("Scenarios");
 		ImGui::Separator();
 		mRoot->RenderScenarios(selected);
 	ImGui::End();
 
 	ImGui::SetNextWindowClass(&mainWindowOverride);
-	ImGui::Begin("zoneView", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
+	ImGui::Begin("zoneView", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 		ImGui::Text("Zones");
+		ImGui::SameLine();
+        ImGui::Text(ICON_FK_PLUS_CIRCLE);
+        
+		if(ImGui::IsItemClicked(ImGuiMouseButton_Left) && mRoot->GetGalaxyLoaded()){
+			// Add Zone code goes here. Should be a call to Galaxy->AddZone
+			ImGui::OpenPopup("addZoneDialog");
+			std::cout << "clicked add zone" << std::endl;
+		}
+
 		ImGui::Separator();
 		mRoot->RenderZones(selected);
-		if(ImGui::Button("Add Zone")){
-			// mRoot AddZone method. Needs to make sure the added zone has all empty stageobjinfo entries!
-		}
-		ImGui::SameLine();
-		if(ImGui::Button("Remove Zone")){
-			// Make sure we have at least one zone with stageobjinfo entries!
+
+		bool addZoneDialogOpen = true;
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		ImGui::SetNextWindowSize(ImVec2(ImGui::GetMainViewport()->Size.x / 8, ImGui::GetMainViewport()->Size.y / 3.45));
+
+		if(ImGui::BeginPopupModal("addZoneDialog", &addZoneDialogOpen, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)){
+			float windowWidth = ImGui::GetContentRegionAvail().x;
+			float textWidth = ImGui::CalcTextSize("Zone Archives").x;
+
+			ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+	
+			ImGui::Text("Zone Archives");
+			
+			ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.98f);
+			ImGui::SetCursorPosX(0.2f);
+			ImGui::BeginListBox("##zoneArchives");
+				for (const auto & entry : std::filesystem::directory_iterator(std::filesystem::path(Options.mRootPath) / "files" / "StageData")){
+					if(entry.path().string().find(".arc") != std::string::npos){
+						if(ImGui::Selectable(entry.path().stem().string().c_str())){
+							mRoot->AddZone(entry.path());
+
+							ImGui::CloseCurrentPopup();
+						}
+					}
+				}
+			ImGui::EndListBox();
+
+			textWidth = ImGui::CalcTextSize(ICON_FK_WINDOW_CLOSE " Cancel").x;
+			ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+			ImGui::Text(ICON_FK_WINDOW_CLOSE " Cancel");
+			if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
+
 		}
 	ImGui::End();
 
@@ -136,7 +197,7 @@ void UStarForgeContext::Render(float deltaTime) {
 	ImGuiIO& io = ImGui::GetIO();
 	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
-	ImGui::Begin("detailWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove);
+	ImGui::Begin("detailWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 		if(selected != nullptr){
 			switch (selected->GetNodeType())
 			{
@@ -205,27 +266,30 @@ void UStarForgeContext::RenderMenuBar() {
 	ImGui::BeginMainMenuBar();
 
 	if (ImGui::BeginMenu("File")) {
-		if (ImGui::MenuItem("Open...")) {
+		if (ImGui::MenuItem(ICON_FK_FOLDER_OPEN " Open...")) {
 			bIsFileDialogOpen = true;
 		}
-		if (ImGui::MenuItem("Save...")) {
+		if (ImGui::MenuItem(ICON_FK_FLOPPY_O " Save...")) {
 			if(mRoot != nullptr){
 				mRoot->SaveGalaxy();
 			}
 		}
 
 		ImGui::Separator();
-		ImGui::MenuItem("Close");
+		ImGui::MenuItem(ICON_FK_WINDOW_CLOSE " Close");
 
 		ImGui::EndMenu();
 	}
 	if (ImGui::BeginMenu("Edit")) {
-		if(ImGui::MenuItem("Settings")){
+		if(ImGui::MenuItem(ICON_FK_COG " Settings")){
 			mOptionsOpen = true;
 		}
 		ImGui::EndMenu();
 	}
-	if (ImGui::BeginMenu("About")) {
+	if (ImGui::BeginMenu(ICON_FK_QUESTION_CIRCLE)) {
+		if(ImGui::MenuItem("About")){
+			mOptionsOpen = true;
+		}
 		ImGui::EndMenu();
 	}
 
@@ -247,6 +311,7 @@ void UStarForgeContext::RenderMenuBar() {
 				if(!mRoot->LoadGalaxy(FilePath, std::filesystem::exists(Options.mRootPath / "files" / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
 					ImGui::OpenPopup("Galaxy Load Error");
 				} else {
+					ModelCache.erase(ModelCache.begin(), ModelCache.end());
 					mRenderables.erase(mRenderables.begin(), mRenderables.end());
 
 					// Get a good enough guesstimation of how many renderables we will need so we aren't reallocating a bunch every frame 
@@ -262,6 +327,8 @@ void UStarForgeContext::RenderMenuBar() {
 				std::cout << "Failed to load galaxy " << FilePath << "! Exception: " << e.what() << "\n";
 			}
 
+			bIsFileDialogOpen = false;
+		} else {
 			bIsFileDialogOpen = false;
 		}
 

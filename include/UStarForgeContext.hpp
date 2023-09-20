@@ -27,6 +27,8 @@ class UStarForgeContext {
 	uint32_t mDockNodeUpLeftID;
 	uint32_t mDockNodeDownLeftID;
 	
+	std::string mSelectedAddZone { "" };
+
 	bool mOptionsOpen { false };
 
 	bool bIsDockingSetUp { false };
@@ -46,7 +48,7 @@ class UStarForgeContext {
 
 public:
 	UStarForgeContext();
-	~UStarForgeContext() { ModelCache.clear(); }
+	~UStarForgeContext();
 
 	bool Update(float deltaTime);
 	void Render(float deltaTime);

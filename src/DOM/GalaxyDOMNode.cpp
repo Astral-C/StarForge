@@ -8,6 +8,8 @@
 
 #include <LightConfigs.hpp>
 
+#include "IconsForkAwesome.h"
+
 SGalaxyDOMNode::SGalaxyDOMNode() : Super("galaxy") {
     mType = EDOMNodeType::Galaxy;
 }
@@ -19,24 +21,46 @@ SGalaxyDOMNode::~SGalaxyDOMNode(){
 }
 
 void SGalaxyDOMNode::SaveGalaxy(){
+    auto zones = GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Zone);
+    auto scenarios = GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Scenario);
+
     for(auto& zone : GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone)){
         zone->SaveZone();
     }
 
     GCarcfile* scenarioFile;
+    GCarcfile* zoneFile;
+
     if(mGame == EGameType::SMG1){
         scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
     } else {
         scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ScenarioData.bcsv"));
     }
-    auto scenarios = GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Scenario);
+
+    if(mGame == EGameType::SMG1){
+        zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("zonelist.bcsv"));
+    } else {
+        zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ZoneList.bcsv"));
+    }
 
 
-    bStream::CMemoryStream saveStream(mScenarioData.CalculateNewFileSize(scenarios.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
-    mScenarioData.Save(scenarios, saveStream);
+    bStream::CMemoryStream scenarioSaveStream(mScenarioData.CalculateNewFileSize(scenarios.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    mScenarioData.Save(scenarios, scenarioSaveStream);
+    
 
     if(scenarioFile != nullptr){
-        gcReplaceFileData(scenarioFile, saveStream.getBuffer(), saveStream.tell());
+        gcReplaceFileData(scenarioFile, scenarioSaveStream.getBuffer(), scenarioSaveStream.tell());
+    }
+
+
+    bStream::CMemoryStream zoneSaveStream(mZoneListData.CalculateNewFileSize(zones.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    mZoneListData.Save(zones, zoneSaveStream, [](SBcsvIO* bcsv, int entry, std::shared_ptr<SDOMNodeSerializable> node){  
+        bcsv->SetString(entry, "ZoneName", std::dynamic_pointer_cast<SZoneDOMNode>(node)->GetName());
+    });
+    
+
+    if(zoneFile != nullptr){
+        gcReplaceFileData(zoneFile, zoneSaveStream.getBuffer(), zoneSaveStream.tell());
     }
 
     GCResourceManager.SaveArchive(mScenarioArchivePath.c_str(), &mScenarioArchive);
@@ -69,6 +93,21 @@ void SGalaxyDOMNode::RenderDetailsUI(){
 
 }
 
+void SGalaxyDOMNode::AddZone(std::filesystem::path zonePath){
+	std::shared_ptr<SZoneDOMNode> newZone = std::make_shared<SZoneDOMNode>(zonePath.stem().string());
+
+	newZone->LoadZone(zonePath);
+
+	auto scenarios = GetChildrenOfType<SScenarioDOMNode>(EDOMNodeType::Scenario);
+	for(auto scenario : scenarios){
+		scenario->AddZone(zonePath.stem().string());
+	}
+
+    mScenarioData.AddField(zonePath.stem().string(), EJmpFieldType::Integer);
+
+	AddChild(newZone);
+}
+
 bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType game){
     //Load Scenario Nodes
     // What the fuck?
@@ -86,7 +125,6 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 	}
 
     GCResourceManager.LoadArchive((galaxy_path / (mName + "Scenario.arc")).c_str(), &mScenarioArchive);
-    mGalaxyLoaded = true;
 
     GCarcfile* zoneFile = nullptr, *scenarioFile = nullptr;
     if(mGame == EGameType::SMG1){
@@ -121,13 +159,12 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 
     // Load all zones and all zone layers
     {
-        SBcsvIO ZoneData;
         bStream::CMemoryStream ZoneDataStream((uint8_t*)zoneFile->data, (size_t)zoneFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
-        ZoneData.Load(&ZoneDataStream);
+        mZoneListData.Load(&ZoneDataStream);
 
         // Manually load the main galaxy zone so we can get a list of zone transforms
         auto mainZone = std::make_shared<SZoneDOMNode>();
-        mainZone->Deserialize(&ZoneData, 0);
+        mainZone->Deserialize(&mZoneListData, 0);
         
         std::filesystem::path mainZonePath;
 
@@ -140,9 +177,9 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         auto zoneTransforms = mainZone->LoadMainZone(mainZonePath);
         AddChild(mainZone);
 
-        for(size_t entry = 1; entry < ZoneData.GetEntryCount(); entry++){
+        for(size_t entry = 1; entry < mZoneListData.GetEntryCount(); entry++){
             auto zone = std::make_shared<SZoneDOMNode>();
-            zone->Deserialize(&ZoneData, entry);
+            zone->Deserialize(&mZoneListData, entry);
 
             if(mGame == EGameType::SMG1){
                 zone->LoadZone(galaxy_path.parent_path() / (zone->GetName() + ".arc"));
@@ -188,5 +225,6 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
             scenario->Deserialize(&mScenarioData, entry);
         }
     }
+    mGalaxyLoaded = true;
     return true;
 }
