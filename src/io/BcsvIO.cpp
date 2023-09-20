@@ -334,7 +334,7 @@ void SBcsvIO::AddField(std::string name, EJmpFieldType type){
 	SBcsvFieldInfo fieldInfo;
 	
 	fieldInfo.Hash = HashFieldName(name);
-	fieldInfo.Bitmask = 0;
+	fieldInfo.Bitmask = 0xFFFFFFFF;
 	fieldInfo.Shift = 0;
 	fieldInfo.Type = type;
 	fieldInfo.Start = (uint16_t)CalculateNewEntrySize();

@@ -46,7 +46,6 @@ void SGalaxyDOMNode::SaveGalaxy(){
 
     bStream::CMemoryStream scenarioSaveStream(mScenarioData.CalculateNewFileSize(scenarios.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
     mScenarioData.Save(scenarios, scenarioSaveStream);
-    
 
     if(scenarioFile != nullptr){
         gcReplaceFileData(scenarioFile, scenarioSaveStream.getBuffer(), scenarioSaveStream.tell());
@@ -100,6 +99,7 @@ void SGalaxyDOMNode::AddZone(std::filesystem::path zonePath){
 
 	auto scenarios = GetChildrenOfType<SScenarioDOMNode>(EDOMNodeType::Scenario);
 	for(auto scenario : scenarios){
+        std::cout << "[Add Zone]: Adding Zone " << zonePath.stem().string() << std::endl;
 		scenario->AddZone(zonePath.stem().string());
 	}
 

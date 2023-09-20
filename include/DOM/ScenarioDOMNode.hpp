@@ -49,7 +49,7 @@ public:
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
 
-    void AddZone(std::string zoneName) { mZoneLayers.insert({zoneName, 1}); }
+    void AddZone(std::string zoneName) { mZoneLayers[zoneName] = 0; }
     void RemoveZone(std::string zoneName) { mZoneLayers.erase(zoneName); }
 
     SScenarioDOMNode();
