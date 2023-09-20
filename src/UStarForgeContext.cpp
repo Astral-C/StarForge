@@ -147,7 +147,6 @@ void UStarForgeContext::Render(float deltaTime) {
 		if(ImGui::IsItemClicked(ImGuiMouseButton_Left) && mRoot->GetGalaxyLoaded()){
 			// Add Zone code goes here. Should be a call to Galaxy->AddZone
 			ImGui::OpenPopup("addZoneDialog");
-			std::cout << "clicked add zone" << std::endl;
 		}
 
 		ImGui::Separator();

@@ -106,6 +106,7 @@ public:
 	}
 
 	void AddField(std::string name, EJmpFieldType type);
+	void RemoveField(std::string name);
 
 /*== Input ==*/
 	// Attempts to load a JMP file from the given stream. Returns

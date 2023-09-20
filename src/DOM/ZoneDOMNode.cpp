@@ -26,7 +26,15 @@ SZoneLayerDOMNode::~SZoneLayerDOMNode() {
 }
 
 void SZoneLayerDOMNode::SaveLayer(GCarchive* zoneArchive){
-    std::vector<std::shared_ptr<SDOMNodeSerializable>> objects = GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Object);
+    std::vector<std::shared_ptr<SDOMNodeSerializable>> objects;
+
+    objects.reserve(Children.size());
+
+    for(auto child : Children){
+        std::cout << fmt::format("[Save Zone Layer {0}]: Adding object {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
+        objects.push_back(std::dynamic_pointer_cast<SDOMNodeSerializable>(child));
+    }
+
     if(objects.size() == 0) {
         return;
     }
@@ -182,7 +190,8 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     ImGui::Text(ICON_FK_MINUS_CIRCLE);
     if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
         //Remove Zone Code goes here. Should be a call to Galaxy->RemoveZone
-        GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->RemoveChild(GetSharedPtr<SZoneDOMNode>(EDOMNodeType::Zone));
+
+        GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->RemoveZone(GetSharedPtr<SZoneDOMNode>(EDOMNodeType::Zone));
     }
     
     ImGui::SameLine();
@@ -240,8 +249,7 @@ void SZoneDOMNode::SaveZone(){
         std::vector<std::shared_ptr<SDOMNodeSerializable>> zones;
 
         for(auto& zone : zoneNodes){
-            std::cout << "[Save Main Zone]: adding zone to stageobjinfo " << zone->GetName() << std::endl;
-            zones.push_back(zone);
+            if(zone->GetName() != GetName()) zones.push_back(zone);
         }
 
 

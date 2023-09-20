@@ -108,6 +108,18 @@ void SGalaxyDOMNode::AddZone(std::filesystem::path zonePath){
 	AddChild(newZone);
 }
 
+void SGalaxyDOMNode::RemoveZone(std::shared_ptr<SZoneDOMNode> zone){
+        
+    auto scenarios = GetChildrenOfType<SScenarioDOMNode>(EDOMNodeType::Scenario);
+    for(auto scenario : scenarios){
+        scenario->RemoveZone(zone->GetName());
+    }
+
+    mScenarioData.RemoveField(zone->GetName());
+
+    RemoveChild(zone);
+}
+
 bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType game){
     //Load Scenario Nodes
     // What the fuck?

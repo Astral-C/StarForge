@@ -50,6 +50,7 @@ public:
     void RenderDetailsUI();
 
     void AddZone(std::string zoneName) { mZoneLayers.insert({zoneName, 1}); }
+    void RemoveZone(std::string zoneName) { mZoneLayers.erase(zoneName); }
 
     SScenarioDOMNode();
     ~SScenarioDOMNode();

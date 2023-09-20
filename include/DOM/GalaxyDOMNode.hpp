@@ -1,10 +1,11 @@
 #pragma once
+#include <filesystem>
 #include "context.h"
 #include "archive.h"
 #include <J3D/J3DModelInstance.hpp>
 #include "DOM/DOMNodeBase.hpp"
+#include "DOM/ZoneDOMNode.hpp"
 #include "io/BcsvIO.hpp"
-#include <filesystem>
 
 class SGalaxyDOMNode : public SDOMNodeBase {
     EGameType mGame;
@@ -32,6 +33,7 @@ public:
 
     void SaveGalaxy();
     void AddZone(std::filesystem::path zonePath);
+    void RemoveZone(std::shared_ptr<SZoneDOMNode> zone);
     bool LoadGalaxy(std::filesystem::path galaxy_path, EGameType game);
     bool GetGalaxyLoaded() { return mGalaxyLoaded; }
 

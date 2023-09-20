@@ -339,7 +339,25 @@ void SBcsvIO::AddField(std::string name, EJmpFieldType type){
 	fieldInfo.Type = type;
 	fieldInfo.Start = (uint16_t)CalculateNewEntrySize();
 
-	mFields.push_back(fieldInfo);
+	int hashedName = HashFieldName("IsHidden");
+	for(size_t field = 0; field < mFields.size(); field++){
+		if(mFields[field].Hash == hashedName){
+			mFields.insert(mFields.begin() + (field - 1), fieldInfo);
+			mFieldCount++;
+			break;
+		}
+	}
+}
+
+void SBcsvIO::RemoveField(std::string name){
+	int hashedName = HashFieldName(name);
+	for(size_t field = 0; field < mFields.size(); field++){
+		if(mFields[field].Hash == hashedName){
+			mFields.erase(mFields.begin() + field, mFields.begin() + field + 1);
+			mFieldCount--;
+			break;
+		}
+	}
 }
 
 bool SBcsvIO::Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, bStream::CMemoryStream& stream, std::function<void(SBcsvIO*, int, std::shared_ptr<SDOMNodeSerializable> node)> Serializer){
