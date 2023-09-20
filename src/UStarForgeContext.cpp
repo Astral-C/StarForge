@@ -134,8 +134,16 @@ void UStarForgeContext::Render(float deltaTime) {
 	
 	ImGui::Begin("mainWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 	ImGui::Text("Scenarios");
+		ImGui::SameLine();
+        ImGui::Text(ICON_FK_PLUS_CIRCLE);
+		if(ImGui::IsItemClicked(ImGuiMouseButton_Left) && mRoot->GetGalaxyLoaded()){
+			std::shared_ptr<SScenarioDOMNode> scenarioNode = std::make_shared<SScenarioDOMNode>(mRoot);
+			mRoot->AddChild(scenarioNode);
+		}
+
 		ImGui::Separator();
 		mRoot->RenderScenarios(selected);
+
 	ImGui::End();
 
 	ImGui::SetNextWindowClass(&mainWindowOverride);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DOM/DOMNodeBase.hpp"
+#include "DOM/GalaxyDOMNode.hpp"
 #include "io/BcsvIO.hpp"
 
 enum EStarType {
@@ -51,8 +52,10 @@ public:
 
     void AddZone(std::string zoneName) { mZoneLayers[zoneName] = 0; }
     void RemoveZone(std::string zoneName) { mZoneLayers.erase(zoneName); }
+    uint32_t GetScenarioNo() { return mScenarioNo; }
 
     SScenarioDOMNode();
+    SScenarioDOMNode(std::shared_ptr<SGalaxyDOMNode> root);
     ~SScenarioDOMNode();
 
     virtual bool IsNodeType(EDOMNodeType type) const override {

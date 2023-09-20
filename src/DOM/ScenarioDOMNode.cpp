@@ -4,6 +4,9 @@
 #include <fmt/core.h>
 #include "GenUtil.hpp"
 #include "imgui.h"
+#include "misc/cpp/imgui_stdlib.h"
+
+#include "IconsForkAwesome.h"
 
 std::string StarTypeNames[] = {
     "Normal",
@@ -23,6 +26,24 @@ const char* CometTypeNames[] = {
 
 SScenarioDOMNode::SScenarioDOMNode() : Super("scenario") {
     mType = EDOMNodeType::Scenario;
+}
+
+SScenarioDOMNode::SScenarioDOMNode(std::shared_ptr<SGalaxyDOMNode> root) : Super("scenario") {
+    mType = EDOMNodeType::Scenario;
+    mName = "Scenario";
+    for(auto zone : root->GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone)){
+        if(!mZoneLayers.contains(zone->GetName())){
+            mZoneLayers.insert({zone->GetName(), 0});
+        }
+    }
+    mSelectedZone = mZoneLayers.begin()->first;
+
+
+    uint32_t lastScenarioNo = 0;
+    for(auto scenario : root->GetChildrenOfType<SScenarioDOMNode>(EDOMNodeType::Scenario)){
+        lastScenarioNo = scenario->GetScenarioNo() > lastScenarioNo ? scenario->GetScenarioNo() : lastScenarioNo;
+    }
+    mScenarioNo = lastScenarioNo + 1;
 }
 
 SScenarioDOMNode::~SScenarioDOMNode(){
@@ -81,6 +102,17 @@ void SScenarioDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 
 
 void SScenarioDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
+
+    ImGui::Text(ICON_FK_MINUS_CIRCLE);
+    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+        //Remove Zone Code goes here. Should be a call to Galaxy->RemoveZone
+
+        GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->RemoveChild(GetSharedPtr<SScenarioDOMNode>(EDOMNodeType::Scenario));
+        return;
+    }
+    
+    ImGui::SameLine();
+
     if(selected == GetSharedPtr<SScenarioDOMNode>(EDOMNodeType::Scenario)){
         ImGui::TextColored(ImColor(0,255,0),fmt::format("{0} : {1} {2}", mScenarioNo, mScenarioName, mComet.empty() ? "" : "["+mComet+"]").data());
     } else {
@@ -110,6 +142,8 @@ void SScenarioDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
 
 void SScenarioDOMNode::RenderDetailsUI(){
     
+    ImGui::InputText("Scenario Name", &mScenarioName);
+
     std::shared_ptr<SGalaxyDOMNode> galaxy;
     if(galaxy = GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()){
         //Get game type and show star type if galaxy 1
