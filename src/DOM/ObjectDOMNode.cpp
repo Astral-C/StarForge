@@ -157,6 +157,13 @@ void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     ImGui::SameLine();
     if(selected == GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object)){
         ImGui::TextColored(ImColor(0,255,0), fmt::format("{0}", mName.data()).c_str());
+        ImGui::SameLine();
+
+        ImGui::Text(ICON_FK_MINUS_CIRCLE);
+        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+            //should check this lock but whatever
+            GetParentOfType<SDOMNodeBase>(EDOMNodeType::ZoneLayer).lock()->RemoveChild(GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object));
+        }
     } else if(selected == mLinkedObject.lock()) {
         ImGui::TextColored(ImColor(0,255,150), fmt::format("{0} [Linked]", mName.data()).c_str());
     } else {
@@ -164,14 +171,6 @@ void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     }
     if(ImGui::IsItemClicked(0)){
         selected = GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object);
-    }
-
-    ImGui::SameLine();
-
-    ImGui::Text(ICON_FK_MINUS_CIRCLE);
-    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
-        //should check this lock but whatever
-        GetParentOfType<SDOMNodeBase>(EDOMNodeType::ZoneLayer).lock()->RemoveChild(GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object));
     }
 
 }

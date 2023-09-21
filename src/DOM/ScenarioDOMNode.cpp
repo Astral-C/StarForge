@@ -44,6 +44,17 @@ SScenarioDOMNode::SScenarioDOMNode(std::shared_ptr<SGalaxyDOMNode> root) : Super
         lastScenarioNo = scenario->GetScenarioNo() > lastScenarioNo ? scenario->GetScenarioNo() : lastScenarioNo;
     }
     mScenarioNo = lastScenarioNo + 1;
+
+    mPowerStarId = 0;
+    mAppearPowerStarObj =  "";
+    mCometLimitTimer = 0;
+    mPowerStarType = "Normal";
+    mComet = "";
+
+    mLuigiModeTimer = 0;
+    mIsHidden = 0;
+    mErrorCheck = 0;
+
 }
 
 SScenarioDOMNode::~SScenarioDOMNode(){
@@ -102,25 +113,21 @@ void SScenarioDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 
 
 void SScenarioDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
-
-    ImGui::Text(ICON_FK_MINUS_CIRCLE);
-    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
-        //Remove Zone Code goes here. Should be a call to Galaxy->RemoveZone
-
-        GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->RemoveChild(GetSharedPtr<SScenarioDOMNode>(EDOMNodeType::Scenario));
-        return;
-    }
-    
-    ImGui::SameLine();
-
-    if(selected == GetSharedPtr<SScenarioDOMNode>(EDOMNodeType::Scenario)){
+    if(this == GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->GetSelectedScenario().get()){
         ImGui::TextColored(ImColor(0,255,0),fmt::format("{0} : {1} {2}", mScenarioNo, mScenarioName, mComet.empty() ? "" : "["+mComet+"]").data());
+        ImGui::SameLine();
+        ImGui::Text(ICON_FK_MINUS_CIRCLE);
+        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+            GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->RemoveChild(GetSharedPtr<SScenarioDOMNode>(EDOMNodeType::Scenario));
+            return;
+        }
     } else {
         ImGui::Text(fmt::format("{0} : {1} {2}", mScenarioNo, mScenarioName, mComet.empty() ? "" : "["+mComet+"]").data());
     }
 
     if(ImGui::IsItemClicked(0)){
         selected = GetSharedPtr<SScenarioDOMNode>(EDOMNodeType::Scenario);
+        GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->SetSelectedScenario(GetSharedPtr<SScenarioDOMNode>(EDOMNodeType::Scenario));
         //show and hide layers based on stuff
 
         // Get all the zones in the galaxy

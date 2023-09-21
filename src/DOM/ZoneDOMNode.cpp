@@ -184,15 +184,6 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
         mVisible = !mVisible;
     }
-
-    ImGui::SameLine();
-
-    ImGui::Text(ICON_FK_MINUS_CIRCLE);
-    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
-        //Remove Zone Code goes here. Should be a call to Galaxy->RemoveZone
-
-        GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->RemoveZone(GetSharedPtr<SZoneDOMNode>(EDOMNodeType::Zone));
-    }
     
     ImGui::SameLine();
 
@@ -204,10 +195,21 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
         SetIsSelected(false);
     }
 
+
     if(opened){
+        ImGui::SameLine();
+
+        ImGui::Text(ICON_FK_MINUS_CIRCLE);
+        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+            //Remove Zone Code goes here. Should be a call to Galaxy->RemoveZone
+
+            GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->RemoveZone(GetSharedPtr<SZoneDOMNode>(EDOMNodeType::Zone));
+        }
+
         for (auto node : GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer)){
             node->RenderHeirarchyUI(selected);
         }
+        
         ImGui::TreePop();
     }
 }

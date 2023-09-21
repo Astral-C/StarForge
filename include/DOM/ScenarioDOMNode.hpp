@@ -1,7 +1,6 @@
 #pragma once
 
 #include "DOM/DOMNodeBase.hpp"
-#include "DOM/GalaxyDOMNode.hpp"
 #include "io/BcsvIO.hpp"
 
 enum EStarType {
@@ -20,6 +19,7 @@ enum ECometType {
     Quick
 };
 
+class SGalaxyDOMNode;
 
 //TODO: Make sure everything here has the proper signedness and update reading/writing accordingly
 

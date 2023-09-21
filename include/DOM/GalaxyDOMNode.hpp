@@ -5,6 +5,7 @@
 #include <J3D/J3DModelInstance.hpp>
 #include "DOM/DOMNodeBase.hpp"
 #include "DOM/ZoneDOMNode.hpp"
+#include "DOM/ScenarioDOMNode.hpp"
 #include "io/BcsvIO.hpp"
 
 class SGalaxyDOMNode : public SDOMNodeBase {
@@ -14,7 +15,11 @@ class SGalaxyDOMNode : public SDOMNodeBase {
     GCarchive mScenarioArchive;
     bool mGalaxyLoaded { false };
 
+    // BCSV files loaded for scenario and zone list
     SBcsvIO mScenarioData, mZoneListData;
+
+    // The current scenario selected by the user. Separate from the normal selection since it controls state for rendering etc
+    std::shared_ptr<SScenarioDOMNode> mSelectedScenario { nullptr };
 
     //std::map<uint32_t, > mLightingConfigs;
 
@@ -36,6 +41,9 @@ public:
     void RemoveZone(std::shared_ptr<SZoneDOMNode> zone);
     bool LoadGalaxy(std::filesystem::path galaxy_path, EGameType game);
     bool GetGalaxyLoaded() { return mGalaxyLoaded; }
+
+    std::shared_ptr<SScenarioDOMNode> GetSelectedScenario() { return mSelectedScenario; }
+    void SetSelectedScenario(std::shared_ptr<SScenarioDOMNode> scenario) { mSelectedScenario = scenario; }
 
     EGameType GetGame() { return mGame; }
 
