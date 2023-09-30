@@ -36,7 +36,7 @@ void main()\n\
     }\n\
 }\
 ";
-/*
+
 void CAreaRenderer::Init() {
 	//Compile Shaders
 	{
@@ -147,4 +147,3 @@ void CAreaRenderer::DrawShape(USceneCamera* Camera, AreaRenderShape shape) {
 
     glBindVertexArray(0);
 }
-*/
