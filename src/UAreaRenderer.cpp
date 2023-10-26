@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <glad/glad.h>
 
+/*
 
 const char* default_area_vtx_shader_source = "#version 330\n\
 layout (location = 0) in vec3 position;\n\
@@ -147,3 +148,4 @@ void CAreaRenderer::DrawShape(USceneCamera* Camera, AreaRenderShape shape) {
 
     glBindVertexArray(0);
 }
+*/
