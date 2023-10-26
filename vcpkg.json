@@ -3,8 +3,6 @@
     "version-string" : "starforge-win",
     "dependencies": [
         "libiconv",
-        "zlib",
-        "libpng",
         "curl"
     ]
 }
