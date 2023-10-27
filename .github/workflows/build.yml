@@ -72,14 +72,20 @@ jobs:
         run: |
           mkdir starforge-build
           cp -r res starforge-build/res
+          ls build
           cp build/starforge starforge-build/starforge
       - name: Create App Package Windows
         if: runner.os == 'Windows'
         run: |
           mkdir starforge-build
           cp -r res starforge-build/res
+          ls build
           cp build/starforge.exe starforge-build/starforge.exe
           cp build/iconv-2.dll starforge-build/iconv-2.dll
+          cp build/curl-d.dll starforge-build/curl-d.dll
+          cp build/VCRUNTIME140D.dll starforge-build/VCRUNTIME140D.dll
+          cp build/ucrtbased.dll starforge-build/ucrtbased.dll
+          cp build/MSVCP140D.dll starforge-build/MSVCP140D.dl
       - name: Upload App Windows
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3
