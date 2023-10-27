@@ -136,7 +136,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 		return false;
 	}
 
-    GCResourceManager.LoadArchive((galaxy_path / (mName + "Scenario.arc")).c_str(), &mScenarioArchive);
+    GCResourceManager.LoadArchive((galaxy_path / (mName + "Scenario.arc")).string().c_str(), &mScenarioArchive);
 
     GCarcfile* zoneFile = nullptr, *scenarioFile = nullptr;
     if(mGame == EGameType::SMG1){
