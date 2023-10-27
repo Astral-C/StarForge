@@ -123,7 +123,7 @@ void SGalaxyDOMNode::RemoveZone(std::shared_ptr<SZoneDOMNode> zone){
 bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType game){
     //Load Scenario Nodes
     // What the fuck?
-    mName = (galaxy_path / std::string(".")).parent_path().filename();
+    mName = (galaxy_path / std::string(".")).parent_path().filename().string();
     mGame = game;
 
     SBcsvIO scenarios;
