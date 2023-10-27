@@ -30,6 +30,6 @@ public:
 
     void Deserialize(SBcsvIO* bcsv, int entry) override;
 
-    void Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt) override;
+    void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt) override;
 
 };

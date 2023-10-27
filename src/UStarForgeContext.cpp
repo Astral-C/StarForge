@@ -38,7 +38,7 @@ void GalaxySort(J3DRendering::SortFunctionArgs packets) {
 }
 
 UStarForgeContext::~UStarForgeContext(){
-	J3DRendering::Cleanup();
+	//J3DRendering::Cleanup();
 	mRenderables.erase(mRenderables.begin(), mRenderables.end());
 	ModelCache.clear();
 }

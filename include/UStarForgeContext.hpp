@@ -15,7 +15,7 @@ class UStarForgeContext {
 	std::shared_ptr<SGalaxyDOMNode> mRoot;
 	std::shared_ptr<SDOMNodeBase> selected;
 
-	std::vector<std::weak_ptr<J3DModelInstance>> mRenderables;
+	std::vector<std::shared_ptr<J3DModelInstance>> mRenderables;
 
 	uint32_t mGizmoOperation { 0 };
 

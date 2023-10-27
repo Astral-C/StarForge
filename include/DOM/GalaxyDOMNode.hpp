@@ -31,7 +31,7 @@ public:
 
     void RenderScenarios(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderZones(std::shared_ptr<SDOMNodeBase>& selected);
-    void Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, float dt);
+    void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, float dt);
 
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();

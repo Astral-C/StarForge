@@ -152,7 +152,7 @@ void SToadDOMNode::RenderDetailsUI(){
     }
 }
 
-void SToadDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+void SToadDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
 	if(mRenderable != nullptr && mVisible) {
 		mRenderable->SetReferenceFrame(transform * mTransform);
 		

@@ -94,7 +94,7 @@ void SPlanetDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     }
 }
 
-void SPlanetDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+void SPlanetDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     if(mRenderable != nullptr) {
         glm::mat4 drawPos = transform * mTransform;
         

@@ -152,7 +152,7 @@ void STicoDOMNode::RenderDetailsUI(){
     }
 }
 
-void STicoDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+void STicoDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     if(mRenderable != nullptr && mVisible) {
         mRenderable->SetReferenceFrame(transform * mTransform);
      

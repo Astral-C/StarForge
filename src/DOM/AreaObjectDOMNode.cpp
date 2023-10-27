@@ -113,5 +113,5 @@ void SAreaObjectDOMNode::RenderDetailsUI(){
     ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
 }
 
-void SAreaObjectDOMNode::Render(std::vector<std::weak_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+void SAreaObjectDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
 }
