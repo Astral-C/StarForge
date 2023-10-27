@@ -129,7 +129,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
     SBcsvIO scenarios;
     SBcsvIO zones;
 
-    mScenarioArchivePath = (galaxy_path / (mName + "Scenario.arc")).c_str();
+    mScenarioArchivePath = (galaxy_path / (mName + "Scenario.arc")).string().c_str();
 
 	if(!std::filesystem::exists(mScenarioArchivePath)){
 		std::cout << "Couldn't open scenario archive " << mScenarioArchivePath << std::endl;
