@@ -82,7 +82,7 @@ jobs:
           ls build
           cp build/starforge.exe starforge-build/starforge.exe
           cp build/iconv-2.dll starforge-build/iconv-2.dll
-          cp build/libcurl-d.dll starforge-build/libcurl-d.dll
+          cp build/libcurl.dll starforge-build/libcurl.dll
       - name: Upload App Windows
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3
