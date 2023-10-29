@@ -40,6 +40,8 @@ bool UStarForgeApplication::Setup() {
 		return false;
 	}
 
+	UInput::SetWindow(mWindow);
+
 	glfwSetKeyCallback(mWindow, UInput::GLFWKeyCallback);
 	glfwSetCursorPosCallback(mWindow, UInput::GLFWMousePositionCallback);
 	glfwSetMouseButtonCallback(mWindow, UInput::GLFWMouseButtonCallback);

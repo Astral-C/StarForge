@@ -30,6 +30,7 @@ class UStarForgeContext {
 	std::string mSelectedAddZone { "" };
 
 	bool mOptionsOpen { false };
+	bool mAboutOpen { false };
 
 	bool bIsDockingSetUp { false };
 	bool bIsFileDialogOpen { false };

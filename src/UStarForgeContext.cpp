@@ -295,7 +295,7 @@ void UStarForgeContext::RenderMenuBar() {
 	}
 	if (ImGui::BeginMenu(ICON_FK_QUESTION_CIRCLE)) {
 		if(ImGui::MenuItem("About")){
-			mOptionsOpen = true;
+			mAboutOpen = true;
 		}
 		ImGui::EndMenu();
 	}
@@ -347,6 +347,48 @@ void UStarForgeContext::RenderMenuBar() {
 		ImGui::Separator();
 
 		if (ImGui::Button("OK", ImVec2(120,0))) {
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+
+	if(mAboutOpen){
+		ImGui::OpenPopup("About Window");
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowSize(ImVec2(250, 110), ImGuiCond_Appearing);
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.4f));
+	}
+
+	if (ImGui::BeginPopupModal("About Window", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove)){
+		auto windowWidth = ImGui::GetWindowSize().x;
+		auto textWidth = ImGui::CalcTextSize("StarForge").x;
+		ImGuiStyle* style = &ImGui::GetStyle();
+
+		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+		ImGui::Text("StarForge");
+		
+		ImGui::Separator();
+
+		textWidth = ImGui::CalcTextSize("https://github.com/Astral-C/StarForge").x;
+
+		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+		ImGui::Text("https://github.com/Astral-C/StarForge");
+
+		textWidth = ImGui::CalcTextSize("Made by SpaceCats/Veebs\n\n").x;
+
+		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+		ImGui::Text("Made by SpaceCats/Veebs");
+
+		ImGui::Separator();
+
+		float size = 120 + style->FramePadding.x * 2.0f;
+		float avail = ImGui::GetContentRegionAvail().x;
+
+		float off = (avail - size) * 0.5;
+		if (off > 0.0f) ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+
+		if (ImGui::Button("Close", ImVec2(120, 0))) {
+			mAboutOpen = false;
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();

@@ -7,6 +7,7 @@ namespace UInput {
 	namespace {
 		constexpr uint32_t KEY_MAX = 512;
 		constexpr uint32_t MOUSE_BUTTON_MAX = 3;
+		GLFWwindow* mWindow = nullptr;
 
 		glm::vec2 mMousePosition;
 		glm::vec2 mMouseDelta;
@@ -28,6 +29,16 @@ namespace UInput {
 		}
 
 		void SetMousePosition(uint32_t x, uint32_t y) {
+			if(mWindow == nullptr) return;
+			int winWidth, winHeight;
+
+			glfwGetWindowSize(mWindow, &winWidth, &winHeight);
+
+			if(x < 0) x = winWidth;
+			if(x > winWidth) x = 0;
+			if(y < 0) y = winHeight;
+			if(y > winHeight) y = 0;
+
 			mMousePosition = glm::vec2(x, y);
 		}
 
@@ -36,6 +47,11 @@ namespace UInput {
 		}
 	}
 }
+
+void UInput::SetWindow(GLFWwindow* window){
+	mWindow = window;
+}
+
 
 bool UInput::GetKey(uint32_t key) {
 	return mKeysDown[key];

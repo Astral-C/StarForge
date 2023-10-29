@@ -19,6 +19,8 @@ namespace UInput {
 	glm::vec2 GetMouseDelta();
 	int32_t GetMouseScrollDelta();
 
+	void SetWindow(GLFWwindow* window);
+
 	// Tick the internal state. For internal use only.
 	void UpdateInputState();
 
