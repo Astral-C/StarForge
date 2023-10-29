@@ -109,38 +109,34 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
 
     ImGui::SameLine();
     if(ImGui::TreeNode(mName.data())){
-
         bool treeOpen = ImGui::TreeNode("Objects");
-        ImGui::SameLine();
-        ImGui::Text(ICON_FK_PLUS_CIRCLE);
-        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
-            auto object = std::make_shared<SObjectDOMNode>();
-            AddChild(object);
-            selected = object;
-        }
-        
         if(treeOpen){
             for (auto node : GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
                 node->RenderHeirarchyUI(selected);
+            }
+            ImGui::Text(ICON_FK_PLUS_CIRCLE);
+            if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+                auto object = std::make_shared<SObjectDOMNode>();
+                AddChild(object);
+                selected = object;
             }
             ImGui::TreePop();
         }
 
         treeOpen = ImGui::TreeNode("Area Objects");
-        ImGui::SameLine();
-        ImGui::Text(ICON_FK_PLUS_CIRCLE);
-        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
-            auto object = std::make_shared<SAreaObjectDOMNode>();
-            AddChild(object);
-            selected = object;
-        }
 
         if(treeOpen){
             for (auto node : GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
                 node->RenderHeirarchyUI(selected);
             }
             
-            ImGui::TreePop();
+            ImGui::Text(ICON_FK_PLUS_CIRCLE);
+            if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+                auto object = std::make_shared<SAreaObjectDOMNode>();
+                AddChild(object);
+                selected = object;
+            }
+                ImGui::TreePop();
         }
         
         ImGui::TreePop();
