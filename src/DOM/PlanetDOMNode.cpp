@@ -69,7 +69,7 @@ void SPlanetDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
 
     if(ModelCache.count(mName) != 0){
-        mRenderable = ModelCache[mName]->GetInstance();
+        mRenderable = ModelCache[mName]->CreateInstance();
 
         mRenderable->SetLight(LightingConfigs["Planet"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);
@@ -78,7 +78,7 @@ void SPlanetDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     }
     
     if(ModelCache.count(mName+"Water")){
-        mWaterRenderable = ModelCache[mName+"Water"]->GetInstance();
+        mWaterRenderable = ModelCache[mName+"Water"]->CreateInstance();
         
         mRenderable->SetLight(LightingConfigs["Planet"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);
@@ -86,7 +86,7 @@ void SPlanetDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     }
 
     if(ModelCache.count(mName+"Bloom")){
-        mWaterRenderable = ModelCache[mName+"Bloom"]->GetInstance();
+        mWaterRenderable = ModelCache[mName+"Bloom"]->CreateInstance();
         
         mRenderable->SetLight(LightingConfigs["Planet"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);

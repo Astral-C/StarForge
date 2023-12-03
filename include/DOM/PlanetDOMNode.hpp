@@ -10,7 +10,7 @@
 
 #include <J3D/Animation/J3DColorAnimationInstance.hpp>
 #include <J3D/Animation/J3DAnimationInstance.hpp>
-#include <J3D/J3DModelInstance.hpp>
+#include <J3D/Data/J3DModelInstance.hpp>
 
 class SPlanetDOMNode : public SObjectDOMNode {
     std::shared_ptr<J3DModelInstance> mWaterRenderable, mBloomRenderable; // add bloom and indirect

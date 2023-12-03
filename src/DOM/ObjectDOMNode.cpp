@@ -83,7 +83,7 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mGeneratorID = bcsv->GetShort(entry, "GeneratorID");
 
     if(ModelCache.count(mName) != 0){
-        mRenderable = ModelCache[mName]->GetInstance();
+        mRenderable = ModelCache[mName]->CreateInstance();
         mRenderable->SetLight(LightingConfigs["Strong"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Strong"].Light1, 1);
         mRenderable->SetLight(LightingConfigs["Strong"].Light2, 2);

@@ -3,11 +3,11 @@
 #include "util/UUIUtil.hpp"
 
 #include <J3D/J3DModelLoader.hpp>
-#include <J3D/J3DModelData.hpp>
-#include <J3D/J3DUniformBufferObject.hpp>
-#include <J3D/J3DLight.hpp>
-#include <J3D/J3DModelInstance.hpp>
-#include <J3D/J3DRendering.hpp>
+#include <J3D/Data/J3DModelData.hpp>
+#include <J3D/Material/J3DUniformBufferObject.hpp>
+#include <J3D/Rendering/J3DLight.hpp>
+#include <J3D/Data/J3DModelInstance.hpp>
+#include <J3D/Rendering/J3DRendering.hpp>
 
 #include <ImGuiFileDialog.h>
 #include <glad/glad.h>
@@ -251,7 +251,7 @@ void UStarForgeContext::Render(float deltaTime) {
 	view = mCamera.GetViewMatrix();
 
 	//if(!mSetLights) SetLights();
-	J3DUniformBufferObject::SetProjAndViewMatrices(&projection, &view);
+	J3DUniformBufferObject::SetProjAndViewMatrices(projection, view);
 	
 	//Render Models here
 	

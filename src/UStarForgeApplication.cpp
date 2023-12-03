@@ -3,7 +3,7 @@
 #include "UInput.hpp"
 #include "../lib/glfw/deps/glad/gl.h"
 
-#include <J3D/J3DUniformBufferObject.hpp>
+#include <J3D/Material/J3DUniformBufferObject.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>

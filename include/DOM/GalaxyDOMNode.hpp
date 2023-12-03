@@ -2,7 +2,7 @@
 #include <filesystem>
 #include "context.h"
 #include "archive.h"
-#include <J3D/J3DModelInstance.hpp>
+#include <J3D/Data/J3DModelInstance.hpp>
 #include "DOM/DOMNodeBase.hpp"
 #include "DOM/ZoneDOMNode.hpp"
 #include "DOM/ScenarioDOMNode.hpp"

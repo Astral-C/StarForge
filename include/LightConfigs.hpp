@@ -1,5 +1,5 @@
 #pragma once
-#include <J3D/J3DLight.hpp>
+#include <J3D/Rendering/J3DLight.hpp>
 #include <io/BcsvIO.hpp>
 #include <string>
 #include <map>

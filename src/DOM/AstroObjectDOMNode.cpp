@@ -67,27 +67,27 @@ void SAstroObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         {
         case 1:
             GCResourceManager.CacheModel("AstroDomeEntranceObservatory");
-            mRenderable = ModelCache["AstroDomeEntranceObservatory"]->GetInstance();
+            mRenderable = ModelCache["AstroDomeEntranceObservatory"]->CreateInstance();
             break;
         case 2:
             GCResourceManager.CacheModel("AstroDomeEntranceWell");
-            mRenderable = ModelCache["AstroDomeEntranceWell"]->GetInstance();
+            mRenderable = ModelCache["AstroDomeEntranceWell"]->CreateInstance();
             break;
         case 3:
             GCResourceManager.CacheModel("AstroDomeEntranceKitchen");
-            mRenderable = ModelCache["AstroDomeEntranceKitchen"]->GetInstance();
+            mRenderable = ModelCache["AstroDomeEntranceKitchen"]->CreateInstance();
             break;
         case 4:
             GCResourceManager.CacheModel("AstroDomeEntranceBedRoom");
-            mRenderable = ModelCache["AstroDomeEntranceBedRoom"]->GetInstance();
+            mRenderable = ModelCache["AstroDomeEntranceBedRoom"]->CreateInstance();
             break;
         case 5:
             GCResourceManager.CacheModel("AstroDomeEntranceMachine");
-            mRenderable = ModelCache["AstroDomeEntranceMachine"]->GetInstance();
+            mRenderable = ModelCache["AstroDomeEntranceMachine"]->CreateInstance();
             break;
         case 6:
             GCResourceManager.CacheModel("AstroDomeEntranceTower");
-            mRenderable = ModelCache["AstroDomeEntranceTower"]->GetInstance();
+            mRenderable = ModelCache["AstroDomeEntranceTower"]->CreateInstance();
             break;
         default:
             break;
@@ -97,27 +97,27 @@ void SAstroObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         {
         case 1:
             GCResourceManager.CacheModel("AstroStarPlateObservatory");
-            mRenderable = ModelCache["AstroStarPlateObservatory"]->GetInstance();
+            mRenderable = ModelCache["AstroStarPlateObservatory"]->CreateInstance();
             break;
         case 2:
             GCResourceManager.CacheModel("AstroStarPlateWell");
-            mRenderable = ModelCache["AstroStarPlateWell"]->GetInstance();
+            mRenderable = ModelCache["AstroStarPlateWell"]->CreateInstance();
             break;
         case 3:
             GCResourceManager.CacheModel("AstroStarPlateKitchen");
-            mRenderable = ModelCache["AstroStarPlateKitchen"]->GetInstance();
+            mRenderable = ModelCache["AstroStarPlateKitchen"]->CreateInstance();
             break;
         case 4:
             GCResourceManager.CacheModel("AstroStarPlateBedRoom");
-            mRenderable = ModelCache["AstroStarPlateBedRoom"]->GetInstance();
+            mRenderable = ModelCache["AstroStarPlateBedRoom"]->CreateInstance();
             break;
         case 5:
             GCResourceManager.CacheModel("AstroStarPlateMachine");
-            mRenderable = ModelCache["AstroStarPlateMachine"]->GetInstance();
+            mRenderable = ModelCache["AstroStarPlateMachine"]->CreateInstance();
             break;
         case 6:
             GCResourceManager.CacheModel("AstroStarPlateTower");
-            mRenderable = ModelCache["AstroStarPlateTower"]->GetInstance();
+            mRenderable = ModelCache["AstroStarPlateTower"]->CreateInstance();
             break;
         default:
             break;
@@ -126,7 +126,7 @@ void SAstroObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         if(ModelCache.count("AstroBaseCenterA") == 0){
             GCResourceManager.CacheModel("AstroBaseCenterA");
             if(ModelCache.count("AstroBaseCenterA") != 0){
-                mRenderable = ModelCache[mName]->GetInstance();
+                mRenderable = ModelCache[mName]->CreateInstance();
                 mRenderable->SetRegisterColorAnimation(GCResourceManager.LoadAnimation("AstroBaseCenterA", "revival.brk"));
                 mRenderable->GetRegisterColorAnimation()->SetFrame(119, true);
             }
@@ -134,7 +134,7 @@ void SAstroObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     } else {
         if(ModelCache.count(mName) == 0){
             GCResourceManager.CacheModel(mName);
-            if(ModelCache.count(mName) != 0) mRenderable = ModelCache[mName]->GetInstance();
+            if(ModelCache.count(mName) != 0) mRenderable = ModelCache[mName]->CreateInstance();
         }
     }
 

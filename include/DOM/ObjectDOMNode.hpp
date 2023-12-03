@@ -9,7 +9,7 @@
 
 #include <J3D/Animation/J3DColorAnimationInstance.hpp>
 #include <J3D/Animation/J3DAnimationInstance.hpp>
-#include <J3D/J3DModelInstance.hpp>
+#include <J3D/Data/J3DModelInstance.hpp>
 
 class SObjectDOMNode : public SDOMNodeSerializable {
     uint32_t mID;

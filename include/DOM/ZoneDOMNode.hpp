@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 #include "DOM/DOMNodeBase.hpp"
-#include <J3D/J3DModelInstance.hpp>
+#include <J3D/Data/J3DModelInstance.hpp>
 #include "io/BcsvIO.hpp"
 #include <map>
 

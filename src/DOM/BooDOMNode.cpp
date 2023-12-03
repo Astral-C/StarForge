@@ -66,7 +66,7 @@ void SBooDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mGeneratorID = bcsv->GetShort(entry, "GeneratorID");
 
     if(ModelCache.count("Teresa") != 0){
-        mRenderable = ModelCache["Teresa"]->GetInstance();
+        mRenderable = ModelCache["Teresa"]->CreateInstance();
 
         mRenderable->SetLight(LightingConfigs["Strong"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Strong"].Light1, 1);

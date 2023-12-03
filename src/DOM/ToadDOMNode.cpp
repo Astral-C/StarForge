@@ -85,7 +85,7 @@ void SToadDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 	mGeneratorID = bcsv->GetShort(entry, "GeneratorID");
 
 	if(ModelCache.count("Kinopio") != 0){
-		mRenderable = ModelCache["Kinopio"]->GetInstance();
+		mRenderable = ModelCache["Kinopio"]->CreateInstance();
 
 		auto anim = GCResourceManager.LoadAnimation("Kinopio", "colorchange.brk");
 

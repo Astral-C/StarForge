@@ -88,7 +88,7 @@ void STicoDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mGeneratorID = bcsv->GetShort(entry, "GeneratorID");
 
     if(ModelCache.count("Tico") != 0){
-        mRenderable = ModelCache["Tico"]->GetInstance();
+        mRenderable = ModelCache["Tico"]->CreateInstance();
 
         mRenderable->SetLight(LightingConfigs["Strong"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Strong"].Light1, 1);
