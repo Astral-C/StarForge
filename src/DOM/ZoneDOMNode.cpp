@@ -6,6 +6,7 @@
 #include "DOM/PlanetDOMNode.hpp"
 #include "DOM/ToadDOMNode.hpp"
 #include "DOM/TicoDOMNode.hpp"
+#include "DOM/BlackHoleDOMNode.hpp"
 #include "DOM/AstroObjectDOMNode.hpp"
 #include "DOM/BooDOMNode.hpp"
 #include "compression.h"
@@ -77,6 +78,10 @@ void SZoneLayerDOMNode::LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, s
                     AddChild(object);                    
                 } else if(ActorName.find("Astro") != std::string::npos){
                     auto object = std::make_shared<SAstroObjectDOMNode>();
+                    object->Deserialize(&mObjInfo, objEntry);
+                    AddChild(object);
+                } else if(ActorName == "BlackHole"){
+                    auto object = std::make_shared<SBlackHoleDOMNode>();
                     object->Deserialize(&mObjInfo, objEntry);
                     AddChild(object);
                 } else {
@@ -237,7 +242,7 @@ void SZoneDOMNode::SaveZone(){
 
     if(!mZoneArchiveLoaded) return;
 
-    if(mIsMainZone){
+    if(mIsMainZone){ // Todo: per scenario!! same as regar objects
         GCarcfile* stageObjInfo = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/placement/common/stageobjinfo"));
         if(stageObjInfo == nullptr){
             stageObjInfo = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path("jmp/Placement/Common/StageObjInfo"));

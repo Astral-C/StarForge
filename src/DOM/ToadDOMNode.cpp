@@ -87,7 +87,7 @@ void SToadDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 	if(ModelCache.count("Kinopio") != 0){
 		mRenderable = ModelCache["Kinopio"]->CreateInstance();
 
-		auto anim = GCResourceManager.LoadAnimation("Kinopio", "colorchange.brk");
+		auto anim = GCResourceManager.LoadColorAnimation("Kinopio", "colorchange.brk");
 
         mRenderable->SetLight(LightingConfigs["Strong"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Strong"].Light1, 1);
@@ -95,6 +95,10 @@ void SToadDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
 		mRenderable->SetRegisterColorAnimation(anim);
 		mRenderable->GetRegisterColorAnimation()->SetFrame(glm::max(mObjArgs[1], 0), true);
+
+        auto wait_anim = GCResourceManager.LoadJointAnimation("Kinopio", "wait.bck");
+        mRenderable->SetJointAnimation(wait_anim);
+        mRenderable->GetJointAnimation()->SetFrame(rand() % 20);
 	}
 
 }
@@ -156,6 +160,7 @@ void SToadDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& render
 	if(mRenderable != nullptr && mVisible) {
 		mRenderable->SetReferenceFrame(transform * mTransform);
 		
+        mRenderable->GetJointAnimation()->Tick(dt);
 		mRenderable->UpdateAnimations(dt);
 		renderables.push_back(mRenderable);
 	}

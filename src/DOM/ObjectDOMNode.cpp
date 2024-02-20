@@ -7,6 +7,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
 #include "IconsForkAwesome.h"
+#include <J3D/Picking/J3DPicking.hpp>
 
 static nlohmann::json objectDB;
 
@@ -31,6 +32,7 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     
     if(ModelCache.count(mName) == 0){
         GCResourceManager.CacheModel(mName);
+
     }
 
     glm::vec3 position = {bcsv->GetFloat(entry, "pos_x"), bcsv->GetFloat(entry, "pos_y"), bcsv->GetFloat(entry, "pos_z")};
@@ -87,6 +89,9 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         mRenderable->SetLight(LightingConfigs["Strong"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Strong"].Light1, 1);
         mRenderable->SetLight(LightingConfigs["Strong"].Light2, 2);
+        
+        auto wait_anim = GCResourceManager.LoadJointAnimation(mName, "wait.bck");
+        if(wait_anim != nullptr) mRenderable->SetJointAnimation(wait_anim);
     }
 
 }
@@ -189,6 +194,11 @@ void SObjectDOMNode::RenderDetailsUI(){
 void SObjectDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     if(mRenderable != nullptr && mVisible) {
         mRenderable->SetReferenceFrame(transform * mTransform);
+
+        if(mRenderable->GetJointAnimation() != NULL){
+            mRenderable->GetJointAnimation()->Tick(dt);
+        }
+
         renderables.push_back(mRenderable);
     }
 }

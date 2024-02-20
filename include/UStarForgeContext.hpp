@@ -51,6 +51,7 @@ public:
 	UStarForgeContext();
 	~UStarForgeContext();
 
+	void HandleSelect();
 	bool Update(float deltaTime);
 	void Render(float deltaTime);
 };

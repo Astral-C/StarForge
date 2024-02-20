@@ -7,6 +7,7 @@
 #include <J3D/Material/J3DUniformBufferObject.hpp>
 #include <J3D/Rendering/J3DLight.hpp>
 #include <J3D/Data/J3DModelInstance.hpp>
+#include <J3D/Picking/J3DPicking.hpp>
 #include <J3D/Rendering/J3DRendering.hpp>
 
 #include <ImGuiFileDialog.h>
@@ -23,13 +24,15 @@
 
 #include "IconsForkAwesome.h"
 
-void GalaxySort(J3DRendering::SortFunctionArgs packets) {
+void GalaxySort(J3D::Rendering::RenderPacketVector& packets) {
     std::sort(
         packets.begin(),
         packets.end(),
         [](const J3DRenderPacket& a, const J3DRenderPacket& b) -> bool {
-			if((a.SortKey & 0x01000000) != (b.SortKey & 0x01000000)){
-				return (a.SortKey & 0x01000000) > (b.SortKey & 0x01000000);
+			uint8_t aSortKey = static_cast<uint8_t>((a.SortKey & 0x800000) >> 23);
+			uint8_t bSortKey = static_cast<uint8_t>((b.SortKey & 0x800000) >> 23);
+			if(aSortKey != bSortKey){
+				return aSortKey > bSortKey;
 			} else {
             	return a.Material->Name < b.Material->Name;
 			}
@@ -73,7 +76,7 @@ UStarForgeContext::UStarForgeContext(){
 
 	mGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
 
-	J3DRendering::SetSortFunction(GalaxySort);
+	J3D::Rendering::SetSortFunction(GalaxySort);
 
 	mRoot = std::make_shared<SGalaxyDOMNode>();
 }
@@ -101,6 +104,7 @@ bool UStarForgeContext::Update(float deltaTime) {
 }
 
 void UStarForgeContext::Render(float deltaTime) {
+	ImGuiIO& io = ImGui::GetIO();
 
 	RenderMenuBar();
 	
@@ -201,7 +205,6 @@ void UStarForgeContext::Render(float deltaTime) {
 	ImGui::SetNextWindowClass(&mainWindowOverride);
 
 	ImGuizmo::BeginFrame();
-	ImGuiIO& io = ImGui::GetIO();
 	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
 	ImGui::Begin("detailWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
@@ -258,7 +261,23 @@ void UStarForgeContext::Render(float deltaTime) {
 	mRenderables.clear();
 	mRoot->Render(mRenderables, deltaTime);
 
-	J3DRendering::Render(deltaTime, mCamera.GetPosition(), view, projection, mRenderables);
+	J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
+
+	J3D::Rendering::Render(deltaTime, view, projection, packets);
+	
+	if(ImGui::IsMouseClicked(0) && !io.WantCaptureMouse){
+		J3D::Picking::RenderPickingScene(view, projection, packets);
+
+		ImVec2 mousePos = ImGui::GetMousePos();
+		uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x, 720 - (uint32_t)mousePos.y));
+
+		for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
+			if(object->GetModel() != nullptr && object->GetModel()->GetModelId()== modelID){
+				selected = object;
+				break;
+			}
+		}
+	}
 
 	//mGrid.Render(mCamera.GetPosition(), mCamera.GetProjectionMatrix(), mCamera.GetViewMatrix());
 }
@@ -355,7 +374,7 @@ void UStarForgeContext::RenderMenuBar() {
 	if(mAboutOpen){
 		ImGui::OpenPopup("About Window");
 		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-		ImGui::SetNextWindowSize(ImVec2(250, 110), ImGuiCond_Appearing);
+		ImGui::SetNextWindowSize(ImVec2(250, 130), ImGuiCond_Appearing);
 		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.4f));
 	}
 
@@ -374,10 +393,15 @@ void UStarForgeContext::RenderMenuBar() {
 		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
 		ImGui::Text("https://github.com/Astral-C/StarForge");
 
-		textWidth = ImGui::CalcTextSize("Made by SpaceCats/Veebs\n\n").x;
+		textWidth = ImGui::CalcTextSize("Made by SpaceCats").x;
 
 		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-		ImGui::Text("Made by SpaceCats/Veebs");
+		ImGui::Text("Made by SpaceCats");
+
+		textWidth = ImGui::CalcTextSize("INI Parser by rxi").x;
+
+		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+		ImGui::Text("INI Parser by rxi");
 
 		ImGui::Separator();
 

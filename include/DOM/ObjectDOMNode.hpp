@@ -80,4 +80,5 @@ public:
 
     static void LoadObjectDB(nlohmann::json db);
 
+    std::shared_ptr<J3DModelInstance> GetModel() { return mRenderable; }
 };

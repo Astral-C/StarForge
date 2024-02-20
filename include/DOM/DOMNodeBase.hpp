@@ -35,7 +35,8 @@ enum class EDOMNodeType
 	Planet,
 	Toad,
 	Boo,
-	AstroObject
+	AstroObject,
+	BlackHole
 };
 
 // Base class for all DOM (Document Object Model) nodes.

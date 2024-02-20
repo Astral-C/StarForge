@@ -127,7 +127,7 @@ void SAstroObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
             GCResourceManager.CacheModel("AstroBaseCenterA");
             if(ModelCache.count("AstroBaseCenterA") != 0){
                 mRenderable = ModelCache[mName]->CreateInstance();
-                mRenderable->SetRegisterColorAnimation(GCResourceManager.LoadAnimation("AstroBaseCenterA", "revival.brk"));
+                mRenderable->SetRegisterColorAnimation(GCResourceManager.LoadColorAnimation("AstroBaseCenterA", "revival.brk"));
                 mRenderable->GetRegisterColorAnimation()->SetFrame(119, true);
             }
         }        

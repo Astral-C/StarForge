@@ -8,6 +8,8 @@
 #include <LightConfigs.hpp>
 #include "IconsForkAwesome.h"
 
+#include <J3D/Picking/J3DPicking.hpp>
+
 enum LumaColors {
     Yellow,
     Blue,
@@ -90,14 +92,21 @@ void STicoDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     if(ModelCache.count("Tico") != 0){
         mRenderable = ModelCache["Tico"]->CreateInstance();
 
+        
+
         mRenderable->SetLight(LightingConfigs["Strong"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Strong"].Light1, 1);
         mRenderable->SetLight(LightingConfigs["Strong"].Light2, 2);
 
-        auto anim = GCResourceManager.LoadAnimation("Tico", "colorchange.brk");
+        auto anim = GCResourceManager.LoadColorAnimation("Tico", "colorchange.brk");
 
         mRenderable->SetRegisterColorAnimation(anim);
         mRenderable->GetRegisterColorAnimation()->SetFrame(glm::max(mObjArgs[0], 0), true);
+
+
+        auto wait_anim = GCResourceManager.LoadJointAnimation("Tico", "wait.bck");
+        mRenderable->SetJointAnimation(wait_anim);
+        mRenderable->GetJointAnimation()->SetFrame(rand() % 20);
     }
 
 }
@@ -155,7 +164,7 @@ void STicoDOMNode::RenderDetailsUI(){
 void STicoDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     if(mRenderable != nullptr && mVisible) {
         mRenderable->SetReferenceFrame(transform * mTransform);
-     
+        mRenderable->GetJointAnimation()->Tick(dt);
         mRenderable->UpdateAnimations(dt);
         renderables.push_back(mRenderable);
     }

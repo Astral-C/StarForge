@@ -197,7 +197,7 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 	}
 }
 
-std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourceManager::LoadAnimation(std::string modelName, std::string animName){
+std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourceManager::LoadColorAnimation(std::string modelName, std::string animName){
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
@@ -216,6 +216,71 @@ std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourc
 				std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DColorAnimationInstance>(animStream);
 
 				std::cout << "Loaded Animation for color change " << instance.get() << std::endl;
+
+				return instance;
+			}
+		}
+		gcFreeArchive(&modelArc);
+	} else {
+		std::cout << "Couldn't find archive " << modelName << std::endl;
+	}
+
+	return nullptr;
+}
+
+std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> SResUtility::SGCResourceManager::LoadJointAnimation(std::string modelName, std::string animName){
+	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
+	//std::cout << "Trying to load archive" << modelPath << std::endl;
+	if(std::filesystem::exists(modelPath)){
+		GCarchive modelArc;
+		if(!GCResourceManager.LoadArchive(modelPath.string().c_str(), &modelArc)){
+			std::cout << "Couldn't load archive " << modelPath << std::endl; 
+			return nullptr;
+		}
+		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
+			std::string name = std::string(file->name);
+			std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+			if(name == animName){
+				J3DAnimation::J3DAnimationLoader Loader;
+				bStream::CMemoryStream animStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
+
+				std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DJointAnimationInstance>(animStream);
+
+				std::cout << "Loaded Joint Animation for " << instance.get() << std::endl;
+
+				return instance;
+			}
+		}
+		gcFreeArchive(&modelArc);
+	} else {
+		std::cout << "Couldn't find archive " << modelName << std::endl;
+	}
+
+	return nullptr;
+}
+
+std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> SResUtility::SGCResourceManager::LoadTextureAnimation(std::string modelName, std::string animName){
+	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
+	//std::cout << "Trying to load archive" << modelPath << std::endl;
+	if(std::filesystem::exists(modelPath)){
+		GCarchive modelArc;
+		if(!GCResourceManager.LoadArchive(modelPath.string().c_str(), &modelArc)){
+			std::cout << "Couldn't load archive " << modelPath << std::endl; 
+			return nullptr;
+		}
+		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
+			std::string name = std::string(file->name);
+			std::string animNameLower = animName;
+			std::transform(animNameLower.begin(), animNameLower.end(), animNameLower.begin(), ::tolower);
+			std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+			std::cout << name << " - " << animNameLower << std::endl;
+			if(name == animNameLower){
+				J3DAnimation::J3DAnimationLoader Loader;
+				bStream::CMemoryStream animStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
+
+				std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DTexMatrixAnimationInstance>(animStream);
+
+				std::cout << "Loaded Tex Animation for " << instance.get() << std::endl;
 
 				return instance;
 			}

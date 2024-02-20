@@ -4,6 +4,7 @@
 #include "../lib/glfw/deps/glad/gl.h"
 
 #include <J3D/Material/J3DUniformBufferObject.hpp>
+#include <J3D/Picking/J3DPicking.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
@@ -68,6 +69,8 @@ bool UStarForgeApplication::Setup() {
 
 	GCResourceManager.Init();
 	
+	J3D::Picking::InitFramebuffer(1280,720); //resize as a todo
+
 	// Create viewer context
 	mContext = new UStarForgeContext();
 
@@ -76,14 +79,15 @@ bool UStarForgeApplication::Setup() {
 }
 
 bool UStarForgeApplication::Teardown() {
+	J3D::Picking::DestroyFramebuffer();
+	J3DUniformBufferObject::DestroyUBO();
+
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 	
 	glfwDestroyWindow(mWindow);
 	glfwTerminate();
-
-	J3DUniformBufferObject::DestroyUBO();
 
 	delete mContext;
 
@@ -114,6 +118,7 @@ bool UStarForgeApplication::Execute(float deltaTime) {
 	glfwGetFramebufferSize(mWindow, &width, &height);
 	glViewport(0, 0, width, height);
 
+	glDepthMask(true);
 	// Clear buffers
 	glClearColor(0.100f, 0.261f, 0.402f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

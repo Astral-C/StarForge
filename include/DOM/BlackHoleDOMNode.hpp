@@ -9,23 +9,19 @@
 #include <array>
 
 #include <J3D/Animation/J3DColorAnimationInstance.hpp>
-#include <J3D/Animation/J3DJointAnimationInstance.hpp>
 #include <J3D/Animation/J3DAnimationInstance.hpp>
 #include <J3D/Data/J3DModelInstance.hpp>
 
-class STicoDOMNode : public SObjectDOMNode {
+class SBlackHoleDOMNode : public SObjectDOMNode {
 
 public:
     typedef SObjectDOMNode Super; 
 
-    void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected) override;
-    void RenderDetailsUI() override;
-
-    STicoDOMNode();
-    ~STicoDOMNode();
+    SBlackHoleDOMNode();
+    ~SBlackHoleDOMNode();
 
     virtual bool IsNodeType(EDOMNodeType type) const override {
-        if(type == EDOMNodeType::Tico){
+        if(type == EDOMNodeType::BlackHole){
             return true;
         }
 

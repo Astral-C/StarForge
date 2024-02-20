@@ -1,4 +1,4 @@
-#include "DOM/BooDOMNode.hpp"
+#include "DOM/BlackHoleDOMNode.hpp"
 #include "ModelCache.hpp"
 #include "ResUtil.hpp"
 #include "imgui.h"
@@ -7,22 +7,22 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
 
-SBooDOMNode::SBooDOMNode() : Super() {
-    mType = EDOMNodeType::Boo;
+SBlackHoleDOMNode::SBlackHoleDOMNode() : Super() {
+    mType = EDOMNodeType::BlackHole;
     mTransform = glm::mat4(1);
 }
 
-SBooDOMNode::~SBooDOMNode(){
+SBlackHoleDOMNode::~SBlackHoleDOMNode(){
     
 }
 
-void SBooDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
+void SBlackHoleDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mName = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "name"));
     
     mRenderable = nullptr;
     
-    if(ModelCache.count("Teresa") == 0){
-        GCResourceManager.CacheModel("Teresa");
+    if(ModelCache.count("BlackHole") == 0){
+        GCResourceManager.CacheModel("BlackHole");
     }
 
     glm::vec3 position = {bcsv->GetFloat(entry, "pos_x"), bcsv->GetFloat(entry, "pos_y"), bcsv->GetFloat(entry, "pos_z")};
@@ -65,30 +65,24 @@ void SBooDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mObjID = bcsv->GetShort(entry, "Obj_ID");
     mGeneratorID = bcsv->GetShort(entry, "GeneratorID");
 
-    if(ModelCache.count("Teresa") != 0){
-        mRenderable = ModelCache["Teresa"]->CreateInstance();
+    if(ModelCache.count("BlackHole") != 0){
+        mRenderable = ModelCache["BlackHole"]->CreateInstance();
 
         mRenderable->SetLight(LightingConfigs["Strong"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Strong"].Light1, 1);
         mRenderable->SetLight(LightingConfigs["Strong"].Light2, 2);
 
-        auto anim = GCResourceManager.LoadColorAnimation("Teresa", "teresa.brk");
-
-        mRenderable->SetRegisterColorAnimation(anim);
-        mRenderable->GetRegisterColorAnimation()->SetFrame(0, true);
-
-        auto wait_anim = GCResourceManager.LoadJointAnimation("Teresa", "wait.bck");
-        mRenderable->SetJointAnimation(wait_anim);
-        mRenderable->GetJointAnimation()->SetFrame(rand() % 20);
+        auto anim = GCResourceManager.LoadTextureAnimation("BlackHole", "blackhole.btk");
+        mRenderable->SetTexMatrixAnimation(anim);
     }
 
 }
 
-void SBooDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+void SBlackHoleDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
     if(mRenderable != nullptr) {
         mRenderable->SetReferenceFrame(transform * mTransform);
      
-        if(mRenderable->GetJointAnimation()) mRenderable->GetJointAnimation()->Tick(dt);
+        if(mRenderable->GetTexMatrixAnimation()) mRenderable->GetTexMatrixAnimation()->Tick(dt);
 
         mRenderable->UpdateAnimations(dt);
         renderables.push_back(mRenderable);

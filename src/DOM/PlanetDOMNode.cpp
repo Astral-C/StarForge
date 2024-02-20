@@ -6,6 +6,7 @@
 #include <fmt/core.h>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
+#include <J3D/Animation/J3DTexMatrixAnimationInstance.hpp>
 
 SPlanetDOMNode::SPlanetDOMNode() : Super() {
     mType = EDOMNodeType::Planet;
@@ -75,22 +76,27 @@ void SPlanetDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         mRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);
         mRenderable->SetLight(LightingConfigs["Planet"].Light2, 2);
 
+        auto anim = GCResourceManager.LoadTextureAnimation(mName, mName+".btk");
+        if(anim != nullptr) mRenderable->SetTexMatrixAnimation(anim);
     }
     
     if(ModelCache.count(mName+"Water")){
         mWaterRenderable = ModelCache[mName+"Water"]->CreateInstance();
         
-        mRenderable->SetLight(LightingConfigs["Planet"].Light0, 0);
-        mRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);
-        mRenderable->SetLight(LightingConfigs["Planet"].Light2, 2);
+        mWaterRenderable->SetLight(LightingConfigs["Planet"].Light0, 0);
+        mWaterRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);
+        mWaterRenderable->SetLight(LightingConfigs["Planet"].Light2, 2);
+
+        auto water_anim = GCResourceManager.LoadTextureAnimation(mName+"Water", mName+"Water.btk");
+        if(water_anim != nullptr) mWaterRenderable->SetTexMatrixAnimation(water_anim);
     }
 
     if(ModelCache.count(mName+"Bloom")){
-        mWaterRenderable = ModelCache[mName+"Bloom"]->CreateInstance();
+        mBloomRenderable = ModelCache[mName+"Bloom"]->CreateInstance();
         
-        mRenderable->SetLight(LightingConfigs["Planet"].Light0, 0);
-        mRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);
-        mRenderable->SetLight(LightingConfigs["Planet"].Light2, 2);
+        mBloomRenderable->SetLight(LightingConfigs["Planet"].Light0, 0);
+        mBloomRenderable->SetLight(LightingConfigs["Planet"].Light1, 1);
+        mBloomRenderable->SetLight(LightingConfigs["Planet"].Light2, 2);
     }
 }
 
@@ -99,9 +105,11 @@ void SPlanetDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& rend
         glm::mat4 drawPos = transform * mTransform;
         
         mRenderable->SetReferenceFrame(drawPos);
+        if(mRenderable->GetTexMatrixAnimation() != nullptr) mRenderable->GetTexMatrixAnimation()->Tick(dt);
         
         if(mWaterRenderable != nullptr){
             mWaterRenderable->SetReferenceFrame(drawPos);
+            if(mWaterRenderable->GetTexMatrixAnimation() != nullptr) mWaterRenderable->GetTexMatrixAnimation()->Tick(dt);
             renderables.push_back(mWaterRenderable);
         }
 
