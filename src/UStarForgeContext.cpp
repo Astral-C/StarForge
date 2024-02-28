@@ -341,7 +341,7 @@ void UStarForgeContext::RenderMenuBar() {
 
 	if (bIsFileDialogOpen) {
 		IGFD::FileDialogConfig config;
-		config.path = Options.mRootPath.string() == "" ? "." : (Options.mRootPath / "files" / "StageData" / ".");
+		config.path = Options.mRootPath.string() == "" ? "." : (Options.mRootPath / "files" / "StageData" / ".").string();
 		ImGuiFileDialog::Instance()->OpenDialog("OpenGalaxyDialog", "Choose Stage Directory", nullptr, config);
 	}
 
