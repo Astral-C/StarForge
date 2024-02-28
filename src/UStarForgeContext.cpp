@@ -11,6 +11,7 @@
 #include <J3D/Rendering/J3DRendering.hpp>
 
 #include <ImGuiFileDialog.h>
+#include <ImGuiFileDialogConfig.h>
 #include <glad/glad.h>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -340,12 +341,15 @@ void UStarForgeContext::RenderMenuBar() {
 	ImGui::EndMainMenuBar();
 
 	if (bIsFileDialogOpen) {
-		ImGuiFileDialog::Instance()->OpenDialog("OpenGalaxyDialog", "Choose Stage Directory", nullptr, Options.mRootPath.string() == "" ? "." : (Options.mRootPath / "files" / "StageData" / ".").string(), "");
+		IGFD::FileDialogConfig config;
+		config.path = Options.mRootPath.string() == "" ? "." : (Options.mRootPath / "files" / "StageData" / ".");
+		ImGuiFileDialog::Instance()->OpenDialog("OpenGalaxyDialog", "Choose Stage Directory", nullptr, config);
 	}
 
 	if (ImGuiFileDialog::Instance()->Display("OpenGalaxyDialog")) {
 		if (ImGuiFileDialog::Instance()->IsOk()) {
-			std::string FilePath = ImGuiFileDialog::Instance()->GetFilePathName();
+			std::string FilePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+			std::cout << FilePath << std::endl;
 
 			try {
 				selected = nullptr;

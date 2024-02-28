@@ -1,5 +1,5 @@
 #include "UApplication.hpp"
-#include "UTime.hpp"
+#include "util/UTime.hpp"
 
 void UApplication::Run() {
 	Clock::time_point lastFrameTime, thisFrameTime;

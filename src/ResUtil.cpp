@@ -5,6 +5,7 @@
 #include <fmt/core.h>
 #include <bstream.h>
 #include <ImGuiFileDialog.h>
+#include <ImGuiFileDialogConfig.h>
 
 #include <J3D/J3DModelLoader.hpp>
 #include <J3D/Animation/J3DAnimationLoader.hpp>
@@ -381,7 +382,12 @@ void SResUtility::SOptions::RenderOptionMenu(){
 			ImGui::CloseCurrentPopup();
 		}
 
-		if(mSelectRootDialogOpen) ImGuiFileDialog::Instance()->OpenDialog("OpenRootDialog", "Choose Game Root", nullptr, ".");
+
+		if(mSelectRootDialogOpen){
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			ImGuiFileDialog::Instance()->OpenDialog("OpenRootDialog", "Choose Game Root", nullptr, config);
+		}
 
 		if (ImGuiFileDialog::Instance()->Display("OpenRootDialog")) {
 			if (ImGuiFileDialog::Instance()->IsOk()) {
