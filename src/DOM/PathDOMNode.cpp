@@ -26,6 +26,7 @@ void SPathDOMNode::Render(USceneCamera* cam, glm::mat4 referenceFrame){
 
 void SPathDOMNode::Update(){
 	mRenderer.mPath.clear();
+    mRenderer.isClosed = mIsClosed;
     for(auto point : GetChildrenOfType<SPathPointDOMNode>(EDOMNodeType::PathPoint)){
 		mRenderer.mPath.push_back(
 			(CPathPoint){
@@ -44,7 +45,7 @@ void SPathDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     std::cout << mName << std::endl;
     mPathType = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "type"));
 
-    mIsClosed = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "type")) != "OPEN";
+    mIsClosed = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "closed")) != "OPEN";
     mLinkID = bcsv->GetUnsignedInt(entry, "l_id");
     
     for(int i = 0; i < 8; i++){

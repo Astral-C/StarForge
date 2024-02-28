@@ -43,7 +43,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt update
-          sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev mesa-common-dev libcurl4-openssl-dev
+          sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev mesa-common-dev libcurl4-openssl-dev libwayland-dev libxkbcommon-dev libegl1-mesa-dev
       - name: Set up MSVC for Windows
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
@@ -81,9 +81,7 @@ jobs:
           cp -r res starforge-build/res
           ls build
           cp build/starforge.exe starforge-build/starforge.exe
-          cp build/iconv-2.dll starforge-build/iconv-2.dll
-          cp build/libcurl.dll starforge-build/libcurl.dll
-          cp build/zlib1.dll starforge-build/zlib1.dll
+          cp build/*.dll starforge-build/*.dll
       - name: Upload App Windows
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3

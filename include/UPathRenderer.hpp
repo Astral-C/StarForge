@@ -27,8 +27,9 @@ class CPathRenderer {
     uint32_t mPointsVbo;
 
     uint32_t mRenderPathSize;
-
+    
 public:
+    bool isClosed;
     std::vector<CPathPoint> mPath;
 
     void UpdateData();

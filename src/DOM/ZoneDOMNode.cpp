@@ -280,10 +280,10 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath){
     AddChild(layer);
 
     for(int l = 0; l < 16; l++){
-        auto layer = std::make_shared<SZoneLayerDOMNode>(fmt::format("Layer {}", char('A' + l)));
+        auto layer = std::make_shared<SZoneLayerDOMNode>(fmt::format("Layer {}", char('A'+l)));
 
         for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
-            if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && (strcmp(file->name, fmt::format("layer{}", 'a'+l).c_str()) == 0 || strcmp(file->name, fmt::format("Layer{}", 'A'+l).c_str()) == 0)){
+            if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && (strcmp(file->name, fmt::format("layer{}", char('a'+l)).c_str()) == 0 || strcmp(file->name, fmt::format("Layer{}", char('A'+l)).c_str()) == 0)){
                 layer->LoadLayerObjects(&mZoneArchive, file, std::string(file->name));
             }
         }
@@ -387,11 +387,11 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
         auto layer = std::make_shared<SZoneLayerDOMNode>(fmt::format("Layer {}", 'a' + l));
 
         for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
-            if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, fmt::format("layer{}", 'a'+l).c_str()) == 0){
+            if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, fmt::format("layer{}", char('a'+l)).c_str()) == 0){
                 layer->LoadLayerObjects(&mZoneArchive, file, std::string(file->name));
             }
 
-            if(file->parent != nullptr && (strcmp(file->parent->name, "path") == 0 || strcmp(file->parent->name, "Path") == 0) && (file->attr & 0x02) && strcmp(file->name, fmt::format("layer{}", 'a'+l).c_str()) == 0){
+            if(file->parent != nullptr && (strcmp(file->parent->name, "path") == 0 || strcmp(file->parent->name, "Path") == 0) && (file->attr & 0x02)){
                 layer->LoadLayerPaths(&mZoneArchive, file, std::string(file->name));
             }
         }

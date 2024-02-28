@@ -11,7 +11,7 @@ uniform mat4 gpu_ModelViewProjectionMatrix;\n\
 void main()\n\
 {\n\
     gl_Position = gpu_ModelViewProjectionMatrix * vec4(position, 1.0);\n\
-    gl_PointSize = 51200 / gl_Position.w; //min(51200, 32 / gl_Position.w);\n\
+    gl_PointSize = min(16000, 16000 / gl_Position.w);\n\
     mPath_color = color;\n\
 }\
 ";
@@ -28,7 +28,7 @@ void main()\n\
         if(dot(p,p) > r){\n\
             discard;\n\
         } else {\n\
-            gl_FragColor = vec4(1.0,1.0,1.0,1.0);\n\
+            gl_FragColor = mPath_color;\n\
         }\n\
     } else {\n\
         gl_FragColor = mPath_color;\n\
@@ -37,6 +37,7 @@ void main()\n\
 ";
 
 void CPathRenderer::Init() {
+    isClosed = false;
 	//Compile Shaders
 	{
 	    char glErrorLogBuffer[4096];
@@ -157,7 +158,7 @@ void CPathRenderer::UpdateData(){
         points.push_back((CPathPoint){mPath.at(i).LeftHandle, mPath.at(i).Color, {0,0,0}, {0,0,0}});
         points.push_back(mPath.at(i));
         
-        if(i == mPath.size() - 1) break;
+        if(i == mPath.size() - 1 && isClosed == false) break;
 
         for(float t = 0.01f; t < 1.0f; t += 0.01f){
             float p1t = (1.0f - t) * (1.0f - t) * (1.0f - t);
@@ -165,14 +166,14 @@ void CPathRenderer::UpdateData(){
             float p3t = 3.0f * t * t * (1.0f - t);
             float p4t = t * t * t;
             
-            float x = mPath.at(i).Position.x * p1t + mPath.at(i).RightHandle.x * p2t + mPath.at(i + 1).LeftHandle.x * p3t + mPath.at(i + 1).Position.x * p4t;
-            float y = mPath.at(i).Position.y * p1t + mPath.at(i).RightHandle.y * p2t + mPath.at(i + 1).LeftHandle.y * p3t + mPath.at(i + 1).Position.y * p4t;
-            float z = mPath.at(i).Position.z * p1t + mPath.at(i).RightHandle.z * p2t + mPath.at(i + 1).LeftHandle.z * p3t + mPath.at(i + 1).Position.z * p4t;
+            float x = mPath.at(i).Position.x * p1t + mPath.at(i).RightHandle.x * p2t + mPath.at((i + 1) % mPath.size()).LeftHandle.x * p3t + mPath.at((i + 1) % mPath.size()).Position.x * p4t;
+            float y = mPath.at(i).Position.y * p1t + mPath.at(i).RightHandle.y * p2t + mPath.at((i + 1) % mPath.size()).LeftHandle.y * p3t + mPath.at((i + 1) % mPath.size()).Position.y * p4t;
+            float z = mPath.at(i).Position.z * p1t + mPath.at(i).RightHandle.z * p2t + mPath.at((i + 1) % mPath.size()).LeftHandle.z * p3t + mPath.at((i + 1) % mPath.size()).Position.z * p4t;
             
             points.push_back((CPathPoint){glm::vec3(x,y,z), mPath.at(i).Color, {0,0,0}, {0,0,0}});
             points.push_back((CPathPoint){glm::vec3(x,y,z), mPath.at(i).Color, {0,0,0}, {0,0,0}});
         }
-        points.push_back(mPath.at(i+1));
+        points.push_back(mPath.at((i + 1) % mPath.size()));
     }
 
     mRenderPathSize = points.size();
@@ -187,12 +188,6 @@ void CPathRenderer::UpdateData(){
 }
 
 void CPathRenderer::Draw(USceneCamera *Camera, glm::mat4 ReferenceFrame) {
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     glEnable(GL_PROGRAM_POINT_SIZE);
     //glEnable(GL_POINT_SPRITE);
 
@@ -216,5 +211,6 @@ void CPathRenderer::Draw(USceneCamera *Camera, glm::mat4 ReferenceFrame) {
     glDrawArrays(GL_LINE_STRIP, 0, mRenderPathSize);
 
     glBindVertexArray(0);
+
 
 }
