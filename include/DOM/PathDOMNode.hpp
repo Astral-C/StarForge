@@ -11,6 +11,7 @@
 #include <J3D/Animation/J3DAnimationInstance.hpp>
 #include <J3D/Data/J3DModelInstance.hpp>
 #include <UPathRenderer.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #include <UCamera.hpp>
 
