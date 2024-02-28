@@ -66,7 +66,7 @@ void SZoneLayerDOMNode::LoadLayerPaths(GCarchive* zoneArchive, GCarcfile* layerD
                 std::cout << "Path " << path->GetName() << " Deserialized" << std::endl;
 
                 for (GCarcfile* path_file = &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff]; path_file < &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff] + zoneArchive->dirs[layerDir->size].filenum; path_file++){
-                    if(std::string(path_file->name) == fmt::format("commonpathpointinfo.{}", path->GetPathNumber())){
+                    if(std::string(path_file->name) == fmt::format("commonpathpointinfo.{}", path->GetPathNumber()) || std::string(path_file->name) == fmt::format("CommonPathPointInfo.{}", path->GetPathNumber())){
                         std::cout << "Loading Path " <<  path->GetName() << std::endl;
                         SBcsvIO pathInfo;
 			            bStream::CMemoryStream pathInfoStream((uint8_t*)path_file->data, (size_t)path_file->size, bStream::Endianess::Big, bStream::OpenMode::In);
@@ -268,7 +268,7 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath){
     auto layer = std::make_shared<SZoneLayerDOMNode>("Common");
 
     for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
-        if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, "common") == 0){
+        if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && (strcmp(file->name, "common") == 0 || strcmp(file->name, "Common") == 0)){
             layer->LoadLayerObjects(&mZoneArchive, file, std::string(file->name));
         }
 
