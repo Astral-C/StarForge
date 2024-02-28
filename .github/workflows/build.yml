@@ -82,7 +82,7 @@ jobs:
           cp -r res starforge-build/res
           ls build
           cp build/starforge.exe starforge-build/starforge.exe
-          cp build/*.dll starforge-build/*.dll
+          for f in "build/"*.dll; do cp $f "starforge-build/${f##*/}"; done
       - name: Upload App Windows
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3
