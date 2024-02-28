@@ -4,8 +4,7 @@
 #include <filesystem>
 #include <fmt/core.h>
 #include <bstream.h>
-#include <ImGuiFileDialog.h>
-#include <ImGuiFileDialogConfig.h>
+#include "../lib/ImGuiFileDialog/ImGuiFileDialog.h"
 
 #include <J3D/J3DModelLoader.hpp>
 #include <J3D/Animation/J3DAnimationLoader.hpp>

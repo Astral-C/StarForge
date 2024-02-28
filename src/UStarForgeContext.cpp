@@ -10,8 +10,7 @@
 #include <J3D/Picking/J3DPicking.hpp>
 #include <J3D/Rendering/J3DRendering.hpp>
 
-#include <ImGuiFileDialog.h>
-#include <ImGuiFileDialogConfig.h>
+#include "../lib/ImGuiFileDialog/ImGuiFileDialog.h"
 #include <glad/glad.h>
 #include <imgui.h>
 #include <imgui_internal.h>
