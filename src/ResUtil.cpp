@@ -390,7 +390,7 @@ void SResUtility::SOptions::RenderOptionMenu(){
 
 		if (ImGuiFileDialog::Instance()->Display("OpenRootDialog")) {
 			if (ImGuiFileDialog::Instance()->IsOk()) {
-				mRootPath = ImGuiFileDialog::Instance()->GetFilePathName();
+				mRootPath = ImGuiFileDialog::Instance()->GetCurrentPath();
 
 				mSelectRootDialogOpen = false;
 			} else {
