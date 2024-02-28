@@ -28,14 +28,13 @@ void SPathDOMNode::Update(){
 	mRenderer.mPath.clear();
     mRenderer.isClosed = mIsClosed;
     for(auto point : GetChildrenOfType<SPathPointDOMNode>(EDOMNodeType::PathPoint)){
-		mRenderer.mPath.push_back(
-			(CPathPoint){
-				point->GetPosition(),
-				glm::vec4((float)(mColor >> 16 & 0xFF) / 255.0f, (float)(mColor >> 8 & 0xFF) / 255.0f, (float)(mColor & 0xFF) / 255.0f, 1.0f),
-				point->GetLeftHandle(),
-				point->GetRightHandle()
-			}
-		);
+		CPathPoint pnt = {
+			.Position = point->GetPosition(),
+			.Color = glm::vec4((float)(mColor >> 16 & 0xFF) / 255.0f, (float)(mColor >> 8 & 0xFF) / 255.0f, (float)(mColor & 0xFF) / 255.0f, 1.0f),
+			.LeftHandle = point->GetLeftHandle(),
+			.RightHandle = point->GetRightHandle()
+		};
+        mRenderer.mPath.push_back(pnt);
     }
 	mRenderer.UpdateData();
 }

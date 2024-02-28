@@ -150,12 +150,12 @@ void CPathRenderer::UpdateData(){
 
     for(int i = 0; i < mPath.size(); i++){
         circles.push_back(mPath.at(i));
-        circles.push_back((CPathPoint){mPath.at(i).RightHandle, mPath.at(i).Color, {0,0,0}, {0,0,0}});
-        circles.push_back((CPathPoint){mPath.at(i).LeftHandle, mPath.at(i).Color, {0,0,0}, {0,0,0}});
+        circles.push_back({.Position = mPath.at(i).RightHandle, .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
+        circles.push_back({.Position = mPath.at(i).LeftHandle, .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
 
         points.push_back(mPath.at(i));
-        points.push_back((CPathPoint){mPath.at(i).RightHandle, mPath.at(i).Color, {0,0,0}, {0,0,0}});
-        points.push_back((CPathPoint){mPath.at(i).LeftHandle, mPath.at(i).Color, {0,0,0}, {0,0,0}});
+        points.push_back({.Position = mPath.at(i).RightHandle, .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
+        points.push_back({.Position = mPath.at(i).LeftHandle,.Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
         points.push_back(mPath.at(i));
         
         if(i == mPath.size() - 1 && isClosed == false) break;
@@ -170,8 +170,7 @@ void CPathRenderer::UpdateData(){
             float y = mPath.at(i).Position.y * p1t + mPath.at(i).RightHandle.y * p2t + mPath.at((i + 1) % mPath.size()).LeftHandle.y * p3t + mPath.at((i + 1) % mPath.size()).Position.y * p4t;
             float z = mPath.at(i).Position.z * p1t + mPath.at(i).RightHandle.z * p2t + mPath.at((i + 1) % mPath.size()).LeftHandle.z * p3t + mPath.at((i + 1) % mPath.size()).Position.z * p4t;
             
-            points.push_back((CPathPoint){glm::vec3(x,y,z), mPath.at(i).Color, {0,0,0}, {0,0,0}});
-            points.push_back((CPathPoint){glm::vec3(x,y,z), mPath.at(i).Color, {0,0,0}, {0,0,0}});
+            points.push_back({.Position = glm::vec3(x,y,z), .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
         }
         points.push_back(mPath.at((i + 1) % mPath.size()));
     }
