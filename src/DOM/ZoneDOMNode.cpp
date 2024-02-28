@@ -9,6 +9,7 @@
 #include "DOM/BlackHoleDOMNode.hpp"
 #include "DOM/AstroObjectDOMNode.hpp"
 #include "DOM/BooDOMNode.hpp"
+#include "DOM/PathDOMNode.hpp"
 #include "compression.h"
 #include "archive.h"
 #include "imgui.h"
@@ -17,7 +18,8 @@
 #include <fmt/core.h>
 #include <glm/gtx/matrix_decompose.hpp>
 
-SZoneLayerDOMNode::SZoneLayerDOMNode() : Super("Layer") {
+SZoneLayerDOMNode::SZoneLayerDOMNode(std::string name) : Super("Layer") {
+    mName = name;
     mType = EDOMNodeType::ZoneLayer;
     mVisible = true;
 }
@@ -49,9 +51,48 @@ void SZoneLayerDOMNode::SaveLayer(GCarchive* zoneArchive){
 
 }
 
-void SZoneLayerDOMNode::LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName){
-    mName = std::string(layerDir->name);
-    
+void SZoneLayerDOMNode::LoadLayerPaths(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName){
+	for (GCarcfile* layer_file = &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff]; layer_file < &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff] + zoneArchive->dirs[layerDir->size].filenum; layer_file++){
+		if((strcmp(layer_file->name, "commonpathinfo") == 0 || strcmp(layer_file->name, "CommonPathInfo") == 0) && layer_file->data != nullptr){
+            std::cout << "Loading Common Path Data" << std::endl;
+            // Load Paths
+            SBcsvIO commonPathInfo;
+			bStream::CMemoryStream commonPathInfoStream((uint8_t*)layer_file->data, (size_t)layer_file->size, bStream::Endianess::Big, bStream::OpenMode::In);
+			commonPathInfo.Load(&commonPathInfoStream);
+
+            for(size_t pathEntry = 0; pathEntry < commonPathInfo.GetEntryCount(); pathEntry++){            
+                auto path = std::make_shared<SPathDOMNode>();
+                path->Deserialize(&commonPathInfo, pathEntry);
+                std::cout << "Path " << path->GetName() << " Deserialized" << std::endl;
+
+                for (GCarcfile* path_file = &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff]; path_file < &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff] + zoneArchive->dirs[layerDir->size].filenum; path_file++){
+                    if(std::string(path_file->name) == fmt::format("commonpathpointinfo.{}", path->GetPathNumber())){
+                        std::cout << "Loading Path " <<  path->GetName() << std::endl;
+                        SBcsvIO pathInfo;
+			            bStream::CMemoryStream pathInfoStream((uint8_t*)path_file->data, (size_t)path_file->size, bStream::Endianess::Big, bStream::OpenMode::In);
+			            pathInfo.Load(&pathInfoStream);
+
+                        for(size_t pointEntry = 0; pointEntry < pathInfo.GetEntryCount(); pointEntry++){
+                            auto point = std::make_shared<SPathPointDOMNode>();
+                            point->Deserialize(&pathInfo, pointEntry);
+                            path->AddChild(point);
+                        }
+
+                        break;
+                    }
+                    
+                }
+                path->Update();
+                AddChild(path);
+            }
+
+            break;
+        }
+    }
+
+}
+
+void SZoneLayerDOMNode::LoadLayerObjects(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName){
 	for (GCarcfile* layer_file = &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff]; layer_file < &zoneArchive->files[zoneArchive->dirs[layerDir->size].fileoff] + zoneArchive->dirs[layerDir->size].filenum; layer_file++){
 		if((strcmp(layer_file->name, "objinfo") == 0 || strcmp(layer_file->name, "ObjInfo") == 0) && layer_file->data != nullptr){
             mObjInfoFile = layer_file;
@@ -224,15 +265,31 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath){
 
     GCResourceManager.LoadArchive(zonePath.string().c_str(), &mZoneArchive);
 
-	for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
-		if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, ".") != 0 && strcmp(file->name, "..") != 0){
-			auto layer = std::make_shared<SZoneLayerDOMNode>();
-            
-            layer->LoadLayer(&mZoneArchive, file, std::string(file->name));
+    auto layer = std::make_shared<SZoneLayerDOMNode>("Common");
 
-            AddChild(layer);
-		}
-	}
+    for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
+        if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, "common") == 0){
+            layer->LoadLayerObjects(&mZoneArchive, file, std::string(file->name));
+        }
+
+        if((strcmp(file->name, "path") == 0 || strcmp(file->name, "Path") == 0) && (file->attr & 0x02) ){
+            layer->LoadLayerPaths(&mZoneArchive, file, std::string(file->name));
+        }
+    }
+
+    AddChild(layer);
+
+    for(int l = 0; l < 16; l++){
+        auto layer = std::make_shared<SZoneLayerDOMNode>(fmt::format("Layer {}", char('A' + l)));
+
+        for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
+            if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && (strcmp(file->name, fmt::format("layer{}", 'a'+l).c_str()) == 0 || strcmp(file->name, fmt::format("Layer{}", 'A'+l).c_str()) == 0)){
+                layer->LoadLayerObjects(&mZoneArchive, file, std::string(file->name));
+            }
+        }
+
+        AddChild(layer);
+    }
 
     mZoneArchiveLoaded = true;
 
@@ -312,17 +369,35 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
         }
     }
 
+    auto layer = std::make_shared<SZoneLayerDOMNode>("Common");
 
+    for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
+        if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, "common") == 0){
+            layer->LoadLayerObjects(&mZoneArchive, file, std::string(file->name));
+        }
 
-	for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
-		if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, ".") != 0 && strcmp(file->name, "..") != 0){
-			auto layer = std::make_shared<SZoneLayerDOMNode>();
-            
-            layer->LoadLayer(&mZoneArchive, file, std::string(file->name));
+        if(file->parent != nullptr && (strcmp(file->parent->name, "path") == 0 || strcmp(file->parent->name, "Path") == 0) && (file->attr & 0x02) && strcmp(file->name, "common") == 0){
+            layer->LoadLayerPaths(&mZoneArchive, file, std::string(file->name));
+        }
+    }
 
-            AddChild(layer);
-		}
-	}
+    AddChild(layer);
+
+    for(int l = 0; l < 16; l++){
+        auto layer = std::make_shared<SZoneLayerDOMNode>(fmt::format("Layer {}", 'a' + l));
+
+        for (GCarcfile* file = mZoneArchive.files; file < mZoneArchive.files + mZoneArchive.filenum; file++){
+            if(file->parent != nullptr && (strcmp(file->parent->name, "placement") == 0 || strcmp(file->parent->name, "Placement") == 0) && (file->attr & 0x02) && strcmp(file->name, fmt::format("layer{}", 'a'+l).c_str()) == 0){
+                layer->LoadLayerObjects(&mZoneArchive, file, std::string(file->name));
+            }
+
+            if(file->parent != nullptr && (strcmp(file->parent->name, "path") == 0 || strcmp(file->parent->name, "Path") == 0) && (file->attr & 0x02) && strcmp(file->name, fmt::format("layer{}", 'a'+l).c_str()) == 0){
+                layer->LoadLayerPaths(&mZoneArchive, file, std::string(file->name));
+            }
+        }
+
+        AddChild(layer);
+    }
 
     return zoneTransforms;
 }

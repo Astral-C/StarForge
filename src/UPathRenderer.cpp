@@ -1,38 +1,37 @@
 #include "UPathRenderer.hpp"
 #include <filesystem>
 #include <glad/glad.h>
-
+#include <iostream>
 
 const char* default_path_vtx_shader_source = "#version 330\n\
 layout (location = 0) in vec3 position;\n\
 layout (location = 1) in vec4 color;\n\
-layout (location = 2) in int size;\n\
-out vec4 line_color;\n\
+out vec4 mPath_color;\n\
 uniform mat4 gpu_ModelViewProjectionMatrix;\n\
 void main()\n\
 {\n\
     gl_Position = gpu_ModelViewProjectionMatrix * vec4(position, 1.0);\n\
-    gl_PointSize = min(size, size / gl_Position.w);\n\
-    line_color = color;\n\
+    gl_PointSize = 51200 / gl_Position.w; //min(51200, 32 / gl_Position.w);\n\
+    mPath_color = color;\n\
 }\
 ";
 
 const char* default_path_frg_shader_source = "#version 330\n\
 uniform sampler2D spriteTexture;\n\
-in vec4 line_color;\n\
+in vec4 mPath_color;\n\
 uniform bool pointMode;\n\
 void main()\n\
 {\n\
     if(pointMode){\n\
         vec2 p = gl_PointCoord * 2.0 - vec2(1.0);\n\
         float r = sqrt(dot(p,p));\n\
-        if(dot(p,p) > r || dot(p,p) < r*0.75){\n\
+        if(dot(p,p) > r){\n\
             discard;\n\
         } else {\n\
             gl_FragColor = vec4(1.0,1.0,1.0,1.0);\n\
         }\n\
     } else {\n\
-        gl_FragColor = line_color;\n\
+        gl_FragColor = mPath_color;\n\
     }\n\
 }\
 ";
@@ -109,11 +108,30 @@ void CPathRenderer::Init() {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, Color));
     glEnableVertexAttribArray(2);
-    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(CPathPoint), (void*)offsetof(CPathPoint, SpriteSize));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, LeftHandle));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, RightHandle));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    glGenVertexArrays(1, &mPointsVao);
+    glBindVertexArray(mPointsVao);
+
+    glGenBuffers(1, &mPointsVbo);
+    glBindBuffer(GL_ARRAY_BUFFER, mPointsVbo);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, Position));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, Color));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, LeftHandle));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, RightHandle));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 CPathRenderer::CPathRenderer() {}
@@ -121,21 +139,56 @@ CPathRenderer::CPathRenderer() {}
 CPathRenderer::~CPathRenderer() {
     glDeleteBuffers(1, &mVbo);
     glDeleteVertexArrays(1, &mVao);
+
+    glDeleteBuffers(1, &mPointsVbo);
+    glDeleteVertexArrays(1, &mPointsVao);
 }
 
 void CPathRenderer::UpdateData(){
-    glBindBuffer(GL_ARRAY_BUFFER, mVbo);
-    uint32_t vtxCount = 0;
-    for(auto& line : mPaths){
-        vtxCount += line.size();
+    std::vector<CPathPoint> points, circles;
+
+    for(int i = 0; i < mPath.size(); i++){
+        circles.push_back(mPath.at(i));
+        circles.push_back((CPathPoint){mPath.at(i).RightHandle, mPath.at(i).Color, {0,0,0}, {0,0,0}});
+        circles.push_back((CPathPoint){mPath.at(i).LeftHandle, mPath.at(i).Color, {0,0,0}, {0,0,0}});
+
+        points.push_back(mPath.at(i));
+        points.push_back((CPathPoint){mPath.at(i).RightHandle, mPath.at(i).Color, {0,0,0}, {0,0,0}});
+        points.push_back((CPathPoint){mPath.at(i).LeftHandle, mPath.at(i).Color, {0,0,0}, {0,0,0}});
+        points.push_back(mPath.at(i));
+        
+        if(i == mPath.size() - 1) break;
+
+        for(float t = 0.01f; t < 1.0f; t += 0.01f){
+            float p1t = (1.0f - t) * (1.0f - t) * (1.0f - t);
+            float p2t = 3.0f * t * (1.0f - t) * (1.0f - t);
+            float p3t = 3.0f * t * t * (1.0f - t);
+            float p4t = t * t * t;
+            
+            float x = mPath.at(i).Position.x * p1t + mPath.at(i).RightHandle.x * p2t + mPath.at(i + 1).LeftHandle.x * p3t + mPath.at(i + 1).Position.x * p4t;
+            float y = mPath.at(i).Position.y * p1t + mPath.at(i).RightHandle.y * p2t + mPath.at(i + 1).LeftHandle.y * p3t + mPath.at(i + 1).Position.y * p4t;
+            float z = mPath.at(i).Position.z * p1t + mPath.at(i).RightHandle.z * p2t + mPath.at(i + 1).LeftHandle.z * p3t + mPath.at(i + 1).Position.z * p4t;
+            
+            points.push_back((CPathPoint){glm::vec3(x,y,z), mPath.at(i).Color, {0,0,0}, {0,0,0}});
+            points.push_back((CPathPoint){glm::vec3(x,y,z), mPath.at(i).Color, {0,0,0}, {0,0,0}});
+        }
+        points.push_back(mPath.at(i+1));
     }
-    glBufferData(GL_ARRAY_BUFFER, sizeof(CPathPoint) * vtxCount, &mPaths[0][0], GL_DYNAMIC_DRAW);
+
+    mRenderPathSize = points.size();
+
+    glBindBuffer(GL_ARRAY_BUFFER, mVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CPathPoint) * points.size(), &points[0], GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mPointsVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CPathPoint) * mPath.size() * 3, &circles[0], GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void CPathRenderer::Draw(USceneCamera *Camera) {
+void CPathRenderer::Draw(USceneCamera *Camera, glm::mat4 ReferenceFrame) {
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    glDepthFunc(GL_LEQUAL);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -143,31 +196,25 @@ void CPathRenderer::Draw(USceneCamera *Camera) {
     glEnable(GL_PROGRAM_POINT_SIZE);
     //glEnable(GL_POINT_SPRITE);
 
-    glLineWidth(2.0f);
+    glLineWidth(1.5f);
 
 	glm::mat4 mvp;
-	mvp = Camera->GetProjectionMatrix() * Camera->GetViewMatrix() * glm::identity<glm::mat4>();
+	mvp = Camera->GetProjectionMatrix() * Camera->GetViewMatrix() * ReferenceFrame;
 
     glUseProgram(mShaderID);
 
-    glBindVertexArray(mVao);
-
     glUniformMatrix4fv(mMVPUniform, 1, 0, (float*)&mvp[0]);
 
- 
-    uint32_t start = 0;
+    glBindVertexArray(mPointsVao);
     glUniform1i(mPointModeUniform, GL_TRUE);
-    for(auto& line : mPaths){
-        glDrawArrays(GL_POINTS, start, line.size());
-        start += line.size();
-    }
+    glDrawArrays(GL_POINTS, 0, mPath.size() * 3);
+    
+    glBindVertexArray(0);
 
-    start = 0;
+    glBindVertexArray(mVao);
     glUniform1i(mPointModeUniform, GL_FALSE);
-    for(auto& line : mPaths){
-        glDrawArrays(GL_LINE_STRIP, start, line.size());
-        start += line.size();
-    }
+    glDrawArrays(GL_LINE_STRIP, 0, mRenderPathSize);
 
     glBindVertexArray(0);
+
 }

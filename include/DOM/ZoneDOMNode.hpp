@@ -10,6 +10,7 @@ class SZoneLayerDOMNode : public SDOMNodeBase {
     bool mVisible;
     SBcsvIO mObjInfo, mAreaObjInfo;
     GCarcfile* mObjInfoFile, *mAreaObjInfoFile;
+    std::string mLayerName;
 
 public:
     typedef SDOMNodeBase Super; 
@@ -18,12 +19,13 @@ public:
     void RenderDetailsUI();
     void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
 
-    void LoadLayer(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName);
+    void LoadLayerObjects(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName);
+    void LoadLayerPaths(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName);
     void SaveLayer(GCarchive* zoneArchive);
     bool GetVisible(){ return mVisible; }
     void SetVisible(bool v) { mVisible = v; }
 
-    SZoneLayerDOMNode();
+    SZoneLayerDOMNode(std::string name);
     ~SZoneLayerDOMNode();
 
 
@@ -79,5 +81,5 @@ public:
 
     void Deserialize(SBcsvIO* bcsv, int entry);
     void Serialize(SBcsvIO* bcsv, int entry);
-
+    bool isVisible() { return mVisible; }
 };

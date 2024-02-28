@@ -21,6 +21,7 @@
 #include "DOM/ZoneDOMNode.hpp"
 #include "DOM/ScenarioDOMNode.hpp"
 #include "DOM/ObjectDOMNode.hpp"
+#include "DOM/PathDOMNode.hpp"
 
 #include "IconsForkAwesome.h"
 
@@ -48,6 +49,8 @@ UStarForgeContext::~UStarForgeContext(){
 
 UStarForgeContext::UStarForgeContext(){
 	mGrid.Init();
+	mPathRenderer.Init();
+	srand(time(0));
 
 	auto objectDBPath = std::filesystem::current_path() / "res" / "objectdb.json";
 	if(std::filesystem::exists(objectDBPath)){
@@ -247,6 +250,16 @@ void UStarForgeContext::Render(float deltaTime) {
 			}
 		}
 		//TODO: Once selection is set up again call the selected node's render function
+
+		glm::mat4 viewMtx = mCamera.GetViewMatrix();
+		ImVec4 forward = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX}, up = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
+		ImGuizmo::ViewManipulate(&viewMtx[0][0], 64, ImVec2(mainViewport->Size.x - 74, mainViewport->Size.y - 74), ImVec2(64, 64), ImColor(ImVec4(0.35,0.2,0.35,0.35)), forward, up);
+
+		if(forward.x != FLT_MAX && forward.y != FLT_MAX && forward.z != FLT_MAX){
+			mCamera.SetForward(glm::vec3(forward.x, forward.y, forward.z));
+			mCamera.SetUp(glm::vec3(up.x, up.y, up.z));
+		}
+
 	ImGui::End();
 
 	glm::mat4 projection, view;
@@ -265,6 +278,11 @@ void UStarForgeContext::Render(float deltaTime) {
 
 	J3D::Rendering::Render(deltaTime, view, projection, packets);
 	
+	for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
+		std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
+		if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
+	}
+
 	if(ImGui::IsMouseClicked(0) && !io.WantCaptureMouse){
 		J3D::Picking::RenderPickingScene(view, projection, packets);
 
@@ -348,6 +366,9 @@ void UStarForgeContext::RenderMenuBar() {
 
 					mRenderables.reserve(renderableCountEstimation*3);
 				}
+			}
+			catch (std::runtime_error e) {
+				std::cout << "Failed to load galaxy " << FilePath << "! Exception: " << e.what() << "\n";
 			}
 			catch (std::exception e) {
 				std::cout << "Failed to load galaxy " << FilePath << "! Exception: " << e.what() << "\n";

@@ -26,6 +26,10 @@ enum class EDOMNodeType
     Scenario,
 	Zone,
 	ZoneLayer,
+	
+	// Paths
+	Path,
+	PathPoint,
 
 	// Entities
 	Entity,

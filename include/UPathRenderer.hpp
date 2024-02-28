@@ -9,8 +9,10 @@
 typedef struct {
     glm::vec3 Position;
     glm::vec4 Color;
-    uint32_t SpriteSize;
+    glm::vec3 LeftHandle;
+    glm::vec3 RightHandle;
 } CPathPoint;
+
 
 class CPathRenderer {
     uint32_t mShaderID;
@@ -21,11 +23,16 @@ class CPathRenderer {
     uint32_t mVao;
     uint32_t mVbo;
 
+    uint32_t mPointsVao;
+    uint32_t mPointsVbo;
+
+    uint32_t mRenderPathSize;
+
 public:
-	std::vector<std::vector<CPathPoint>> mPaths;
-	
+    std::vector<CPathPoint> mPath;
+
     void UpdateData();
-	void Draw(USceneCamera* Camera);
+	void Draw(USceneCamera* Camera, glm::mat4 ReferenceFrame);
 
 	void Init();
 	CPathRenderer();
