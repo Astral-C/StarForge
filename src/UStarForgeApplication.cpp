@@ -1,6 +1,7 @@
 #include "UStarForgeApplication.hpp"
 #include "UStarForgeContext.hpp"
 #include "UInput.hpp"
+#include "UCamera.hpp"
 #include "../lib/glfw/deps/glad/gl.h"
 
 #include <J3D/Material/J3DUniformBufferObject.hpp>
@@ -16,6 +17,18 @@
 
 void DealWithGLErrors(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
 	std::cout << "GL CALLBACK: " << message << std::endl;
+}
+
+static UStarForgeContext* ResizeContext = nullptr;
+
+void HandleFramebufferResize(GLFWwindow* window, int w, int h){
+	int width, height;
+	glfwGetFramebufferSize(window, &width, &height);
+	if(ResizeContext != nullptr){
+		std::cout << "New Window Size is " << w << " " << h << std::endl;
+		ResizeContext->GetCamera()->SetWindowSize(width, height);
+		J3D::Picking::ResizeFramebuffer(width, height);
+	}
 }
 
 UStarForgeApplication::UStarForgeApplication() {
@@ -47,6 +60,7 @@ bool UStarForgeApplication::Setup() {
 	glfwSetCursorPosCallback(mWindow, UInput::GLFWMousePositionCallback);
 	glfwSetMouseButtonCallback(mWindow, UInput::GLFWMouseButtonCallback);
 	glfwSetScrollCallback(mWindow, UInput::GLFWMouseScrollCallback);
+	glfwSetFramebufferSizeCallback(mWindow, HandleFramebufferResize);
 
 	glfwMakeContextCurrent(mWindow);
 	gladLoadGL(glfwGetProcAddress);
@@ -73,7 +87,7 @@ bool UStarForgeApplication::Setup() {
 
 	// Create viewer context
 	mContext = new UStarForgeContext();
-
+	ResizeContext = mContext;
 
 	return true;
 }

@@ -55,4 +55,5 @@ public:
 	void HandleSelect();
 	bool Update(float deltaTime);
 	void Render(float deltaTime);
+	USceneCamera* GetCamera() { return &mCamera; }
 };

@@ -8,6 +8,7 @@ class UStarForgeApplication : public UApplication {
 
 	virtual bool Execute(float deltaTime) override;
 
+	
 public:
 	UStarForgeApplication();
 	virtual ~UStarForgeApplication() {}

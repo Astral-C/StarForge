@@ -14,6 +14,7 @@ SPathDOMNode::SPathDOMNode() : Super("Path") {
     mTransform = glm::mat4(1);
     mColor = ~rand() & 0xFFFFFF;
     mRenderer.Init();
+    mVisible = true;
 }
 
 SPathDOMNode::~SPathDOMNode(){
@@ -21,7 +22,7 @@ SPathDOMNode::~SPathDOMNode(){
 }
 
 void SPathDOMNode::Render(USceneCamera* cam, glm::mat4 referenceFrame){
-    mRenderer.Draw(cam, referenceFrame);
+    if(mVisible) mRenderer.Draw(cam, referenceFrame);
 }
 
 void SPathDOMNode::Update(){
@@ -41,7 +42,6 @@ void SPathDOMNode::Update(){
 
 void SPathDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mName = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "name"));
-    std::cout << mName << std::endl;
     mPathType = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "type"));
 
     mIsClosed = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "closed")) != "OPEN";
@@ -61,43 +61,49 @@ void SPathDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 }
 
 void SPathDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
-    /*
     ImGui::Text((mVisible ? ICON_FK_EYE : ICON_FK_EYE_SLASH));
     if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
         mVisible = !mVisible;
     }
     ImGui::SameLine();
-    if(selected == GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object)){
-        ImGui::TextColored(ImColor(0,255,0), fmt::format("{0}", mName.data()).c_str());
-        ImGui::SameLine();
+    bool treeOpen = ImGui::TreeNode(mName.data());
 
-        ImGui::Text(ICON_FK_MINUS_CIRCLE);
-        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
-            //should check this lock but whatever
-            GetParentOfType<SDOMNodeBase>(EDOMNodeType::ZoneLayer).lock()->RemoveChild(GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object));
+    if(treeOpen){
+        for (auto node : GetChildrenOfType<SPathPointDOMNode>(EDOMNodeType::PathPoint)){
+            node->RenderHeirarchyUI(selected);
         }
-    } else if(selected == mLinkedObject.lock()) {
-        ImGui::TextColored(ImColor(0,255,150), fmt::format("{0} [Linked]", mName.data()).c_str());
-    } else {
-        ImGui::Text(fmt::format("{0}", mName.data()).c_str());
+        
+        ImGui::Text(ICON_FK_PLUS_CIRCLE);
+        if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+            auto object = std::make_shared<SPathPointDOMNode>();
+            AddChild(object);
+            selected = object;
+            Update();
+        }
+        ImGui::TreePop();
     }
+    
+    
     if(ImGui::IsItemClicked(0)){
-        selected = GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object);
+        selected = GetSharedPtr<SPathDOMNode>(EDOMNodeType::Path);
     }
-    */
 }
 
 void SPathDOMNode::RenderDetailsUI(){
-    /*
-    glm::vec3 pos(mTransform[3]);
-    ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
+    ImGui::Text(fmt::format("Name: {}", mName).c_str());
+    ImGui::Text("Path Type: %s", mPathType.c_str());
+    ImGui::Text("Usage: %s", mUsage.c_str());
+    ImGui::Checkbox("Is Closed", &mIsClosed);
 
-    ImGui::InputText("Name", &mName);
+    ImVec4 color = ImColor(mColor);
+    ImGui::ColorPicker4("Path Color Pick", (float*)&color);
+    
 
-    for (size_t i = 0; i < 8; i++){
-        ImGui::InputInt(mObjArgNames[i].data(), &mObjArgs[i]);
+    uint32_t newColor = ImGui::GetColorU32(color);
+    if(newColor != mColor){
+        mColor = newColor;
+        //Update();
     }
-    */
 }
 
 SPathPointDOMNode::SPathPointDOMNode() : Super("PathPoint") {
@@ -134,7 +140,12 @@ void SPathPointDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 }
 
 void SPathPointDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
+    ImGui::Text("Path Point");
+    if(ImGui::IsItemClicked(0)){
+        selected = GetSharedPtr<SPathPointDOMNode>(EDOMNodeType::PathPoint);
+    }
 }
 
 void SPathPointDOMNode::RenderDetailsUI(){
+
 }

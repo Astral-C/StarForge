@@ -207,7 +207,9 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
             AddChild(zone);
         }
 
-        //Link Objects
+        // Link Objects
+        // TODO: Come back to this 
+        /*
         std::vector<std::shared_ptr<SObjectDOMNode>> objects = GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object);
 
         for(auto& object : objects){
@@ -222,6 +224,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
                 (*linked)->SetLinked(object);
             }
         }
+        */
 
     }
 

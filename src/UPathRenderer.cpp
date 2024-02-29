@@ -155,6 +155,7 @@ void CPathRenderer::UpdateData(){
 
         points.push_back(mPath.at(i));
         points.push_back({.Position = mPath.at(i).RightHandle, .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
+        points.push_back(mPath.at(i));
         points.push_back({.Position = mPath.at(i).LeftHandle,.Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
         points.push_back(mPath.at(i));
         

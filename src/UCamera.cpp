@@ -1,12 +1,13 @@
 #include "UCamera.hpp"
 #include "UInput.hpp"
 
+#include <iostream>
 #include <algorithm>
 #include <GLFW/glfw3.h>
 
 USceneCamera::USceneCamera() : mNearPlane(1.0f), mFarPlane(1000000.f), mFovy(glm::radians(60.f)),
     mCenter(ZERO), mEye(ZERO), mPitch(0.f), mYaw(glm::half_pi<float>()), mUp(UNIT_Y), mRight(UNIT_X), mForward(UNIT_Z),
-    mAspectRatio(16.f / 9.f), mMoveSpeed(1000.f), mMouseSensitivity(0.25f)
+    mAspectRatio(16.f / 9.f), mMoveSpeed(1000.f), mMouseSensitivity(0.25f), mIsOrtho(false), mWinWidth(1280), mWinHeight(720), mOrthoZoom(1.0f)
 {
 	mCenter = mEye - mForward;
 }
@@ -24,9 +25,9 @@ void USceneCamera::Update(float deltaTime) {
 		moveDir += mRight;
 
 	if (UInput::GetKey(GLFW_KEY_Q))
-		moveDir -= UNIT_Y;
+		moveDir -= mUp;
 	if (UInput::GetKey(GLFW_KEY_E))
-		moveDir += UNIT_Y;
+		moveDir += mUp;
 
 	mMoveSpeed += UInput::GetMouseScrollDelta() * 100 * deltaTime;
 	mMoveSpeed = std::clamp(mMoveSpeed, 100.f, 50000.f);
@@ -40,6 +41,9 @@ void USceneCamera::Update(float deltaTime) {
 
 	mEye += moveDir * (actualMoveSpeed * deltaTime);
 	mCenter = mEye - mForward;
+
+	if(UInput::GetKey(GLFW_KEY_Z)) mOrthoZoom += 0.1f;
+	if(UInput::GetKey(GLFW_KEY_X)) mOrthoZoom -= 0.1f;
 }
 
 void USceneCamera::Rotate(float deltaTime, glm::vec2 mouseDelta) {

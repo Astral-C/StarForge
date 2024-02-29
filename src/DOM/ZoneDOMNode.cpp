@@ -182,7 +182,7 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
                 AddChild(object);
                 selected = object;
             }
-                ImGui::TreePop();
+            ImGui::TreePop();
         }
         
         ImGui::TreePop();
@@ -250,6 +250,22 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
 
         for (auto node : GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer)){
             node->RenderHeirarchyUI(selected);
+        }
+
+        bool treeOpen = ImGui::TreeNode("Paths");
+
+        if(treeOpen){
+            for (auto node : GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
+                node->RenderHeirarchyUI(selected);
+            }
+            
+            ImGui::Text(ICON_FK_PLUS_CIRCLE);
+            if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+                auto object = std::make_shared<SPathDOMNode>();
+                AddChild(object);
+                selected = object;
+            }
+            ImGui::TreePop();
         }
         
         ImGui::TreePop();

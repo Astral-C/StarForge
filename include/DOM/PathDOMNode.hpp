@@ -17,6 +17,7 @@
 
 class SPathDOMNode : public SDOMNodeSerializable {
 private:
+    bool mVisible;
     std::string mName;
     std::string mPathType;    
 
@@ -101,8 +102,11 @@ public:
         glm::decompose(mTransform, scale, dir, pos, skew, persp);
         return pos;
     }
+    
     glm::vec3 GetLeftHandle() { return mLeftHandle; }
     glm::vec3 GetRightHandle() { return mRightHandle; }
 
+    void SetLeftHandle(glm::vec3 v) { mLeftHandle = v; }
+    void SetRightHandle(glm::vec3 v) { mRightHandle = v; }
 
 };

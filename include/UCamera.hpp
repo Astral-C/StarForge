@@ -17,6 +17,7 @@ class USceneCamera {
 	glm::vec3 mEye;
 	glm::vec3 mCenter;
 
+	bool mIsOrtho;
 	float mPitch;
 	float mYaw;
 	glm::vec3 mForward;
@@ -30,6 +31,8 @@ class USceneCamera {
 
 	float mMoveSpeed;
 	float mMouseSensitivity;
+	int mWinWidth, mWinHeight;
+	float mOrthoZoom;
 
 	void Rotate(float deltaTime, glm::vec2 mouseDelta);
 
@@ -39,11 +42,12 @@ public:
 
 	void Update(float deltaTime);
 
-
+	void ToggleOrtho() { mIsOrtho = !mIsOrtho; }
+	void SetWindowSize(int w, int h) { mWinWidth = w; mWinHeight = h; }
 	void SetForward(glm::vec3 forward) { mForward = forward; }
 	void SetUp(glm::vec3 up) { mUp = up; }
 	glm::vec3 GetPosition() { return mEye; }
 	glm::vec3 GetForward() { return mForward; }
 	glm::mat4 GetViewMatrix() { return glm::lookAt(mEye, mCenter, mUp); }
-	glm::mat4 GetProjectionMatrix() { return glm::perspective(mFovy, mAspectRatio, mNearPlane, mFarPlane); }
+	glm::mat4 GetProjectionMatrix() { if(!mIsOrtho) { return glm::perspective(mFovy, mAspectRatio, mNearPlane, mFarPlane); } else { return glm::ortho(0.0f, (float)mWinWidth / mOrthoZoom, 0.0f, (float)mWinHeight / mOrthoZoom, mNearPlane, mFarPlane); } }
 };

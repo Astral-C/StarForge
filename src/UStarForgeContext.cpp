@@ -103,6 +103,10 @@ bool UStarForgeContext::Update(float deltaTime) {
 		selected = nullptr;
 	}
 
+	if(ImGui::IsKeyPressed(ImGuiKey_O)){
+		mCamera.ToggleOrtho();
+	}
+
 	return true;
 }
 
@@ -244,6 +248,34 @@ void UStarForgeContext::Render(float deltaTime) {
 				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
 					object->mTransform = glm::inverse(zoneTransform) * transform;
 				}
+			} else if(selected->IsNodeType(EDOMNodeType::PathPoint)) {
+				std::shared_ptr<SPathPointDOMNode> pathpoint = std::static_pointer_cast<SPathPointDOMNode>(selected);
+				std::shared_ptr<SPathDOMNode> path = pathpoint->GetParentOfType<SPathDOMNode>(EDOMNodeType::Path).lock();
+				glm::mat4 zoneTransform = pathpoint->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+				glm::mat4 transform, delta = glm::identity<glm::mat4>();
+
+				if(ImGui::IsKeyDown(ImGuiKey_LeftCtrl)){
+					transform = (zoneTransform * glm::translate(glm::identity<glm::mat4>(), pathpoint->GetLeftHandle()));
+				} else if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
+					transform = (zoneTransform * glm::translate(glm::identity<glm::mat4>(), pathpoint->GetRightHandle()));
+				} else {
+					transform = (zoneTransform * pathpoint->mTransform);
+				}
+
+				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+					glm::mat4 out = glm::inverse(zoneTransform) * transform;
+				
+					if(ImGui::IsKeyDown(ImGuiKey_LeftCtrl)){
+						pathpoint->SetLeftHandle(out[3]);
+					} else if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
+						pathpoint->SetRightHandle(out[3]);
+					} else {
+						pathpoint->mTransform = out;
+					}
+				
+					path->Update();
+				}
+
 			} else if (selected->IsNodeType(EDOMNodeType::Zone)){
 				std::shared_ptr<SZoneDOMNode> zone = std::static_pointer_cast<SZoneDOMNode>(selected);
 				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &zone->mTransform[0][0]);
