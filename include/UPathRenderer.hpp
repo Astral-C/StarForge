@@ -18,6 +18,7 @@ class CPathRenderer {
     uint32_t mShaderID;
     uint32_t mMVPUniform;
     uint32_t mPointModeUniform;
+    uint32_t mIsOrthoUniform;
     uint32_t mTextureID; //single texture for points
 
     uint32_t mVao;

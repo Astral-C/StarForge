@@ -9,6 +9,7 @@
 #include "DOM/GalaxyDOMNode.hpp"
 #include "ModelCache.hpp"
 #include "UPathRenderer.hpp"
+#include "UAreaRenderer.hpp"
 
 class UStarForgeContext {
 	
@@ -16,7 +17,7 @@ class UStarForgeContext {
 	std::shared_ptr<SDOMNodeBase> selected;
 
 	std::vector<std::shared_ptr<J3DModelInstance>> mRenderables;
-	CPathRenderer mPathRenderer;
+	CAreaRenderer mAreaRenderer;
 
 	uint32_t mGizmoOperation { 0 };
 

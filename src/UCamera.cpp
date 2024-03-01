@@ -42,8 +42,8 @@ void USceneCamera::Update(float deltaTime) {
 	mEye += moveDir * (actualMoveSpeed * deltaTime);
 	mCenter = mEye - mForward;
 
-	if(UInput::GetKey(GLFW_KEY_Z)) mOrthoZoom += 0.1f;
-	if(UInput::GetKey(GLFW_KEY_X)) mOrthoZoom -= 0.1f;
+	if(UInput::GetKey(GLFW_KEY_Z)) mOrthoZoom += 0.01f;
+	if(UInput::GetKey(GLFW_KEY_X)) mOrthoZoom -= 0.01f;
 }
 
 void USceneCamera::Rotate(float deltaTime, glm::vec2 mouseDelta) {

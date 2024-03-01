@@ -25,7 +25,6 @@ void HandleFramebufferResize(GLFWwindow* window, int w, int h){
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
 	if(ResizeContext != nullptr){
-		std::cout << "New Window Size is " << w << " " << h << std::endl;
 		ResizeContext->GetCamera()->SetWindowSize(width, height);
 		J3D::Picking::ResizeFramebuffer(width, height);
 	}

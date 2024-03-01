@@ -6,12 +6,14 @@
 #include <fmt/core.h>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
+#include "UAreaRenderer.hpp"
 
 
 SAreaObjectDOMNode::SAreaObjectDOMNode() : Super("Area") {
     mType = EDOMNodeType::AreaObject;
     mTransform = glm::mat4(1);
     mObjArgNames = {"Obj_arg0","Obj_arg1","Obj_arg2","Obj_arg3","Obj_arg4","Obj_arg5","Obj_arg6","Obj_arg7"};
+    mColor = glm::vec4(0.0, 1.0, 0.0, 1.0);
 }
 
 SAreaObjectDOMNode::~SAreaObjectDOMNode(){
@@ -54,7 +56,6 @@ void SAreaObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     glm::vec3 pos, scale, skew;
     glm::quat dir;
     glm::vec4 persp;
-
 
     glm::decompose(mTransform, scale, dir, pos, skew, persp);
 
@@ -111,7 +112,27 @@ void SAreaObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& select
 void SAreaObjectDOMNode::RenderDetailsUI(){
     glm::vec3 pos(mTransform[3]);
     ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
+
+    int data = mAreaShapeNo;
+    ImGui::InputInt("Area Shape ID", &data);
+    mAreaShapeNo = (uint16_t)data;
 }
 
-void SAreaObjectDOMNode::Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt){
+void SAreaObjectDOMNode::Render(USceneCamera* camera, CAreaRenderer* area_renderer, glm::mat4 transform, EGameType game){
+    if(game == SMG2){
+        area_renderer->DrawShape(camera, (AreaRenderShape)mAreaShapeNo, transform * mTransform, mColor, {500,500,500});
+    } else {
+        if(mName.find("Cylinder") != std::string::npos){
+            area_renderer->DrawShape(camera, CYLINDER, transform * mTransform, mColor, {500,500,500});
+        }
+        if(mName.find("Cube") != std::string::npos){ // Fug
+            area_renderer->DrawShape(camera, BOX_BASE, transform * mTransform, mColor, {500,500,500});
+        }
+        if(mName.find("Sphere") != std::string::npos){
+            area_renderer->DrawShape(camera, SPHERE, transform * mTransform, mColor, {500,500,500});
+        }
+        if(mName.find("Bowl") != std::string::npos){
+            area_renderer->DrawShape(camera, BOWL, transform * mTransform, mColor, {500,500,500});
+        }
+    }
 }

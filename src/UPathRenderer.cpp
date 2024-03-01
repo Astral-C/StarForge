@@ -8,10 +8,15 @@ layout (location = 0) in vec3 position;\n\
 layout (location = 1) in vec4 color;\n\
 out vec4 mPath_color;\n\
 uniform mat4 gpu_ModelViewProjectionMatrix;\n\
+uniform bool isOrtho;\n\
 void main()\n\
 {\n\
     gl_Position = gpu_ModelViewProjectionMatrix * vec4(position, 1.0);\n\
-    gl_PointSize = min(16000, 16000 / gl_Position.w);\n\
+    if(isOrtho){\n\
+        gl_PointSize = 8;\n\
+    } else {\n\
+        gl_PointSize = min(16000, 16000 / gl_Position.w);\n\
+    }\n\
     mPath_color = color;\n\
 }\
 ";
@@ -97,6 +102,7 @@ void CPathRenderer::Init() {
 
     mMVPUniform = glGetUniformLocation(mShaderID, "gpu_ModelViewProjectionMatrix");
     mPointModeUniform = glGetUniformLocation(mShaderID, "pointMode");
+    mIsOrthoUniform = glGetUniformLocation(mShaderID, "isOrtho");
 
     glGenVertexArrays(1, &mVao);
     glBindVertexArray(mVao);
@@ -199,6 +205,7 @@ void CPathRenderer::Draw(USceneCamera *Camera, glm::mat4 ReferenceFrame) {
     glUseProgram(mShaderID);
 
     glUniformMatrix4fv(mMVPUniform, 1, 0, (float*)&mvp[0]);
+    glUniform1i(mIsOrthoUniform, Camera->GetIsOrtho() ? GL_TRUE : GL_FALSE);
 
     glBindVertexArray(mPointsVao);
     glUniform1i(mPointModeUniform, GL_TRUE);

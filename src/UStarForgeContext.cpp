@@ -22,6 +22,7 @@
 #include "DOM/ScenarioDOMNode.hpp"
 #include "DOM/ObjectDOMNode.hpp"
 #include "DOM/PathDOMNode.hpp"
+#include "DOM/AreaObjectDOMNode.hpp"
 
 #include "IconsForkAwesome.h"
 
@@ -49,7 +50,7 @@ UStarForgeContext::~UStarForgeContext(){
 
 UStarForgeContext::UStarForgeContext(){
 	mGrid.Init();
-	mPathRenderer.Init();
+	mAreaRenderer.Init();
 	srand(time(0));
 
 	auto objectDBPath = std::filesystem::current_path() / "res" / "objectdb.json";
@@ -240,6 +241,7 @@ void UStarForgeContext::Render(float deltaTime) {
 		ImGui::Separator();
 		if(selected != nullptr){
 			selected->RenderDetailsUI();
+			//TODO: make this a switch please
 			if(selected->IsNodeType(EDOMNodeType::Object)){
 				std::shared_ptr<SObjectDOMNode> object = std::static_pointer_cast<SObjectDOMNode>(selected);
 				glm::mat4 zoneTransform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
@@ -248,7 +250,15 @@ void UStarForgeContext::Render(float deltaTime) {
 				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
 					object->mTransform = glm::inverse(zoneTransform) * transform;
 				}
-			} else if(selected->IsNodeType(EDOMNodeType::PathPoint)) {
+			} else if(selected->IsNodeType(EDOMNodeType::AreaObject)){
+				std::shared_ptr<SAreaObjectDOMNode> object = std::static_pointer_cast<SAreaObjectDOMNode>(selected);
+				glm::mat4 zoneTransform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+				glm::mat4 transform = (zoneTransform * object->mTransform), delta = glm::identity<glm::mat4>();
+
+				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+					object->mTransform = glm::inverse(zoneTransform) * transform;
+				}
+			}  else if(selected->IsNodeType(EDOMNodeType::PathPoint)) {
 				std::shared_ptr<SPathPointDOMNode> pathpoint = std::static_pointer_cast<SPathPointDOMNode>(selected);
 				std::shared_ptr<SPathDOMNode> path = pathpoint->GetParentOfType<SPathDOMNode>(EDOMNodeType::Path).lock();
 				glm::mat4 zoneTransform = pathpoint->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
@@ -315,11 +325,16 @@ void UStarForgeContext::Render(float deltaTime) {
 		if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
 	}
 
+	for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
+		std::shared_ptr<SZoneLayerDOMNode> layer = area->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
+		if(layer->GetVisible()) area->Render(&mCamera, &mAreaRenderer, layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform, mRoot->GetGame());
+	}
+
 	if(ImGui::IsMouseClicked(0) && !io.WantCaptureMouse){
 		J3D::Picking::RenderPickingScene(view, projection, packets);
 
 		ImVec2 mousePos = ImGui::GetMousePos();
-		uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x, 720 - (uint32_t)mousePos.y));
+		uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x, io.DisplaySize.y - (uint32_t)mousePos.y));
 
 		for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
 			if(object->GetModel() != nullptr && object->GetModel()->GetModelId()== modelID){

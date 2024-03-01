@@ -1,40 +1,59 @@
 #include "UAreaRenderer.hpp"
 #include <filesystem>
 #include <glad/glad.h>
+#include <math.h>
+#include <iostream>
 
-/*
+const std::vector<CShapeVertex> Box = {
+    // Bottom
+    {{-1, -1, -1}},  {{-1, -1, 1}}, // Back Line
+    {{1, -1, -1}}, {{1, -1, 1}},    // Front Line
+    {{-1, -1, 1}}, {{1, -1, 1}},    //Left Side
+    {{-1, -1, -1}}, {{1, -1, -1}},  // Right Side
+
+
+    // Top
+    {{-1, 1, -1}},  {{-1, 1, 1}}, // Back Line
+    {{1, 1, -1}}, {{1, 1, 1}},    // Front Line
+    {{-1, 1, 1}}, {{1, 1, 1}},    //Left Side
+    {{-1, 1, -1}}, {{1, 1, -1}},  // Right Side
+
+    // Sides
+    {{1, -1, 1}},  {{1, 1, 1}},
+    {{1, -1, -1}},  {{1, 1, -1}},
+    {{-1, -1, 1}},  {{-1, 1, 1}},
+    {{-1, -1, -1}},  {{-1, 1, -1}},
+    
+};
+
+static std::vector<CShapeVertex> Sphere;
+static std::vector<CShapeVertex> Bowl;
+static std::vector<CShapeVertex> Cylinder;
+
+const std::vector<CShapeVertex>* Shapes[SHAPES_COUNT] = {
+    &Box,
+    &Box,
+    &Sphere,
+    &Cylinder,
+    &Bowl
+};
 
 const char* default_area_vtx_shader_source = "#version 330\n\
 layout (location = 0) in vec3 position;\n\
-layout (location = 1) in vec4 color;\n\
-layout (location = 2) in int size;\n\
-out vec4 line_color;\n\
+uniform vec3 area_scale;\n\
+uniform float y_offset;\n\
 uniform mat4 gpu_ModelViewProjectionMatrix;\n\
 void main()\n\
 {\n\
-    gl_Position = gpu_ModelViewProjectionMatrix * vec4(position, 1.0);\n\
-    gl_PointSize = min(size, size / gl_Position.w);\n\
-    line_color = color;\n\
+    gl_Position = gpu_ModelViewProjectionMatrix * vec4(((position * area_scale) + vec3(0, y_offset, 0)), 1.0);\n\
 }\
 ";
 
 const char* default_area_frg_shader_source = "#version 330\n\
-uniform sampler2D spriteTexture;\n\
-in vec4 line_color;\n\
-uniform bool pointMode;\n\
+uniform vec4 color;\n\
 void main()\n\
 {\n\
-    if(pointMode){\n\
-        vec2 p = gl_PointCoord * 2.0 - vec2(1.0);\n\
-        float r = sqrt(dot(p,p));\n\
-        if(dot(p,p) > r || dot(p,p) < r*0.75){\n\
-            discard;\n\
-        } else {\n\
-            gl_FragColor = vec4(1.0,1.0,1.0,1.0);\n\
-        }\n\
-    } else {\n\
-        gl_FragColor = line_color;\n\
-    }\n\
+    gl_FragColor = color;\n\
 }\
 ";
 
@@ -96,40 +115,113 @@ void CAreaRenderer::Init() {
 
 	}
 
-    // Init Cube
+    glGenVertexArrays(SHAPES_COUNT, mShapeArrays);
+    glGenBuffers(SHAPES_COUNT, mShapeBuffers);
 
-    glGenVertexArrays(1, &mVao);
-    glBindVertexArray(mVao);
+    for(int shape = 0; shape < SHAPES_COUNT; shape++){
+        glBindVertexArray(mShapeArrays[shape]);
+        glBindBuffer(GL_ARRAY_BUFFER, mShapeBuffers[shape]);
 
-    glGenBuffers(1, &mVbo);
-    glBindBuffer(GL_ARRAY_BUFFER, mVbo);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(CShapeVertex), (void*)offsetof(CShapeVertex, Position));
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(CPrimitivePoint), (void*)offsetof(CPrimitivePoint, Position));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(CPrimitivePoint), (void*)offsetof(CPrimitivePoint, Color));
-    glEnableVertexAttribArray(2);
-    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(CPrimitivePoint), (void*)offsetof(CPrimitivePoint, SpriteSize));
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 
+    // Generate Meshes
+    // Cylinder
+    float secStep = (2 * M_PI) / 16;
+    for(float sector = 0.0f; sector < 16; sector += secStep){
+        float x = cos(sector), z = sin(sector);
+        float x1 = cos(sector+secStep), z1 = sin(sector+secStep); 
+
+        Cylinder.push_back({.Position = {x, -1, z}});
+        Cylinder.push_back({.Position = {x, 1, z}});
+
+        Cylinder.push_back({.Position = {x, 1, z}});
+        Cylinder.push_back({.Position = {x1, 1, z1}});
+
+        Cylinder.push_back({.Position = {x, -1, z}});
+        Cylinder.push_back({.Position = {x1, -1, z1}});
+    }
+
+    // Sphere
+    secStep = (2 * M_PI) / 64;
+    float arcStep = ((2*M_PI) / 8);
+    
+    for(float sector = 0.0f; sector < 64; sector += secStep){
+        float x = cos(sector), z = sin(sector);
+        float x1 = cos(sector+secStep), z1 = sin(sector+secStep); 
+
+        Sphere.push_back({.Position = {x, 0, z}});
+        Sphere.push_back({.Position = {x1, 0, z1}});
+    }
+
+    for(float arc = 0.0f; arc < 8; arc += arcStep){
+        float r = cos(arc), t = sin(arc);
+        for(float sector = 0.0f; sector < 64; sector += secStep){
+            float x = cos(sector), z = sin(sector);
+            float x1 = cos(sector+secStep), z1 = sin(sector+secStep); 
+
+            Sphere.push_back({.Position = {x * t, z, r * x}});
+            Sphere.push_back({.Position = {x1 * t, z1, r * x1}});
+        }
+    }
+    
+    // Bowl
+    for(float sector = 0.0f; sector < 64; sector += secStep){
+        float x = cos(sector), z = sin(sector);
+        float x1 = cos(sector+secStep), z1 = sin(sector+secStep); 
+
+        Bowl.push_back({.Position = {x, 0, z}});
+        Bowl.push_back({.Position = {x1, 0, z1}});
+    }
+
+    for(float arc = 0.0f; arc < 8; arc += arcStep){
+        float r = cos(arc), t = sin(arc);
+        for(float sector = 0.0f; sector < 64; sector += secStep){
+            float x = cos(sector), z = sin(sector);
+            float x1 = cos(sector+secStep), z1 = sin(sector+secStep); 
+
+            if(z > 0 || z1 > 0) continue;
+
+            Bowl.push_back({.Position = {x * t, z, r * x}});
+            Bowl.push_back({.Position = {x1 * t, z1, r * x1}});
+        }
+    }
+    
+    glBindBuffer(GL_ARRAY_BUFFER, mShapeBuffers[BOX_BASE]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CShapeVertex) * Box.size(), &Box[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mShapeBuffers[BOX_CENTER]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CShapeVertex) * Box.size(), &Box[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mShapeBuffers[SPHERE]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CShapeVertex) * Sphere.size(), &Sphere[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mShapeBuffers[CYLINDER]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CShapeVertex) * Cylinder.size(), &Cylinder[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, mShapeBuffers[BOWL]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CShapeVertex) * Bowl.size(), &Bowl[0], GL_STATIC_DRAW);
+
+    mMVPUniform = glGetUniformLocation(mShaderID, "gpu_ModelViewProjectionMatrix");
+    mColorUniform = glGetUniformLocation(mShaderID, "color");
+    mYOffsetUniform = glGetUniformLocation(mShaderID, "y_offset");
+    mAreaScaleUniform = glGetUniformLocation(mShaderID, "area_scale");
+    
 }
 
 CAreaRenderer::CAreaRenderer() {}
 
 CAreaRenderer::~CAreaRenderer() {
-    glDeleteBuffers(1, &mVboCube);
-    glDeleteVertexArrays(1, &mVaoCube);
-
-    glDeleteBuffers(1, &mVboSphere);
-    glDeleteVertexArrays(1, &mVaoSphere);
-
-    glDeleteBuffers(1, &mVboCylinder);
-    glDeleteVertexArrays(1, &mVaoCylinder);
+    glDeleteVertexArrays(SHAPES_COUNT, mShapeArrays);
+    glDeleteBuffers(SHAPES_COUNT, mShapeBuffers);
 }
 
-void CAreaRenderer::DrawShape(USceneCamera* Camera, AreaRenderShape shape) {
+void CAreaRenderer::DrawShape(USceneCamera* camera, AreaRenderShape shape, glm::mat4 transform, glm::vec4 color, glm::vec3 area_scale) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
@@ -139,13 +231,27 @@ void CAreaRenderer::DrawShape(USceneCamera* Camera, AreaRenderShape shape) {
     glEnable(GL_PROGRAM_POINT_SIZE);
     //glEnable(GL_POINT_SPRITE);
 
-    glLineWidth(2.0f);
+    glLineWidth(1.2f);
+
+	glm::mat4 mvp;
+	mvp = camera->GetProjectionMatrix() * camera->GetViewMatrix() * transform;
 
     glUseProgram(mShaderID);
 
-    //glBindVertexArray(mVao);
-    //glDrawArrays(GL_POINTS, start, line.size());
+    // Set Uniforms
+    glUniformMatrix4fv(mMVPUniform, 1, 0, (float*)&mvp[0]);
+
+    glUniform4fv(mColorUniform, 1, &color[0]);
+    glUniform3fv(mAreaScaleUniform, 1, &area_scale[0]); //TODO: Proper scale based on shape, etc scales use x as radius
+
+    if(shape == BOX_BASE){ // bowl is also not centered, but its y offset is the radius
+        glUniform1f(mYOffsetUniform, 500.0f);
+    } else {
+        glUniform1f(mYOffsetUniform, 0.0f);
+    }
+
+    glBindVertexArray(mShapeArrays[shape]);
+    glDrawArrays(GL_LINES, 0, Shapes[shape]->size());
 
     glBindVertexArray(0);
 }
-*/

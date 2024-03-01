@@ -10,9 +10,13 @@
 #include <J3D/Animation/J3DColorAnimationInstance.hpp>
 #include <J3D/Animation/J3DAnimationInstance.hpp>
 #include <J3D/Data/J3DModelInstance.hpp>
+#include "UAreaRenderer.hpp"
+#include "UCamera.hpp"
+
 
 class SAreaObjectDOMNode : public SDOMNodeSerializable {
     uint32_t mID;
+    glm::vec4 mColor;
 protected:
 
     uint32_t mLinkID;
@@ -57,8 +61,7 @@ public:
     void Deserialize(SBcsvIO* bcsv, int entry);
     void Serialize(SBcsvIO* bcsv, int entry);
 
-    virtual void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
+    virtual void Render(USceneCamera* camera, CAreaRenderer* area_renderer, glm::mat4 transform, EGameType game);
     uint32_t GetLinkID() { return mLinkID; }
-
 
 };
