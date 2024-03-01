@@ -1,9 +1,8 @@
 #include "UAreaRenderer.hpp"
 #include <filesystem>
 #include <glad/glad.h>
-#include <math.h>
+#include <cmath>
 #include <iostream>
-#define M_PI 3.14159265358979323846
 
 const std::vector<CShapeVertex> Box = {
     // Bottom
