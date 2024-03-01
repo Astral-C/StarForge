@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <math.h>
 #include <iostream>
+#define M_PI 3.14159265358979323846
 
 const std::vector<CShapeVertex> Box = {
     // Bottom
