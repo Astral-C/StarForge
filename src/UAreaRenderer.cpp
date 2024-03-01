@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <cmath>
 #include <iostream>
+#define M_PI 3.14159265358979323846 // why is this not defined on windows :)
 
 const std::vector<CShapeVertex> Box = {
     // Bottom
