@@ -11,7 +11,7 @@ typedef struct {
     int32_t SpriteSize;
     int32_t Texture;
     int32_t SizeFixed;
-    int32_t Flip;
+    int32_t ID;
 } CPointSprite;
 
 class CPointSpriteManager {
@@ -29,7 +29,9 @@ public:
 	void SetBillboardTexture(std::filesystem::path ImagePath, int TextureIndex);
 	void Draw(USceneCamera* Camera);
 
+    void UpdateData();
 	void Init(int BillboardResolution, int BillboardImageCount);
+
 	CPointSpriteManager();
 	~CPointSpriteManager();
 

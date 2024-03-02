@@ -19,6 +19,7 @@ class CPathRenderer {
     uint32_t mMVPUniform;
     uint32_t mPointModeUniform;
     uint32_t mIsOrthoUniform;
+    uint32_t mPickUniform;
     uint32_t mTextureID; //single texture for points
 
     uint32_t mVao;
@@ -34,7 +35,7 @@ public:
     std::vector<CPathPoint> mPath;
 
     void UpdateData();
-	void Draw(USceneCamera* Camera, glm::mat4 ReferenceFrame);
+	void Draw(USceneCamera* Camera, int32_t id, glm::mat4 ReferenceFrame);
 
 	void Init();
 	CPathRenderer();

@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <functional>
+#include <atomic>
 
 enum EGameType {
     SMG1,
@@ -43,14 +44,16 @@ enum class EDOMNodeType
 	BlackHole
 };
 
+extern std::atomic<uint32_t> SPickingID;
+
 // Base class for all DOM (Document Object Model) nodes.
 class SDOMNodeBase : public std::enable_shared_from_this<SDOMNodeBase>
 {
 	uint32_t mNodeState { 0 };
-
 protected:
 	EDOMNodeType mType;
 	std::string mName;
+	int32_t mPickId { 0 };
 
 	template<typename T>
 	void GatherChildrenOfType(std::vector<std::shared_ptr<T>>& list, EDOMNodeType type)
@@ -82,7 +85,7 @@ protected:
 	}
 
 public:
-	SDOMNodeBase(std::string name) { mName = name; SetIsSelected(false); SetIsRendered(true); SetIsInitialized(false); }
+	SDOMNodeBase(std::string name) { mName = name; SetIsSelected(false); SetIsRendered(true); SetIsInitialized(false); mPickId = SPickingID++; }
 
 	std::weak_ptr<SDOMNodeBase> Parent;
 	std::vector<std::shared_ptr<SDOMNodeBase>> Children;

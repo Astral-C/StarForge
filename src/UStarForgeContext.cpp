@@ -24,6 +24,9 @@
 #include "DOM/PathDOMNode.hpp"
 #include "DOM/AreaObjectDOMNode.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include "IconsForkAwesome.h"
 
 void GalaxySort(J3D::Rendering::RenderPacketVector& packets) {
@@ -317,9 +320,15 @@ void UStarForgeContext::Render(float deltaTime) {
 	mRoot->Render(mRenderables, deltaTime);
 
 	J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
-
 	J3D::Rendering::Render(deltaTime, view, projection, packets);
 	
+
+	if(ImGui::IsMouseClicked(0) && !io.WantCaptureMouse){
+		J3D::Picking::RenderPickingScene(view, projection, packets);
+	}
+
+	// Combine these two into one
+
 	for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
 		std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
 		if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
@@ -331,9 +340,13 @@ void UStarForgeContext::Render(float deltaTime) {
 	}
 
 	if(ImGui::IsMouseClicked(0) && !io.WantCaptureMouse){
-		J3D::Picking::RenderPickingScene(view, projection, packets);
-
 		ImVec2 mousePos = ImGui::GetMousePos();
+
+		// Check picking FB for paths, areas, billboards, etc
+		// Exit early if we found a selection here
+
+
+		// Check picking for J3DUltra 
 		uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x, io.DisplaySize.y - (uint32_t)mousePos.y));
 
 		for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){

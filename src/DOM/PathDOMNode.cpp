@@ -22,7 +22,7 @@ SPathDOMNode::~SPathDOMNode(){
 }
 
 void SPathDOMNode::Render(USceneCamera* cam, glm::mat4 referenceFrame){
-    if(mVisible) mRenderer.Draw(cam, referenceFrame);
+    if(mVisible) mRenderer.Draw(cam, mPickId, referenceFrame);
 }
 
 void SPathDOMNode::Update(){
@@ -41,17 +41,17 @@ void SPathDOMNode::Update(){
 }
 
 void SPathDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
-    mName = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "name"));
-    mPathType = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "type"));
+    mName = bcsv->GetString(entry, "name");
+    mPathType = bcsv->GetString(entry, "type");
 
-    mIsClosed = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "closed")) != "OPEN";
+    mIsClosed = bcsv->GetString(entry, "closed") != "OPEN";
     mLinkID = bcsv->GetUnsignedInt(entry, "l_id");
     
     for(int i = 0; i < 8; i++){
         mPathArgs[i] = bcsv->GetUnsignedInt(entry, fmt::format("path_arg{}", i));
     }
 
-    mUsage = SGenUtility::SjisToUtf8(bcsv->GetString(entry, "usage"));
+    mUsage = bcsv->GetString(entry, "usage");
     mNo = bcsv->GetUnsignedInt(entry, "no");
     mPathID = bcsv->GetUnsignedInt(entry, "Path_ID");
 }

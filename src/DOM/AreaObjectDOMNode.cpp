@@ -120,19 +120,19 @@ void SAreaObjectDOMNode::RenderDetailsUI(){
 
 void SAreaObjectDOMNode::Render(USceneCamera* camera, CAreaRenderer* area_renderer, glm::mat4 transform, EGameType game){
     if(game == SMG2){
-        area_renderer->DrawShape(camera, (AreaRenderShape)mAreaShapeNo, transform * mTransform, mColor, {500,500,500});
+        area_renderer->DrawShape(camera, (AreaRenderShape)mAreaShapeNo, mPickId, transform * mTransform);
     } else {
         if(mName.find("Cylinder") != std::string::npos){
-            area_renderer->DrawShape(camera, CYLINDER, transform * mTransform, mColor, {500,500,500});
+            area_renderer->DrawShape(camera, CYLINDER, mPickId, transform * mTransform);
         }
         if(mName.find("Cube") != std::string::npos){ // Fug
-            area_renderer->DrawShape(camera, BOX_BASE, transform * mTransform, mColor, {500,500,500});
+            area_renderer->DrawShape(camera, BOX_BASE, mPickId, transform * mTransform);
         }
         if(mName.find("Sphere") != std::string::npos){
-            area_renderer->DrawShape(camera, SPHERE, transform * mTransform, mColor, {500,500,500});
+            area_renderer->DrawShape(camera, SPHERE, mPickId, transform * mTransform);
         }
         if(mName.find("Bowl") != std::string::npos){
-            area_renderer->DrawShape(camera, BOWL, transform * mTransform, mColor, {500,500,500});
+            area_renderer->DrawShape(camera, BOWL, mPickId, transform * mTransform);
         }
     }
 }

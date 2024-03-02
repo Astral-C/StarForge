@@ -41,20 +41,22 @@ const std::vector<CShapeVertex>* Shapes[SHAPES_COUNT] = {
 
 const char* default_area_vtx_shader_source = "#version 330\n\
 layout (location = 0) in vec3 position;\n\
-uniform vec3 area_scale;\n\
 uniform float y_offset;\n\
 uniform mat4 gpu_ModelViewProjectionMatrix;\n\
 void main()\n\
 {\n\
-    gl_Position = gpu_ModelViewProjectionMatrix * vec4(((position * area_scale) + vec3(0, y_offset, 0)), 1.0);\n\
+    gl_Position = gpu_ModelViewProjectionMatrix * vec4(((position * vec3(500,500,500)) + vec3(0, y_offset, 0)), 1.0);\n\
 }\
 ";
 
 const char* default_area_frg_shader_source = "#version 330\n\
-uniform vec4 color;\n\
+uniform int id;\n\
+out vec4 outColor;\n\
+out int outPick;\n\
 void main()\n\
 {\n\
-    gl_FragColor = color;\n\
+    outColor = vec4(0.0,1.0,0.0,1.0);\n\
+    outPick = id;\n\
 }\
 ";
 
@@ -209,9 +211,8 @@ void CAreaRenderer::Init() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(CShapeVertex) * Bowl.size(), &Bowl[0], GL_STATIC_DRAW);
 
     mMVPUniform = glGetUniformLocation(mShaderID, "gpu_ModelViewProjectionMatrix");
-    mColorUniform = glGetUniformLocation(mShaderID, "color");
     mYOffsetUniform = glGetUniformLocation(mShaderID, "y_offset");
-    mAreaScaleUniform = glGetUniformLocation(mShaderID, "area_scale");
+    mPickUniform = glGetUniformLocation(mShaderID, "id");
     
 }
 
@@ -222,7 +223,7 @@ CAreaRenderer::~CAreaRenderer() {
     glDeleteBuffers(SHAPES_COUNT, mShapeBuffers);
 }
 
-void CAreaRenderer::DrawShape(USceneCamera* camera, AreaRenderShape shape, glm::mat4 transform, glm::vec4 color, glm::vec3 area_scale) {
+void CAreaRenderer::DrawShape(USceneCamera* camera, AreaRenderShape shape,  int32_t id, glm::mat4 transform) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
@@ -230,8 +231,6 @@ void CAreaRenderer::DrawShape(USceneCamera* camera, AreaRenderShape shape, glm::
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_PROGRAM_POINT_SIZE);
-    //glEnable(GL_POINT_SPRITE);
-
     glLineWidth(1.2f);
 
 	glm::mat4 mvp;
@@ -241,9 +240,7 @@ void CAreaRenderer::DrawShape(USceneCamera* camera, AreaRenderShape shape, glm::
 
     // Set Uniforms
     glUniformMatrix4fv(mMVPUniform, 1, 0, (float*)&mvp[0]);
-
-    glUniform4fv(mColorUniform, 1, &color[0]);
-    glUniform3fv(mAreaScaleUniform, 1, &area_scale[0]); //TODO: Proper scale based on shape, etc scales use x as radius
+    glUniform1i(mPickUniform, id);
 
     if(shape == BOX_BASE){ // bowl is also not centered, but its y offset is the radius
         glUniform1f(mYOffsetUniform, 500.0f);

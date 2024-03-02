@@ -25,6 +25,9 @@ const char* default_path_frg_shader_source = "#version 330\n\
 uniform sampler2D spriteTexture;\n\
 in vec4 mPath_color;\n\
 uniform bool pointMode;\n\
+uniform int id;\n\
+out vec4 outColor;\n\
+out int outPick;\n\
 void main()\n\
 {\n\
     if(pointMode){\n\
@@ -33,10 +36,12 @@ void main()\n\
         if(dot(p,p) > r){\n\
             discard;\n\
         } else {\n\
-            gl_FragColor = mPath_color;\n\
+            outColor = mPath_color;\n\
+            outPick = id;\n\
         }\n\
     } else {\n\
-        gl_FragColor = mPath_color;\n\
+        outColor = mPath_color;\n\
+        outPick = -1;\n\
     }\n\
 }\
 ";
@@ -103,6 +108,7 @@ void CPathRenderer::Init() {
     mMVPUniform = glGetUniformLocation(mShaderID, "gpu_ModelViewProjectionMatrix");
     mPointModeUniform = glGetUniformLocation(mShaderID, "pointMode");
     mIsOrthoUniform = glGetUniformLocation(mShaderID, "isOrtho");
+    mPickUniform = glGetUniformLocation(mShaderID, "id");
 
     glGenVertexArrays(1, &mVao);
     glBindVertexArray(mVao);
@@ -193,7 +199,7 @@ void CPathRenderer::UpdateData(){
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void CPathRenderer::Draw(USceneCamera *Camera, glm::mat4 ReferenceFrame) {
+void CPathRenderer::Draw(USceneCamera *Camera, int32_t id, glm::mat4 ReferenceFrame) {
     glEnable(GL_PROGRAM_POINT_SIZE);
     //glEnable(GL_POINT_SPRITE);
 
@@ -206,6 +212,7 @@ void CPathRenderer::Draw(USceneCamera *Camera, glm::mat4 ReferenceFrame) {
 
     glUniformMatrix4fv(mMVPUniform, 1, 0, (float*)&mvp[0]);
     glUniform1i(mIsOrthoUniform, Camera->GetIsOrtho() ? GL_TRUE : GL_FALSE);
+    glUniform1i(mPickUniform, id);
 
     glBindVertexArray(mPointsVao);
     glUniform1i(mPointModeUniform, GL_TRUE);

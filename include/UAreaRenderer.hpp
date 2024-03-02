@@ -26,13 +26,12 @@ class CAreaRenderer {
     uint32_t mShapeBuffers[SHAPES_COUNT];
 
     uint32_t mMVPUniform;
-    uint32_t mColorUniform;
     uint32_t mYOffsetUniform;
-    uint32_t mAreaScaleUniform;
+    uint32_t mPickUniform;
 
 public:
 	
-    void DrawShape(USceneCamera* camera, AreaRenderShape shape, glm::mat4 transform, glm::vec4 color, glm::vec3 area_scale);
+    void DrawShape(USceneCamera* camera, AreaRenderShape shape, int32_t id, glm::mat4 transform);
 
 	void Init();
 	CAreaRenderer();
