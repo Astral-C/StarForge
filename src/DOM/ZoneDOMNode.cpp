@@ -410,6 +410,25 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
             if(file->parent != nullptr && (strcmp(file->parent->name, "path") == 0 || strcmp(file->parent->name, "Path") == 0) && (file->attr & 0x02)){
                 layer->LoadLayerPaths(&mZoneArchive, file, std::string(file->name));
             }
+
+
+        }
+
+        GCarcfile* file = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path(fmt::format("jmp/placement/layer{}/stageobjinfo", char('a'+l))));
+        if(file == nullptr){
+            file = GCResourceManager.GetFile(&mZoneArchive, std::filesystem::path(fmt::format("jmp/placement/Layer{}/StageObjInfo", char('A'+l))));
+        }
+        
+        if(file != nullptr && file->size != 0){
+            bStream::CMemoryStream StageObjInfoStream((uint8_t*)file->data, (size_t)file->size, bStream::Endianess::Big, bStream::OpenMode::In);
+            mStageObjInfo.Load(&StageObjInfoStream);
+            for(size_t stageObjEntry = 0; stageObjEntry < mStageObjInfo.GetEntryCount(); stageObjEntry++){
+                std::string zoneName = mStageObjInfo.GetString(stageObjEntry, "name");
+                glm::vec3 position = {mStageObjInfo.GetFloat(stageObjEntry, "pos_x"), mStageObjInfo.GetFloat(stageObjEntry, "pos_y"), mStageObjInfo.GetFloat(stageObjEntry, "pos_z")};
+                glm::vec3 rotation = {mStageObjInfo.GetFloat(stageObjEntry, "dir_x"), mStageObjInfo.GetFloat(stageObjEntry, "dir_y"), mStageObjInfo.GetFloat(stageObjEntry, "dir_z")};
+                
+                zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), mStageObjInfo.GetUnsignedInt(stageObjEntry, "l_id")}});
+            }
         }
 
         AddChild(layer);

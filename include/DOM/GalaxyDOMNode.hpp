@@ -20,6 +20,7 @@ class SGalaxyDOMNode : public SDOMNodeBase {
 
     // The current scenario selected by the user. Separate from the normal selection since it controls state for rendering etc
     std::shared_ptr<SScenarioDOMNode> mSelectedScenario { nullptr };
+    std::weak_ptr<SZoneDOMNode> mMainGalaxyZone;
 
     //std::map<uint32_t, > mLightingConfigs;
 

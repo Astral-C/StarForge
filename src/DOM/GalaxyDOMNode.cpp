@@ -147,7 +147,9 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         GCarchive lightDataArc = {0};
         GCResourceManager.LoadArchive((Options.mRootPath / "files" / "ObjectData" / "LightData.arc").string().c_str(), &lightDataArc);
 
-        GCarcfile* lightDataFile = GCResourceManager.GetFile(&lightDataArc, std::filesystem::path("lightdata.bcsv"));
+        GCarcfile* lightDataFile = nullptr;
+        lightDataFile = GCResourceManager.GetFile(&lightDataArc, std::filesystem::path("lightdata.bcsv"));
+        
         if(lightDataFile != nullptr){
             SBcsvIO lightData;
             bStream::CMemoryStream LightDataStream((uint8_t*)lightDataFile->data, (size_t)lightDataFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
@@ -166,6 +168,29 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
     } else {
         zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ZoneList.bcsv"));
         scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ScenarioData.bcsv"));
+
+
+        // Load Lighting Configs
+        GCarchive lightDataArc = {0};
+        GCResourceManager.LoadArchive((Options.mRootPath / "files" / "LightData" / "LightData.arc").string().c_str(), &lightDataArc);
+
+        GCarcfile* lightDataFile = nullptr;
+        lightDataFile = GCResourceManager.GetFile(&lightDataArc, std::filesystem::path("LightData.bcsv"));
+        
+        if(lightDataFile != nullptr){
+            SBcsvIO lightData;
+            bStream::CMemoryStream LightDataStream((uint8_t*)lightDataFile->data, (size_t)lightDataFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
+            lightData.Load(&LightDataStream);
+
+            LoadLightConfig("Weak", &lightData);
+            LoadLightConfig("Strong", &lightData);
+            LoadLightConfig("Planet", &lightData);
+            LoadLightConfig("Player", &lightData);
+
+        }
+        
+
+        gcFreeArchive(&lightDataArc);
     }
 
 
