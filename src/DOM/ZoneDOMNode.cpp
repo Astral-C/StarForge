@@ -38,7 +38,7 @@ void SZoneLayerDOMNode::SaveLayer(){
         std::shared_ptr<Archive::Folder> layerFolder = nullptr;
 
         if(zone.lock()->mGameType == EGameType::SMG1){
-            layerFolder = zone.lock()->mZoneArchive->GetFolder(mLayerName);
+            layerFolder = zone.lock()->mZoneArchive->GetFolder(std::filesystem::path(mLayerName));
             if(layerFolder == nullptr){
                 std::shared_ptr<Archive::Folder> newLayerFolder = Archive::Folder::Create(zone.lock()->mZoneArchive);
                 newLayerFolder->SetName(std::filesystem::path(mLayerName).stem());
@@ -49,10 +49,10 @@ void SZoneLayerDOMNode::SaveLayer(){
                 mObjInfo.FromTemplate(zone.lock()->mObjInfoTemplate);
                 mObjInfoFile = newLayerObjInfo;
 
-                zone.lock()->mZoneArchive->GetFolder("jmp/placement")->AddSubdirectory(newLayerFolder);
+                zone.lock()->mZoneArchive->GetFolder(std::filesystem::path("jmp/placement"))->AddSubdirectory(newLayerFolder);
             }
         } else {
-            layerFolder = zone.lock()->mZoneArchive->GetFolder(mLayerName);
+            layerFolder = zone.lock()->mZoneArchive->GetFolder(std::filesystem::path(mLayerName));
             if(layerFolder == nullptr){
                 std::shared_ptr<Archive::Folder> newLayerFolder = Archive::Folder::Create(zone.lock()->mZoneArchive);
                 newLayerFolder->SetName(std::filesystem::path(mLayerName).stem());
@@ -63,7 +63,7 @@ void SZoneLayerDOMNode::SaveLayer(){
                 mObjInfo.FromTemplate(zone.lock()->mObjInfoTemplate);
                 mObjInfoFile = newLayerObjInfo;
 
-                zone.lock()->mZoneArchive->GetFolder("jmp/Placement")->AddSubdirectory(newLayerFolder);
+                zone.lock()->mZoneArchive->GetFolder(std::filesystem::path("jmp/Placement"))->AddSubdirectory(newLayerFolder);
             }
         }
 
@@ -92,9 +92,9 @@ void SZoneLayerDOMNode::SaveLayer(){
 
 void SZoneLayerDOMNode::LoadLayerPaths(std::shared_ptr<Archive::Folder> layer){
 
-    std::shared_ptr<Archive::File> commonPathInfoFile = layer->GetFile("commonpathinfo");
+    std::shared_ptr<Archive::File> commonPathInfoFile = layer->GetFile(std::filesystem::path("commonpathinfo"));
     if(commonPathInfoFile == nullptr){
-        commonPathInfoFile = layer->GetFile("CommonPathInfo");
+        commonPathInfoFile = layer->GetFile(std::filesystem::path("CommonPathInfo"));
     }
 
     if(commonPathInfoFile == nullptr) return; // couldnt load path
@@ -108,10 +108,10 @@ void SZoneLayerDOMNode::LoadLayerPaths(std::shared_ptr<Archive::Folder> layer){
         path->Deserialize(&commonPathInfo, pathEntry);
         std::cout << "Path " << path->GetName() << " Deserialized" << std::endl;
         
-        std::shared_ptr<Archive::File> pathFile =  layer->GetFile(fmt::format("commonpathpointinfo.{}", path->GetPathNumber()));
+        std::shared_ptr<Archive::File> pathFile =  layer->GetFile(std::filesystem::path(fmt::format("commonpathpointinfo.{}", path->GetPathNumber())));
 
         if(pathFile == nullptr){
-            pathFile = layer->GetFile(fmt::format("CommonPathPointInfo.{}", path->GetPathNumber()));
+            pathFile = layer->GetFile(std::filesystem::path(fmt::format("CommonPathPointInfo.{}", path->GetPathNumber())));
         }
 
         if(pathFile == nullptr) continue;
@@ -137,9 +137,9 @@ void SZoneLayerDOMNode::LoadLayerPaths(std::shared_ptr<Archive::Folder> layer){
 void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer){
     if(layer == nullptr) return;
 
-    mObjInfoFile = layer->GetFile("objinfo");
+    mObjInfoFile = layer->GetFile(std::filesystem::path("objinfo"));
     if(mObjInfoFile == nullptr){
-        mObjInfoFile = layer->GetFile("ObjInfo");
+        mObjInfoFile = layer->GetFile(std::filesystem::path("ObjInfo"));
     }
 
     if(mObjInfoFile == nullptr) return; // couldnt load path
@@ -182,9 +182,9 @@ void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer)
 	}
 
 
-    mAreaObjInfoFile = layer->GetFile("areaobjinfo");
+    mAreaObjInfoFile = layer->GetFile(std::filesystem::path("areaobjinfo"));
     if(mAreaObjInfoFile == nullptr){
-        mAreaObjInfoFile = layer->GetFile("AreaObjInfo");
+        mAreaObjInfoFile = layer->GetFile(std::filesystem::path("AreaObjInfo"));
     }
 
     if(mAreaObjInfoFile == nullptr) return; // couldnt load path
@@ -337,17 +337,17 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
 
     auto layer = std::make_shared<SZoneLayerDOMNode>("Common");
 
-    std::shared_ptr<Archive::Folder> layerCommonObjects = mZoneArchive->Get<Archive::Folder>("/jmp/placement/common");
-    std::shared_ptr<Archive::Folder> layerCommonPaths = mZoneArchive->Get<Archive::Folder>("/jmp/path");
+    std::shared_ptr<Archive::Folder> layerCommonObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/placement/common"));
+    std::shared_ptr<Archive::Folder> layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/path"));
 
     mGameType = game;
     
     if(layerCommonObjects == nullptr){
-        layerCommonObjects = mZoneArchive->Get<Archive::Folder>("/jmp/Placement/Common");
+        layerCommonObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Placement/Common"));
     }
     
     if(layerCommonPaths == nullptr){
-        layerCommonPaths = mZoneArchive->Get<Archive::Folder>("/jmp/Path");
+        layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Path"));
     }
 
     if(layerCommonObjects == nullptr || layerCommonPaths == nullptr) return;
@@ -367,10 +367,10 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
             layer->mLayerName = fmt::format("/jmp/Placement/Layer{}", char('A'+l));
         }
 
-        std::shared_ptr<Archive::Folder> layerObjects = mZoneArchive->Get<Archive::Folder>(fmt::format("/jmp/placement/layer{}", char('a'+l)));
+        std::shared_ptr<Archive::Folder> layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/placement/layer{}", char('a'+l))));
 
         if(layerObjects == nullptr){
-            layerObjects = mZoneArchive->Get<Archive::Folder>(fmt::format("/jmp/Placement/Layer{}", char('A'+l)));
+            layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/Placement/Layer{}", char('A'+l))));
         }
 
         layer->LoadLayerObjects(layerObjects);
@@ -378,7 +378,7 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
         AddChild(layer);
     }
 
-    auto objInfoFile = mZoneArchive->Get<Archive::File>("/jmp/placement/common/objinfo");
+    auto objInfoFile = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/placement/common/objinfo"));
     bStream::CMemoryStream objInfoStream(objInfoFile->GetData(), objInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
     mObjInfoTemplate.Load(&objInfoStream);
     mObjInfoTemplate.Clear();
@@ -392,9 +392,9 @@ void SZoneDOMNode::SaveZone(){
     if(!mZoneArchiveLoaded) return;
 
     if(mIsMainZone){ // Todo: per scenario!! same as regar objects
-        std::shared_ptr<Archive::File> stageObjInfoFile = mZoneArchive->GetFile("jmp/placement/common/stageobjinfo");
+        std::shared_ptr<Archive::File> stageObjInfoFile = mZoneArchive->GetFile(std::filesystem::path("jmp/placement/common/stageobjinfo"));
         if(stageObjInfoFile == nullptr){
-            stageObjInfoFile = mZoneArchive->GetFile("jmp/Placement/Common/StageObjInfo");
+            stageObjInfoFile = mZoneArchive->GetFile(std::filesystem::path("jmp/Placement/Common/StageObjInfo"));
         }
 
         std::vector<std::shared_ptr<SZoneDOMNode>> zoneNodes = Parent.lock()->GetChildrenOfType<SZoneDOMNode>(EDOMNodeType::Zone);
@@ -458,22 +458,22 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
 
     auto layer = std::make_shared<SZoneLayerDOMNode>("Common");
 
-    std::shared_ptr<Archive::File> layerCommonStageObj = mZoneArchive->Get<Archive::File>("/jmp/placement/common/stageobjinfo");
-    std::shared_ptr<Archive::Folder> layerCommonObjects = mZoneArchive->Get<Archive::Folder>("/jmp/placement/common");
-    std::shared_ptr<Archive::Folder> layerCommonPaths = mZoneArchive->Get<Archive::Folder>("/jmp/path");
+    std::shared_ptr<Archive::File> layerCommonStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/placement/common/stageobjinfo"));
+    std::shared_ptr<Archive::Folder> layerCommonObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/placement/common"));
+    std::shared_ptr<Archive::Folder> layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/path"));
     layer->mLayerName = fmt::format("/jmp/placement/common");    
 
     if(layerCommonStageObj == nullptr){
-        layerCommonStageObj = mZoneArchive->Get<Archive::File>("/jmp/Placement/Common/StageObjInfo");
+        layerCommonStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/Placement/Common/StageObjInfo"));
         layer->mLayerName = fmt::format("/jmp/Placement/Common");
     }
 
     if(layerCommonObjects == nullptr){
-        layerCommonObjects = mZoneArchive->Get<Archive::Folder>("/jmp/Placement/Common");
+        layerCommonObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Placement/Common"));
     }
     
     if(layerCommonPaths == nullptr){
-        layerCommonPaths = mZoneArchive->Get<Archive::Folder>("/jmp/Path");
+        layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Path"));
     }
 
     if(layerCommonObjects == nullptr || layerCommonPaths == nullptr) return {};
@@ -492,7 +492,7 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
         zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), mStageObjInfo.GetUnsignedInt(stageObjEntry, "l_id")}});
     }
     
-    auto objInfoFile = mZoneArchive->Get<Archive::File>("/jmp/placement/common/objinfo");
+    auto objInfoFile = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/placement/common/objinfo"));
     bStream::CMemoryStream objInfoStream(objInfoFile->GetData(), objInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
     mObjInfoTemplate.Load(&objInfoStream);
     mObjInfoTemplate.Clear();
@@ -503,17 +503,17 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
     for(int l = 0; l < 16; l++){
         auto layer = std::make_shared<SZoneLayerDOMNode>(fmt::format("Layer {}", char('A'+l)));
 
-        std::shared_ptr<Archive::File> layerStageObj = mZoneArchive->Get<Archive::File>(fmt::format("jmp/placement/layer{}/stageobjinfo", char('a'+l)));
-        std::shared_ptr<Archive::Folder> layerObjects = mZoneArchive->Get<Archive::Folder>(fmt::format("jmp/placement/layer{}", char('a'+l)));
+        std::shared_ptr<Archive::File> layerStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path(fmt::format("jmp/placement/layer{}/stageobjinfo", char('a'+l))));
+        std::shared_ptr<Archive::Folder> layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("jmp/placement/layer{}", char('a'+l))));
         layer->mLayerName = fmt::format("layer{}", char('a'+l));
 
         if(layerStageObj == nullptr){
             layer->mLayerName = fmt::format("Layer{}", char('A'+l));
-            layerStageObj = mZoneArchive->Get<Archive::File>(fmt::format("/jmp/Placement/Layer{}/StageObjInfo",  char('A'+l)));
+            layerStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path(fmt::format("/jmp/Placement/Layer{}/StageObjInfo",  char('A'+l))));
         }
 
         if(layerObjects == nullptr){
-            layerObjects = mZoneArchive->Get<Archive::Folder>(fmt::format("/jmp/Placement/Layer{}", char('A'+l)));
+            layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/Placement/Layer{}", char('A'+l))));
         }
 
         if(layerObjects != nullptr) layer->LoadLayerObjects(layerObjects);

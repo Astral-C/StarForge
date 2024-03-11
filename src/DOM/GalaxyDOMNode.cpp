@@ -28,15 +28,15 @@ void SGalaxyDOMNode::SaveGalaxy(){
     std::shared_ptr<Archive::File> zoneFile;
 
     if(mGame == EGameType::SMG1){
-        scenarioFile = mScenarioArchive->Get<Archive::File>("scenariodata.bcsv");///GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
+        scenarioFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("scenariodata.bcsv"));///GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
     } else {
-        scenarioFile = mScenarioArchive->Get<Archive::File>("ScenarioData.bcsv");
+        scenarioFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("ScenarioData.bcsv"));
     }
 
     if(mGame == EGameType::SMG1){
-        zoneFile = mScenarioArchive->Get<Archive::File>("zonelist.bcsv");
+        zoneFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("zonelist.bcsv"));
     } else {
-        zoneFile = mScenarioArchive->Get<Archive::File>("ZoneList.bcsv");
+        zoneFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("ZoneList.bcsv"));
     }
 
 
@@ -135,7 +135,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 	}
 
     {
-        bStream::CFileStream scenarioArchive(mScenarioArchivePath, bStream::Endianess::Big, bStream::OpenMode::In);
+        bStream::CFileStream scenarioArchive(std::filesystem::path(mScenarioArchivePath), bStream::Endianess::Big, bStream::OpenMode::In);
         if(!mScenarioArchive->Load(&scenarioArchive)){
             std::cout << "Couldn't mount scenario archive" << mScenarioArchivePath << std::endl;
             return false;
@@ -145,8 +145,8 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
     std::shared_ptr<Archive::File> zoneFile, scenarioFile;
 
     if(mGame == EGameType::SMG1){
-        zoneFile = mScenarioArchive->Get<Archive::File>("zonelist.bcsv");
-        scenarioFile = mScenarioArchive->Get<Archive::File>("scenariodata.bcsv");
+        zoneFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("zonelist.bcsv"));
+        scenarioFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("scenariodata.bcsv"));
 
         // Load Lighting Configs
         std::shared_ptr<Archive::Rarc> lightDataArc = Archive::Rarc::Create();
@@ -172,8 +172,8 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         }
 
     } else {
-        zoneFile = mScenarioArchive->Get<Archive::File>("ZoneList.bcsv");
-        scenarioFile = mScenarioArchive->Get<Archive::File>("ScenarioData.bcsv");
+        zoneFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("ZoneList.bcsv"));
+        scenarioFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("ScenarioData.bcsv"));
 
 
         // Load Lighting Configs
