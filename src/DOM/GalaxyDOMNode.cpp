@@ -135,7 +135,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 	}
 
     {
-        bStream::CFileStream scenarioArchive(std::filesystem::path(mScenarioArchivePath), bStream::Endianess::Big, bStream::OpenMode::In);
+        bStream::CFileStream scenarioArchive((galaxy_path / (mName + "Scenario.arc")).string(), bStream::Endianess::Big, bStream::OpenMode::In);
         if(!mScenarioArchive->Load(&scenarioArchive)){
             std::cout << "Couldn't mount scenario archive" << mScenarioArchivePath << std::endl;
             return false;
@@ -152,7 +152,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         std::shared_ptr<Archive::Rarc> lightDataArc = Archive::Rarc::Create();
 
         {
-            bStream::CFileStream lightDataArcFile(Options.mRootPath / "files" / "ObjectData" / "LightData.arc", bStream::Endianess::Big, bStream::OpenMode::In);
+            bStream::CFileStream lightDataArcFile((Options.mRootPath / "files" / "ObjectData" / "LightData.arc").string(), bStream::Endianess::Big, bStream::OpenMode::In);
 
             lightDataArc->Load(&lightDataArcFile);
         }
@@ -180,7 +180,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         std::shared_ptr<Archive::Rarc> lightDataArc = Archive::Rarc::Create();
 
         {
-            bStream::CFileStream lightDataArcFile(Options.mRootPath / "files" / "ObjectData" / "LightData.arc", bStream::Endianess::Big, bStream::OpenMode::In);
+            bStream::CFileStream lightDataArcFile((Options.mRootPath / "files" / "ObjectData" / "LightData.arc").string(), bStream::Endianess::Big, bStream::OpenMode::In);
 
             lightDataArc->Load(&lightDataArcFile);
         }
