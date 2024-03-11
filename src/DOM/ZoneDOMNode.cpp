@@ -41,7 +41,7 @@ void SZoneLayerDOMNode::SaveLayer(){
             layerFolder = zone.lock()->mZoneArchive->GetFolder(std::filesystem::path(mLayerName));
             if(layerFolder == nullptr){
                 std::shared_ptr<Archive::Folder> newLayerFolder = Archive::Folder::Create(zone.lock()->mZoneArchive);
-                newLayerFolder->SetName(std::filesystem::path(mLayerName).stem());
+                newLayerFolder->SetName(std::filesystem::path(mLayerName).stem().string());
 
                 std::shared_ptr<Archive::File> newLayerObjInfo = Archive::File::Create();
                 newLayerObjInfo->SetName("objinfo");
@@ -55,7 +55,7 @@ void SZoneLayerDOMNode::SaveLayer(){
             layerFolder = zone.lock()->mZoneArchive->GetFolder(std::filesystem::path(mLayerName));
             if(layerFolder == nullptr){
                 std::shared_ptr<Archive::Folder> newLayerFolder = Archive::Folder::Create(zone.lock()->mZoneArchive);
-                newLayerFolder->SetName(std::filesystem::path(mLayerName).stem());
+                newLayerFolder->SetName(std::filesystem::path(mLayerName).stem().string());
                 
                 std::shared_ptr<Archive::File> newLayerObjInfo = Archive::File::Create();
                 newLayerObjInfo->SetName("ObjInfo");
