@@ -1,7 +1,6 @@
 #pragma once
 #include <filesystem>
-#include "context.h"
-#include "archive.h"
+#include <Archive.hpp>
 #include <J3D/Data/J3DModelInstance.hpp>
 #include "DOM/DOMNodeBase.hpp"
 #include "DOM/ZoneDOMNode.hpp"
@@ -12,7 +11,7 @@ class SGalaxyDOMNode : public SDOMNodeBase {
     EGameType mGame;
     std::string mGalaxyName;
     std::string mScenarioArchivePath;
-    GCarchive mScenarioArchive;
+    std::shared_ptr<Archive::Rarc> mScenarioArchive;
     bool mGalaxyLoaded { false };
 
     // BCSV files loaded for scenario and zone list

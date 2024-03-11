@@ -470,7 +470,7 @@ bool SBcsvIO::Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, 
 		}
 
 		stream.seek(mEntryStartOffset);
-		stream.writeBytes((char*)tempBuffer, mEntryCount * mEntrySize);
+		stream.writeBytes(tempBuffer, mEntryCount * mEntrySize);
 
 		stream.seek(mEntryStartOffset + (mEntryCount * mEntrySize));
 

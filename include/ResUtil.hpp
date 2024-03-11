@@ -1,8 +1,9 @@
 #pragma once
 
 #include "GenUtil.hpp"
-#include "archive.h"
-#include "compression.h"
+#include <Archive.hpp>
+#include <Compression.hpp>
+
 
 #include <iostream>
 #include <fstream>
@@ -19,17 +20,14 @@ namespace SResUtility
 	class SGCResourceManager
 	{
 		bool mInitialized = false;
-		GCcontext mResManagerContext;
 		public:
-			bool LoadArchive(const char* path, GCarchive* archive);
-			bool SaveArchiveCompressed(const char* path, GCarchive* archive);
-			bool SaveArchive(const char* path, GCarchive* archive);
-			bool ReplaceArchiveFileData(GCarcfile* file, uint8_t* new_data, size_t new_data_size);
+
 			void CacheModel(std::string modelName);
+
 			std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> LoadColorAnimation(std::string modelName, std::string animName);
 			std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> LoadJointAnimation(std::string modelName, std::string animName);
 			std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> LoadTextureAnimation(std::string modelName, std::string animName);
-			GCarcfile* GetFile(GCarchive* archive, std::filesystem::path filepath);
+
 			void Init();
 	};
 

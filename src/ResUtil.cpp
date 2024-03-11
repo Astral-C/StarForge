@@ -25,173 +25,35 @@ SResUtility::SOptions Options;
 
 void SResUtility::SGCResourceManager::Init()
 {
-	GCerror err;
-	if ((err = gcInitContext(&mResManagerContext)) != GC_ERROR_SUCCESS)
-	{
-		printf("Error initing arc loader context: %s\n", gcGetErrorMessage(err));
-	}
-
 	mInitialized = true;
-}
-
-GCarcfile* SResUtility::SGCResourceManager::GetFile(GCarchive* archive, std::filesystem::path filepath){
-	int dirID = 0;
-	for(auto component : filepath){
-		for (GCarcfile* file = &archive->files[archive->dirs[dirID].fileoff]; file < &archive->files[archive->dirs[dirID].fileoff] + archive->dirs[dirID].filenum; file++){
-			if(strcmp(file->name, component.string().c_str()) == 0 && (file->attr & 0x02)){
-				dirID = file->size;
-				break;
-			} else if(strcmp(file->name, component.string().c_str()) == 0 && !(file->attr & 0x02)) {
-				return file;
-			}
-		}
-	}
-	return nullptr;
-}
-
-bool SResUtility::SGCResourceManager::LoadArchive(const char* path, GCarchive* archive)
-{
-	if(!mInitialized) return false;
-	
-	GCerror err;
-
-	FILE* f = fopen(path, "rb");
-	if (f == nullptr)
-	{
-		printf("Error opening file \"%s\"\n", path);
-		return false;
-	}
-
-	fseek(f, 0L, SEEK_END);
-	GCsize size = (GCsize)ftell(f);
-	rewind(f);
-
-	void* file = malloc(size);
-	if (file == nullptr)
-	{
-		printf("Error allocating buffer for file \"%s\"\n", path);
-		return false;
-	}
-
-	fread(file, 1, size, f);
-	fclose(f);
-
-	// If the file starts with 'Yay0', it's Yay0 compressed.
-	if (*((uint32_t*)file) == 0x30796159)
-	{
-		GCsize compressedSize = gcDecompressedSize(&mResManagerContext, (GCuint8*)file, 0);
-
-		void* decompBuffer = malloc(compressedSize);
-		gcYay0Decompress(&mResManagerContext, (GCuint8*)file, (GCuint8*)decompBuffer, compressedSize, 0);
-
-		free(file);
-		size = compressedSize;
-		file = decompBuffer;
-	}
-	// Likewise, if the file starts with 'Yaz0' it's Yaz0 compressed.
-	else if (*((uint32_t*)file) == 0x307A6159)
-	{
-		GCsize compressedSize = gcDecompressedSize(&mResManagerContext, (GCuint8*)file, 0);
-
-		void* decompBuffer = malloc(compressedSize);
-		gcYaz0Decompress(&mResManagerContext, (GCuint8*)file, (GCuint8*)decompBuffer, compressedSize, 0);
-		free(file);
-		size = compressedSize;
-		file = decompBuffer;
-	}
-
-	gcInitArchive(archive, &mResManagerContext);
-	if ((err = gcLoadArchive(archive, file, size)) != GC_ERROR_SUCCESS) {
-		printf("Error Loading Archive: %s\n", gcGetErrorMessage(err));
-		return false;
-	}
-
-	return true;
-}
-
-bool SResUtility::SGCResourceManager::ReplaceArchiveFileData(GCarcfile* file, uint8_t* new_data, size_t new_data_size){
-	if(!mInitialized) return false;
-	
-	size_t paddedSize = (new_data_size + 31) & ~31;
-
-	//allocate size of new file
-	uint8_t* newFileData = (uint8_t*)gcAllocMem(&mResManagerContext, paddedSize);
-	memcpy(newFileData, new_data, paddedSize);
-		
-	gcFreeMem(&mResManagerContext, file->data);
-
-	//copy new jmp to file buffer for arc
-	file->data = newFileData;
-
-	//set size properly
-	file->size = paddedSize;
-
-	return true;
-}
-
-bool SResUtility::SGCResourceManager::SaveArchiveCompressed(const char* path, GCarchive* archive)
-{
-	if(!mInitialized) return false;
-
-	GCsize outSize = gcSaveArchive(archive, NULL);
-	GCuint8* archiveOut = new GCuint8[outSize];
-	GCuint8* archiveCmp = new GCuint8[outSize];
-
-	gcSaveArchive(archive, archiveOut);
-	GCsize cmpSize = gcYay0Compress(&mResManagerContext, archiveOut, archiveCmp, outSize);
-	
-	std::ofstream fileStream;
-	fileStream.open(path, std::ios::binary | std::ios::out);
-	fileStream.write((const char*)archiveCmp, cmpSize);
-	fileStream.close();
-
-	delete archiveOut;
-	delete archiveCmp;
-
-	return true;
-}
-
-bool SResUtility::SGCResourceManager::SaveArchive(const char* path, GCarchive* archive)
-{
-	if(!mInitialized) return false;
-
-	GCsize outSize = gcSaveArchive(archive, NULL);
-	GCuint8* archiveOut = new GCuint8[outSize];
-
-	gcSaveArchive(archive, archiveOut);
-	
-	std::ofstream fileStream;
-	fileStream.open(path, std::ios::binary | std::ios::out);
-	fileStream.write((const char*)archiveOut, outSize);
-	fileStream.close();
-
-	delete[] archiveOut;
-
-	return true;
 }
 
 void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
-		GCarchive modelArc;
-		if(!GCResourceManager.LoadArchive(modelPath.string().c_str(), &modelArc)){
+		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
+		bStream::CFileStream modelArchive(modelPath, bStream::Endianess::Big, bStream::OpenMode::In);
+
+		if(!archive->Load(&modelArchive)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
 			return;
 		}
 
-		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
+		std::string modelNameLower = modelName;
+		std::transform(modelNameLower.begin(), modelNameLower.end(), modelNameLower.begin(), [](unsigned char c){ return std::tolower(c); });
+		std::shared_ptr<Archive::File> modelFile = archive->Get<Archive::File>(modelNameLower+".bdl");
 
-			if(std::filesystem::path(file->name).extension() == ".bdl"){
-				J3DModelLoader Loader;
-				bStream::CMemoryStream modelStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
-				
-				std::shared_ptr<J3DModelData> data = Loader.Load(&modelStream, NULL);
-				ModelCache.insert({modelName, data});
-				std::cout << "Loaded Model " << modelName << std::endl;
-			}
+		if(modelFile == nullptr){
+			std::cout << "Couldn't find model " << modelName << ".bdl" << std::endl;
+			return;
 		}
-		gcFreeArchive(&modelArc);
+
+		J3DModelLoader Loader;
+		bStream::CMemoryStream modelStream(modelFile->GetData(), modelFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+				
+		std::shared_ptr<J3DModelData> data = Loader.Load(&modelStream, NULL);
+		ModelCache.insert({modelName, data});
 	} else {
 		std::cout << "Couldn't find model " << modelName << std::endl;
 	}
@@ -201,30 +63,29 @@ std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourc
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
-		GCarchive modelArc;
-		if(!GCResourceManager.LoadArchive(modelPath.string().c_str(), &modelArc)){
+		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
+		bStream::CFileStream modelArchive(modelPath, bStream::Endianess::Big, bStream::OpenMode::In);
+
+		if(!archive->Load(&modelArchive)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
 			return nullptr;
 		}
-		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
-			std::string name = std::string(file->name);
-			std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-			if(name == animName && std::filesystem::path(animName).extension() == ".brk"){
-				J3DAnimation::J3DAnimationLoader Loader;
-				bStream::CMemoryStream animStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
 
-				std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DColorAnimationInstance>(animStream);
+		std::shared_ptr<Archive::File> modelFile = archive->Get<Archive::File>(animName);
 
-				std::cout << "Loaded Animation for color change " << instance.get() << std::endl;
-
-				return instance;
-			}
+		if(modelFile == nullptr){
+			std::cout << "Couldn't find color anim " << animName << std::endl;
+			return nullptr;
 		}
-		gcFreeArchive(&modelArc);
-	} else {
-		std::cout << "Couldn't find archive " << modelName << std::endl;
-	}
 
+		J3DAnimation::J3DAnimationLoader Loader;
+		bStream::CMemoryStream animStream(modelFile->GetData(), modelFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+
+		std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DColorAnimationInstance>(animStream);
+		return instance;
+	} else {
+		std::cout << "Couldn't find animation " << animName << std::endl;
+	}
 	return nullptr;
 }
 
@@ -232,30 +93,29 @@ std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> SResUtility::SGCResourc
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
-		GCarchive modelArc;
-		if(!GCResourceManager.LoadArchive(modelPath.string().c_str(), &modelArc)){
+		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
+		bStream::CFileStream modelArchive(modelPath, bStream::Endianess::Big, bStream::OpenMode::In);
+
+		if(!archive->Load(&modelArchive)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
 			return nullptr;
 		}
-		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
-			std::string name = std::string(file->name);
-			std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-			if(name == animName){
-				J3DAnimation::J3DAnimationLoader Loader;
-				bStream::CMemoryStream animStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
 
-				std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DJointAnimationInstance>(animStream);
+		std::shared_ptr<Archive::File> modelFile = archive->Get<Archive::File>(animName);
 
-				std::cout << "Loaded Joint Animation for " << instance.get() << std::endl;
-
-				return instance;
-			}
+		if(modelFile == nullptr){
+			std::cout << "Couldn't find joint anim " << animName << std::endl;
+			return nullptr;
 		}
-		gcFreeArchive(&modelArc);
-	} else {
-		std::cout << "Couldn't find archive " << modelName << std::endl;
-	}
 
+		J3DAnimation::J3DAnimationLoader Loader;
+		bStream::CMemoryStream animStream(modelFile->GetData(), modelFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+
+		std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DJointAnimationInstance>(animStream);
+		return instance;
+	} else {
+		std::cout << "Couldn't find animation " << animName << std::endl;
+	}
 	return nullptr;
 }
 
@@ -263,33 +123,29 @@ std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> SResUtility::SGCRes
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
-		GCarchive modelArc;
-		if(!GCResourceManager.LoadArchive(modelPath.string().c_str(), &modelArc)){
+		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
+		bStream::CFileStream modelArchive(modelPath, bStream::Endianess::Big, bStream::OpenMode::In);
+
+		if(!archive->Load(&modelArchive)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
 			return nullptr;
 		}
-		for (GCarcfile* file = modelArc.files; file < modelArc.files + modelArc.filenum; file++){
-			std::string name = std::string(file->name);
-			std::string animNameLower = animName;
-			std::transform(animNameLower.begin(), animNameLower.end(), animNameLower.begin(), ::tolower);
-			std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-			std::cout << name << " - " << animNameLower << std::endl;
-			if(name == animNameLower){
-				J3DAnimation::J3DAnimationLoader Loader;
-				bStream::CMemoryStream animStream((uint8_t*)file->data, file->size, bStream::Endianess::Big, bStream::OpenMode::In);
 
-				std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DTexMatrixAnimationInstance>(animStream);
+		std::shared_ptr<Archive::File> modelFile = archive->Get<Archive::File>(animName);
 
-				std::cout << "Loaded Tex Animation for " << instance.get() << std::endl;
-
-				return instance;
-			}
+		if(modelFile == nullptr){
+			std::cout << "Couldn't find texmatrix anim " << modelName << std::endl;
+			return nullptr;
 		}
-		gcFreeArchive(&modelArc);
-	} else {
-		std::cout << "Couldn't find archive " << modelName << std::endl;
-	}
 
+		J3DAnimation::J3DAnimationLoader Loader;
+		bStream::CMemoryStream animStream(modelFile->GetData(), modelFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+
+		std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DTexMatrixAnimationInstance>(animStream);
+		return instance;
+	} else {
+		std::cout << "Couldn't find animation " << animName << std::endl;
+	}
 	return nullptr;
 }
 

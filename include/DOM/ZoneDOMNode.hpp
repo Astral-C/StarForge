@@ -9,7 +9,7 @@
 class SZoneLayerDOMNode : public SDOMNodeBase {
     bool mVisible;
     SBcsvIO mObjInfo, mAreaObjInfo;
-    GCarcfile* mObjInfoFile, *mAreaObjInfoFile;
+    std::shared_ptr<Archive::File> mObjInfoFile, mAreaObjInfoFile;
     std::string mLayerName;
 
 public:
@@ -19,9 +19,9 @@ public:
     void RenderDetailsUI();
     void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
 
-    void LoadLayerObjects(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName);
-    void LoadLayerPaths(GCarchive* zoneArchive, GCarcfile* layerDir, std::string layerName);
-    void SaveLayer(GCarchive* zoneArchive);
+    void LoadLayerObjects(std::shared_ptr<Archive::Folder> layer);
+    void LoadLayerPaths(std::shared_ptr<Archive::Folder> layer);
+    void SaveLayer();
     bool GetVisible(){ return mVisible; }
     void SetVisible(bool v) { mVisible = v; }
 
@@ -47,7 +47,7 @@ class SZoneDOMNode : public SDOMNodeSerializable {
     uint32_t mLinkID { 0 };
     
     SBcsvIO mStageObjInfo;
-    GCarchive mZoneArchive;
+    std::shared_ptr<Archive::Rarc> mZoneArchive;
     std::filesystem::path mZoneArchivePath;
     
 

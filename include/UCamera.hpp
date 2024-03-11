@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <imgui.h>
+#include <ImGuizmo.h>
 
 struct GLFWwindow;
 
@@ -42,7 +44,7 @@ public:
 
 	void Update(float deltaTime);
 
-	void ToggleOrtho() { mIsOrtho = !mIsOrtho; }
+	void ToggleOrtho() { mIsOrtho = !mIsOrtho; ImGuizmo::SetOrthographic(mIsOrtho); }
 	bool GetIsOrtho() { return mIsOrtho; }
 	void SetWindowSize(int w, int h) { mWinWidth = w; mWinHeight = h; }
 	void SetForward(glm::vec3 forward) { mForward = forward; }

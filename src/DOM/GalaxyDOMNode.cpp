@@ -14,11 +14,7 @@ SGalaxyDOMNode::SGalaxyDOMNode() : Super("galaxy") {
     mType = EDOMNodeType::Galaxy;
 }
 
-SGalaxyDOMNode::~SGalaxyDOMNode(){
-    if(mGalaxyLoaded){
-        gcFreeArchive(&mScenarioArchive);
-    }
-}
+SGalaxyDOMNode::~SGalaxyDOMNode(){}
 
 void SGalaxyDOMNode::SaveGalaxy(){
     auto zones = GetChildrenOfType<SDOMNodeSerializable>(EDOMNodeType::Zone);
@@ -28,19 +24,19 @@ void SGalaxyDOMNode::SaveGalaxy(){
         zone->SaveZone();
     }
 
-    GCarcfile* scenarioFile;
-    GCarcfile* zoneFile;
+    std::shared_ptr<Archive::File> scenarioFile;
+    std::shared_ptr<Archive::File> zoneFile;
 
     if(mGame == EGameType::SMG1){
-        scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
+        scenarioFile = mScenarioArchive->Get<Archive::File>("scenariodata.bcsv");///GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
     } else {
-        scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ScenarioData.bcsv"));
+        scenarioFile = mScenarioArchive->Get<Archive::File>("ScenarioData.bcsv");
     }
 
     if(mGame == EGameType::SMG1){
-        zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("zonelist.bcsv"));
+        zoneFile = mScenarioArchive->Get<Archive::File>("zonelist.bcsv");
     } else {
-        zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ZoneList.bcsv"));
+        zoneFile = mScenarioArchive->Get<Archive::File>("ZoneList.bcsv");
     }
 
 
@@ -48,7 +44,7 @@ void SGalaxyDOMNode::SaveGalaxy(){
     mScenarioData.Save(scenarios, scenarioSaveStream);
 
     if(scenarioFile != nullptr){
-        gcReplaceFileData(scenarioFile, scenarioSaveStream.getBuffer(), scenarioSaveStream.tell());
+        scenarioFile->SetData(scenarioSaveStream.getBuffer(), scenarioSaveStream.getSize());
     }
 
 
@@ -59,10 +55,11 @@ void SGalaxyDOMNode::SaveGalaxy(){
     
 
     if(zoneFile != nullptr){
-        gcReplaceFileData(zoneFile, zoneSaveStream.getBuffer(), zoneSaveStream.tell());
+        zoneFile->SetData(zoneSaveStream.getBuffer(), zoneSaveStream.getSize());
     }
 
-    GCResourceManager.SaveArchive(mScenarioArchivePath.c_str(), &mScenarioArchive);
+    // write and compress
+    mScenarioArchive->SaveToFile(mScenarioArchivePath, Compression::Format::YAZ0);
 
 }
 
@@ -130,29 +127,41 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
     SBcsvIO zones;
 
     mScenarioArchivePath = (galaxy_path / (mName + "Scenario.arc")).string().c_str();
+    mScenarioArchive = Archive::Rarc::Create();
 
 	if(!std::filesystem::exists(mScenarioArchivePath)){
 		std::cout << "Couldn't open scenario archive " << mScenarioArchivePath << std::endl;
 		return false;
 	}
 
-    GCResourceManager.LoadArchive((galaxy_path / (mName + "Scenario.arc")).string().c_str(), &mScenarioArchive);
+    {
+        bStream::CFileStream scenarioArchive(mScenarioArchivePath, bStream::Endianess::Big, bStream::OpenMode::In);
+        if(!mScenarioArchive->Load(&scenarioArchive)){
+            std::cout << "Couldn't mount scenario archive" << mScenarioArchivePath << std::endl;
+            return false;
+        }
+    }
 
-    GCarcfile* zoneFile = nullptr, *scenarioFile = nullptr;
+    std::shared_ptr<Archive::File> zoneFile, scenarioFile;
+
     if(mGame == EGameType::SMG1){
-        zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("zonelist.bcsv"));
-        scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("scenariodata.bcsv"));
+        zoneFile = mScenarioArchive->Get<Archive::File>("zonelist.bcsv");
+        scenarioFile = mScenarioArchive->Get<Archive::File>("scenariodata.bcsv");
 
         // Load Lighting Configs
-        GCarchive lightDataArc = {0};
-        GCResourceManager.LoadArchive((Options.mRootPath / "files" / "ObjectData" / "LightData.arc").string().c_str(), &lightDataArc);
+        std::shared_ptr<Archive::Rarc> lightDataArc = Archive::Rarc::Create();
 
-        GCarcfile* lightDataFile = nullptr;
-        lightDataFile = GCResourceManager.GetFile(&lightDataArc, std::filesystem::path("lightdata.bcsv"));
+        {
+            bStream::CFileStream lightDataArcFile(Options.mRootPath / "files" / "ObjectData" / "LightData.arc", bStream::Endianess::Big, bStream::OpenMode::In);
+
+            lightDataArc->Load(&lightDataArcFile);
+        }
+
+        std::shared_ptr<Archive::File> lightDataFile = lightDataArc->Get<Archive::File>(std::filesystem::path("lightdata.bcsv"));
         
         if(lightDataFile != nullptr){
             SBcsvIO lightData;
-            bStream::CMemoryStream LightDataStream((uint8_t*)lightDataFile->data, (size_t)lightDataFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
+            bStream::CMemoryStream LightDataStream(lightDataFile->GetData(), lightDataFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
             lightData.Load(&LightDataStream);
 
             LoadLightConfig("Weak", &lightData);
@@ -161,25 +170,26 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
             LoadLightConfig("Player", &lightData);
 
         }
-        
-
-        gcFreeArchive(&lightDataArc);
 
     } else {
-        zoneFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ZoneList.bcsv"));
-        scenarioFile = GCResourceManager.GetFile(&mScenarioArchive, std::filesystem::path("ScenarioData.bcsv"));
+        zoneFile = mScenarioArchive->Get<Archive::File>("ZoneList.bcsv");
+        scenarioFile = mScenarioArchive->Get<Archive::File>("ScenarioData.bcsv");
 
 
         // Load Lighting Configs
-        GCarchive lightDataArc = {0};
-        GCResourceManager.LoadArchive((Options.mRootPath / "files" / "LightData" / "LightData.arc").string().c_str(), &lightDataArc);
+        std::shared_ptr<Archive::Rarc> lightDataArc = Archive::Rarc::Create();
 
-        GCarcfile* lightDataFile = nullptr;
-        lightDataFile = GCResourceManager.GetFile(&lightDataArc, std::filesystem::path("LightData.bcsv"));
+        {
+            bStream::CFileStream lightDataArcFile(Options.mRootPath / "files" / "ObjectData" / "LightData.arc", bStream::Endianess::Big, bStream::OpenMode::In);
+
+            lightDataArc->Load(&lightDataArcFile);
+        }
+
+        std::shared_ptr<Archive::File> lightDataFile = lightDataArc->Get<Archive::File>(std::filesystem::path("LightData.bcsv"));
         
         if(lightDataFile != nullptr){
             SBcsvIO lightData;
-            bStream::CMemoryStream LightDataStream((uint8_t*)lightDataFile->data, (size_t)lightDataFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
+            bStream::CMemoryStream LightDataStream(lightDataFile->GetData(), lightDataFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
             lightData.Load(&LightDataStream);
 
             LoadLightConfig("Weak", &lightData);
@@ -188,15 +198,12 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
             LoadLightConfig("Player", &lightData);
 
         }
-        
-
-        gcFreeArchive(&lightDataArc);
     }
 
 
     // Load all zones and all zone layers
     {
-        bStream::CMemoryStream ZoneDataStream((uint8_t*)zoneFile->data, (size_t)zoneFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
+        bStream::CMemoryStream ZoneDataStream(zoneFile->GetData(), zoneFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
         mZoneListData.Load(&ZoneDataStream);
 
         // Manually load the main galaxy zone so we can get a list of zone transforms
@@ -255,7 +262,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 
     // Load Scenarios
     {
-        bStream::CMemoryStream ScenarioDataStream((uint8_t*)scenarioFile->data, (size_t)scenarioFile->size, bStream::Endianess::Big, bStream::OpenMode::In);
+        bStream::CMemoryStream ScenarioDataStream(scenarioFile->GetData(), scenarioFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
         mScenarioData.Load(&ScenarioDataStream);
         for(size_t entry = 0; entry < mScenarioData.GetEntryCount(); entry++){
 
