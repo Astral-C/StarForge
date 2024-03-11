@@ -33,7 +33,7 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
-		bStream::CFileStream modelArchive(modelPath, bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CFileStream modelArchive(modelPath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
 
 		if(!archive->Load(&modelArchive)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
@@ -64,7 +64,7 @@ std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourc
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
-		bStream::CFileStream modelArchive(modelPath, bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CFileStream modelArchive(modelPath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
 
 		if(!archive->Load(&modelArchive)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
@@ -94,7 +94,7 @@ std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> SResUtility::SGCResourc
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
-		bStream::CFileStream modelArchive(modelPath, bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CFileStream modelArchive(modelPath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
 
 		if(!archive->Load(&modelArchive)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
@@ -124,7 +124,7 @@ std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> SResUtility::SGCRes
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
-		bStream::CFileStream modelArchive(modelPath, bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CFileStream modelArchive(modelPath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
 
 		if(!archive->Load(&modelArchive)){
 			std::cout << "Couldn't load archive " << modelPath << std::endl; 
