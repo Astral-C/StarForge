@@ -92,7 +92,7 @@ void SGalaxyDOMNode::RenderDetailsUI(){
 void SGalaxyDOMNode::AddZone(std::filesystem::path zonePath){
 	std::shared_ptr<SZoneDOMNode> newZone = std::make_shared<SZoneDOMNode>(zonePath.stem().string());
 
-	newZone->LoadZone(zonePath);
+	newZone->LoadZone(zonePath, mGame);
 
 	auto scenarios = GetChildrenOfType<SScenarioDOMNode>(EDOMNodeType::Scenario);
 	for(auto scenario : scenarios){
@@ -226,9 +226,9 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
             zone->Deserialize(&mZoneListData, entry);
 
             if(mGame == EGameType::SMG1){
-                zone->LoadZone(galaxy_path.parent_path() / (zone->GetName() + ".arc"));
+                zone->LoadZone(galaxy_path.parent_path() / (zone->GetName() + ".arc"), mGame);
             } else {
-                zone->LoadZone(galaxy_path.parent_path() / zone->GetName() / (zone->GetName() + "Map.arc"));
+                zone->LoadZone(galaxy_path.parent_path() / zone->GetName() / (zone->GetName() + "Map.arc"), mGame);
             }
 
             if(zoneTransforms.count(zone->GetName())){

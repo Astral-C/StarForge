@@ -158,6 +158,20 @@ uint32_t SBcsvIO::CalculateNewEntrySize()
 	return (newSize + 3) & ~3; //just make 100% sure its aligned to 4
 }
 
+void SBcsvIO::Clear(){
+	mEntryCount = 0;
+	mData.clear();
+}
+
+void SBcsvIO::FromTemplate(SBcsvIO& temp){
+	for(auto field : temp.GetFields()){
+		mFields.push_back(field);
+		std::cout << "Adding field " << field.Hash << " from template" << std::endl;
+	}
+
+	mFieldCount = mFields.size();
+	std::cout << "Created BCSV from template with " << mFieldCount << " fields" << std::endl;
+}
 
 uint32_t SBcsvIO::GetUnsignedInt(uint32_t entry_index, std::string field_name){
 	const SBcsvFieldInfo* field = FetchJmpFieldInfo(field_name);

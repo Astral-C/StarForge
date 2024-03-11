@@ -107,6 +107,9 @@ public:
 
 	void AddField(std::string name, EJmpFieldType type);
 	void RemoveField(std::string name);
+	void FromTemplate(SBcsvIO& temp);
+	void Clear();
+	std::vector<SBcsvFieldInfo> GetFields() { return mFields; }
 
 /*== Input ==*/
 	// Attempts to load a JMP file from the given stream. Returns

@@ -184,7 +184,12 @@ void SObjectDOMNode::RenderDetailsUI(){
     glm::vec3 pos(mTransform[3]);
     ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
 
-    ImGui::InputText("Name", &mName);
+    if(ImGui::InputText("Name", &mName)){
+        if(ModelCache.count(mName) != 0){
+            mVisible = true;
+            mRenderable = ModelCache[mName]->CreateInstance();
+        }
+    }
 
     for (size_t i = 0; i < 8; i++){
         ImGui::InputInt(mObjArgNames[i].data(), &mObjArgs[i]);
