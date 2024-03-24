@@ -14,7 +14,7 @@ UStarForgeProject::UStarForgeProject(nlohmann::json projectJson){
 
     mName = projectJson["name"];
     mDescription = projectJson["description"];
-    mProjectRoot = std::filesystem::path(projectJson["root"]);
+    mProjectRoot = std::filesystem::path(projectJson["root"].get<std::string>());
     mGame = (EGameType)projectJson["game"];
     mIsDolphinRoot = projectJson["isDolphinRoot"];
 
