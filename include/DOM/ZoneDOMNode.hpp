@@ -10,6 +10,8 @@ class SZoneLayerDOMNode : public SDOMNodeBase {
     bool mVisible;
     SBcsvIO mObjInfo, mAreaObjInfo;
     std::shared_ptr<Archive::File> mObjInfoFile, mAreaObjInfoFile;
+    // string should be the full path!
+    std::map<std::string, std::pair<SBcsvIO, std::shared_ptr<Archive::File>>> mLayerBcsvFiles;
 
 public:
     typedef SDOMNodeBase Super; 

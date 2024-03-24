@@ -38,6 +38,7 @@ namespace SResUtility
 
 		public:
 			std::filesystem::path mRootPath;
+			std::filesystem::path mProjectsPath { "projects" }; //defaults to "projects" in cwd
 
 			void RenderOptionMenu();
 			void LoadOptions();

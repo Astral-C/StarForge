@@ -99,12 +99,19 @@ void STicoDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         mRenderable->SetLight(LightingConfigs["Strong"].Light2, 2);
 
         auto anim = GCResourceManager.LoadColorAnimation("Tico", "colorchange.brk");
+        if(anim == nullptr) {
+            anim = GCResourceManager.LoadColorAnimation("Tico", "ColorChange.brk");
+        }
 
         mRenderable->SetRegisterColorAnimation(anim);
         mRenderable->GetRegisterColorAnimation()->SetFrame(glm::max(mObjArgs[0], 0), true);
 
 
         auto wait_anim = GCResourceManager.LoadJointAnimation("Tico", "wait.bck");
+        if(wait_anim == nullptr) {
+            wait_anim = GCResourceManager.LoadJointAnimation("Tico", "Wait.bck");
+        }
+
         mRenderable->SetJointAnimation(wait_anim);
         mRenderable->GetJointAnimation()->SetFrame(rand() % 20);
     }

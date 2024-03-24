@@ -10,8 +10,11 @@
 #include "ModelCache.hpp"
 #include "UPathRenderer.hpp"
 #include "UAreaRenderer.hpp"
+#include "UProject.hpp"
 
 class UStarForgeContext {
+
+	UStarForgeProjectManager mProjects;
 	
 	std::shared_ptr<SGalaxyDOMNode> mRoot;
 	std::shared_ptr<SDOMNodeBase> selected;
@@ -32,6 +35,8 @@ class UStarForgeContext {
 	std::string mSelectedAddZone { "" };
 
 	bool mOptionsOpen { false };
+	bool mProjectManagerOpen { true };
+	bool mGalaxySelectOpen { false };
 	bool mAboutOpen { false };
 
 	bool bIsDockingSetUp { false };

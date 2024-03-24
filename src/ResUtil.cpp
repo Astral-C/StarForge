@@ -45,6 +45,10 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 		std::shared_ptr<Archive::File> modelFile = archive->Get<Archive::File>(modelNameLower+".bdl");
 
 		if(modelFile == nullptr){
+			modelFile = archive->Get<Archive::File>(modelName+".bdl");
+		}
+
+		if(modelFile == nullptr){
 			std::cout << "Couldn't find model " << modelName << ".bdl" << std::endl;
 			return;
 		}
@@ -155,7 +159,7 @@ void SResUtility::SOptions::LoadOptions(){
 		ini_t* config = ini_load(optionsPath.string().c_str());
 		if(config == nullptr) return;
 
-		const char* path = ini_get(config, "settings", "root");
+		const char* path = ini_get(config, "settings", "projects_directory");
 		if(path != nullptr) mRootPath = std::filesystem::path(path);
 
 		const char* url = ini_get(config, "settings", "objectdb_url");
@@ -211,7 +215,7 @@ void SResUtility::SOptions::RenderOptionMenu(){
 	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
 	if (ImGui::BeginPopupModal("Options", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
-		ImGui::Text(fmt::format("Root Path: {0}", mRootPath == "" ? "(Not Set)" : mRootPath.string()).data());
+		ImGui::Text(fmt::format("Projects Path: {0}", mProjectsPath.string()).data());
 		ImGui::SameLine();
 		if(ImGui::Button("Open")){
 			mSelectRootDialogOpen = true;
@@ -226,7 +230,7 @@ void SResUtility::SOptions::RenderOptionMenu(){
 
 		if(ImGui::Button("Save")){
 			std::ofstream settingsFile(std::filesystem::current_path() / "settings.ini");
-			settingsFile << fmt::format("[settings]\nroot={0}\nobjectdb_url={1}", mRootPath.string(), mObjectDBUrl);
+			settingsFile << fmt::format("[settings]\nprojects_directory={0}\nobjectdb_url={1}", mProjectsPath.string(), mObjectDBUrl);
 			settingsFile.close();
 			ImGui::CloseCurrentPopup();
 		}
@@ -241,12 +245,12 @@ void SResUtility::SOptions::RenderOptionMenu(){
 		if(mSelectRootDialogOpen){
 			IGFD::FileDialogConfig config;
 			config.path = ".";
-			ImGuiFileDialog::Instance()->OpenDialog("OpenRootDialog", "Choose Game Root", nullptr, config);
+			ImGuiFileDialog::Instance()->OpenDialog("OpenRootDialog", "Choose Projects Path", nullptr, config);
 		}
 
 		if (ImGuiFileDialog::Instance()->Display("OpenRootDialog")) {
 			if (ImGuiFileDialog::Instance()->IsOk()) {
-				mRootPath = ImGuiFileDialog::Instance()->GetCurrentPath();
+				mProjectsPath = ImGuiFileDialog::Instance()->GetCurrentPath();
 
 				mSelectRootDialogOpen = false;
 			} else {

@@ -180,7 +180,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         std::shared_ptr<Archive::Rarc> lightDataArc = Archive::Rarc::Create();
 
         {
-            bStream::CFileStream lightDataArcFile((Options.mRootPath / "files" / "ObjectData" / "LightData.arc").string(), bStream::Endianess::Big, bStream::OpenMode::In);
+            bStream::CFileStream lightDataArcFile((Options.mRootPath / "files" / "LightData" / "LightData.arc").string(), bStream::Endianess::Big, bStream::OpenMode::In);
 
             lightDataArc->Load(&lightDataArcFile);
         }

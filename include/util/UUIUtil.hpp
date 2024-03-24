@@ -51,4 +51,14 @@ namespace UIUtil {
 
 		return changed;
 	}
+
+	inline bool CenteredButton(std::string text){
+		ImGuiStyle& style = ImGui::GetStyle();
+		float avail = ImGui::GetContentRegionAvail().x;
+		float off = (avail - ImGui::CalcTextSize(text.data()).x) * 0.5f;
+		if (off > 0.0f){
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+		}
+		return ImGui::Button(text.data());
+	}
 }

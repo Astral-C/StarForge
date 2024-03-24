@@ -53,6 +53,7 @@ UStarForgeContext::~UStarForgeContext(){
 
 UStarForgeContext::UStarForgeContext(){
 	mGrid.Init();
+	mProjects.Init();
 	mAreaRenderer.Init();
 	srand(time(0));
 
@@ -241,7 +242,9 @@ void UStarForgeContext::Render(float deltaTime) {
 		} else {
 			ImGui::Text("Properties");
 		}
+
 		ImGui::Separator();
+
 		if(selected != nullptr){
 			selected->RenderDetailsUI();
 			//TODO: make this a switch please
@@ -294,7 +297,6 @@ void UStarForgeContext::Render(float deltaTime) {
 				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &zone->mTransform[0][0]);
 			}
 		}
-		//TODO: Once selection is set up again call the selected node's render function
 
 		glm::mat4 viewMtx = mCamera.GetViewMatrix();
 		ImVec4 forward = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX}, up = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
@@ -371,7 +373,8 @@ void UStarForgeContext::RenderMenuBar() {
 
 	if (ImGui::BeginMenu("File")) {
 		if (ImGui::MenuItem(ICON_FK_FOLDER_OPEN " Open...")) {
-			bIsFileDialogOpen = true;
+			//bIsFileDialogOpen = true;
+			mGalaxySelectOpen = true;
 		}
 		if (ImGui::MenuItem(ICON_FK_FLOPPY_O " Save...")) {
 			if(mRoot != nullptr){
@@ -387,6 +390,13 @@ void UStarForgeContext::RenderMenuBar() {
 	if (ImGui::BeginMenu("Edit")) {
 		if(ImGui::MenuItem(ICON_FK_COG " Settings")){
 			mOptionsOpen = true;
+		}
+		ImGui::EndMenu();
+	}
+	if (ImGui::BeginMenu("Projects")) {
+		mProjectManagerOpen = true;
+		if(mRoot != nullptr){
+			mRoot = std::make_shared<SGalaxyDOMNode>(); // delete by disconnecting root and setting it to a blank galaxy
 		}
 		ImGui::EndMenu();
 	}
@@ -412,7 +422,7 @@ void UStarForgeContext::RenderMenuBar() {
 
 			try {
 				selected = nullptr;
-				mRoot = std::make_shared<SGalaxyDOMNode>();
+				if(mRoot == nullptr) mRoot = std::make_shared<SGalaxyDOMNode>();
 				// TODO: add way to set galaxy type
 				// copy from cammie again? or infer based on root structure
 				if(!mRoot->LoadGalaxy(FilePath, std::filesystem::exists(Options.mRootPath / "files" / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
@@ -458,8 +468,8 @@ void UStarForgeContext::RenderMenuBar() {
 	if(mAboutOpen){
 		ImGui::OpenPopup("About Window");
 		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-		ImGui::SetNextWindowSize(ImVec2(250, 130), ImGuiCond_Appearing);
-		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.4f));
+		ImGui::SetNextWindowSize(ImVec2(250, 130), ImGuiCond_Always);
+		ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.4f));
 	}
 
 	if (ImGui::BeginPopupModal("About Window", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove)){
@@ -505,9 +515,46 @@ void UStarForgeContext::RenderMenuBar() {
 	if(mOptionsOpen){
 		ImGui::OpenPopup("Options");
 	}
-
 	Options.RenderOptionMenu();
 
+	if(mProjectManagerOpen){
+		ImGui::OpenPopup("Projects");
+	}
+
+	if(mGalaxySelectOpen) {
+		ImGui::OpenPopup("Galaxy Select");
+	}
+
+	mProjects.RenderUi(mProjectManagerOpen);
+	auto galaxyPath = mProjects.RenderGalaxySelectUi(mGalaxySelectOpen);
+	if(galaxyPath != ""){
+		try {
+			selected = nullptr;
+			mRoot = std::make_shared<SGalaxyDOMNode>();
+			// TODO: add way to set galaxy type
+			// copy from cammie again? or infer based on root structure
+			if(!mRoot->LoadGalaxy(Options.mRootPath / "files" / "StageData" / galaxyPath, std::filesystem::exists(Options.mRootPath / "files" / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
+				ImGui::OpenPopup("Galaxy Load Error");
+			} else {
+				ModelCache.erase(ModelCache.begin(), ModelCache.end());
+				mRenderables.erase(mRenderables.begin(), mRenderables.end());
+
+				// Get a good enough guesstimation of how many renderables we will need so we aren't reallocating a bunch every frame 
+				size_t renderableCountEstimation = 0;
+				for(auto& child : mRoot->Children){
+					renderableCountEstimation += child->Children.size();
+				}
+
+				mRenderables.reserve(renderableCountEstimation*3);
+			}
+		}
+		catch (std::runtime_error e) {
+			std::cout << "Failed to load galaxy " << Options.mRootPath / "files" / "StageData" / galaxyPath << "! Exception: " << e.what() << "\n";
+		}
+		catch (std::exception e) {
+			std::cout << "Failed to load galaxy " << Options.mRootPath / "files" / "StageData" / galaxyPath << "! Exception: " << e.what() << "\n";
+		}
+	}
 }
 
 void UStarForgeContext::SetLights() {

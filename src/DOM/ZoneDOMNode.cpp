@@ -33,41 +33,59 @@ void SZoneLayerDOMNode::SaveLayer(){
 
     if(Children.size() == 0) return;
 
-    if(mObjInfoFile == nullptr){
-        auto zone = GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone);
-        std::shared_ptr<Archive::Folder> layerFolder = nullptr;
+    /* [v]: this is going to have to wait until _all_ jmp files are loaded for a layer
+    auto zone = GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone);
+    std::shared_ptr<Archive::Folder> layerFolder = nullptr;
 
-        if(zone.lock()->mGameType == EGameType::SMG1){
-            layerFolder = zone.lock()->mZoneArchive->GetFolder(std::filesystem::path(mLayerName));
-            if(layerFolder == nullptr){
-                std::shared_ptr<Archive::Folder> newLayerFolder = Archive::Folder::Create(zone.lock()->mZoneArchive);
-                newLayerFolder->SetName(std::filesystem::path(mLayerName).stem().string());
+    if(zone.lock()->mGameType == EGameType::SMG1){
+        layerFolder = zone.lock()->mZoneArchive->GetFolder(std::filesystem::path(mLayerName));
+        if(layerFolder == nullptr && mLayerName != ""){
+            auto commonLayer = zone.lock()->mZoneArchive->GetFolder(std::filesystem::path("jmp/placement/common"));
+            std::shared_ptr<Archive::Folder> newLayerFolder = Archive::Folder::Create(commonLayer->GetArchive());
+            newLayerFolder->SetName(std::filesystem::path(mLayerName).stem().string());
 
-                std::shared_ptr<Archive::File> newLayerObjInfo = Archive::File::Create();
-                newLayerObjInfo->SetName("objinfo");
-                newLayerFolder->AddFile(newLayerObjInfo);
-                mObjInfo.FromTemplate(zone.lock()->mObjInfoTemplate);
-                mObjInfoFile = newLayerObjInfo;
+            for(auto bcsvFile : commonLayer->GetFiles()){
+                SBcsvIO bcsvOg, bcsvNew;
 
-                zone.lock()->mZoneArchive->GetFolder(std::filesystem::path("jmp/placement"))->AddSubdirectory(newLayerFolder);
+                std::shared_ptr<Archive::File> newBcsvFile = Archive::File::Create();
+
+                bStream::CMemoryStream bcsvStream(bcsvFile->GetData(), bcsvFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+                bcsvOg.Load(&bcsvStream);
+
+                bcsvNew.FromTemplate(bcsvOg);
+
+                bStream::CMemoryStream saveStream(bcsvNew.CalculateNewFileSize(0), bStream::Endianess::Big, bStream::OpenMode::Out);
+                bcsvNew.Save({}, saveStream);
+
+                newBcsvFile->SetData(saveStream.getBuffer(), saveStream.getSize());
+                newBcsvFile->SetName(bcsvFile->GetName());
+                // [v]: this is a hack, really all of these file/bcsv pairs should be in some sort of map per layer that handles loading/saving
+                // theres a todo
+                if(bcsvFile->GetName() == "objinfo"){
+                    mObjInfoFile = newBcsvFile;
+                    mObjInfo = bcsvNew;
+                }
+                newLayerFolder->AddFile(newBcsvFile);
             }
-        } else {
-            layerFolder = zone.lock()->mZoneArchive->GetFolder(std::filesystem::path(mLayerName));
-            if(layerFolder == nullptr){
-                std::shared_ptr<Archive::Folder> newLayerFolder = Archive::Folder::Create(zone.lock()->mZoneArchive);
-                newLayerFolder->SetName(std::filesystem::path(mLayerName).stem().string());
-                
-                std::shared_ptr<Archive::File> newLayerObjInfo = Archive::File::Create();
-                newLayerObjInfo->SetName("ObjInfo");
-                newLayerFolder->AddFile(newLayerObjInfo);
-                mObjInfo.FromTemplate(zone.lock()->mObjInfoTemplate);
-                mObjInfoFile = newLayerObjInfo;
 
-                zone.lock()->mZoneArchive->GetFolder(std::filesystem::path("jmp/Placement"))->AddSubdirectory(newLayerFolder);
-            }
+            zone.lock()->mZoneArchive->GetFolder(std::filesystem::path("jmp/placement"))->AddSubdirectory(newLayerFolder);
         }
+    } else {
+        layerFolder = zone.lock()->mZoneArchive->GetFolder(std::filesystem::path(mLayerName));
+        if(layerFolder == nullptr){
+            std::shared_ptr<Archive::Folder> newLayerFolder = Archive::Folder::Create(zone.lock()->mZoneArchive);
+            newLayerFolder->SetName(std::filesystem::path(mLayerName).stem().string());
+                
+            std::shared_ptr<Archive::File> newLayerObjInfo = Archive::File::Create();
+            newLayerObjInfo->SetName("ObjInfo");
+            newLayerFolder->AddFile(newLayerObjInfo);
+            mObjInfo.FromTemplate(zone.lock()->mObjInfoTemplate);
+            mObjInfoFile = newLayerObjInfo;
 
+            zone.lock()->mZoneArchive->GetFolder(std::filesystem::path("jmp/Placement"))->AddSubdirectory(newLayerFolder);
+        }
     }
+    */
 
     objects.reserve(Children.size());
 
@@ -378,11 +396,6 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
         AddChild(layer);
     }
 
-    auto objInfoFile = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/placement/common/objinfo"));
-    bStream::CMemoryStream objInfoStream(objInfoFile->GetData(), objInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
-    mObjInfoTemplate.Load(&objInfoStream);
-    mObjInfoTemplate.Clear();
-
     mZoneArchiveLoaded = true;
 
 }
@@ -491,11 +504,6 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
         
         zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), mStageObjInfo.GetUnsignedInt(stageObjEntry, "l_id")}});
     }
-    
-    auto objInfoFile = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/placement/common/objinfo"));
-    bStream::CMemoryStream objInfoStream(objInfoFile->GetData(), objInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
-    mObjInfoTemplate.Load(&objInfoStream);
-    mObjInfoTemplate.Clear();
 
     AddChild(layer);
 

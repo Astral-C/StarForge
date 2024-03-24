@@ -41,7 +41,10 @@ enum class EDOMNodeType
 	Toad,
 	Boo,
 	AstroObject,
-	BlackHole
+	BlackHole,
+	SoundObj,
+
+	StartObj
 };
 
 extern std::atomic<uint32_t> SPickingID;
