@@ -81,6 +81,7 @@ void UStarForgeProject::LoadThumbs(){
 
 uint32_t UStarForgeProject::GetThumbnail(std::string name){
     for(int i = 0; i < mGalaxies.size(); i++){
+        if(mGalaxyThumbnails.size() < i) continue;
         if(mGalaxies.at(i)["internalName"] == name) return mGalaxyThumbnails.at(i);
     }
     return 0xFFFFFFFF;
