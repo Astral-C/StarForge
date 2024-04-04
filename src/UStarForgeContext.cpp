@@ -17,6 +17,7 @@
 #include <bstream.h>
 #include <ResUtil.hpp>
 #include "ImGuizmo.h"
+#include <fmt/format.h>
 
 #include "DOM/ZoneDOMNode.hpp"
 #include "DOM/ScenarioDOMNode.hpp"
@@ -26,6 +27,12 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize2.h"
 
 #include "IconsForkAwesome.h"
 
@@ -49,6 +56,14 @@ UStarForgeContext::~UStarForgeContext(){
 	//J3DRendering::Cleanup();
 	mRenderables.erase(mRenderables.begin(), mRenderables.end());
 	ModelCache.clear();
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glDeleteFramebuffers(1, &mFbo);
+	glDeleteRenderbuffers(1, &mRbo);
+	glDeleteTextures(1, &mViewTex);
+	glDeleteTextures(1, &mPickTex);
 }
 
 UStarForgeContext::UStarForgeContext(){
@@ -126,18 +141,46 @@ void UStarForgeContext::Render(float deltaTime) {
 	mMainDockSpaceID = ImGui::DockSpaceOverViewport(mainViewport, dockFlags);
 	
 	if(!bIsDockingSetUp){
+
+		glGenFramebuffers(1, &mFbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
+
+		glGenRenderbuffers(1, &mRbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, mRbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1280, 720);
+
+		glGenTextures(1, &mViewTex);
+		glGenTextures(1, &mPickTex);
+
+		glBindTexture(GL_TEXTURE_2D, mViewTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1280, 720, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
+		glBindTexture(GL_TEXTURE_2D, mPickTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, 1280, 720, 0, GL_RED_INTEGER, GL_INT, nullptr);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mViewTex, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, mPickTex, 0);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRbo);
+
+		assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+	
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
 		ImGui::DockBuilderRemoveNode(mMainDockSpaceID); // clear any previous layout
 		ImGui::DockBuilderAddNode(mMainDockSpaceID, dockFlags | ImGuiDockNodeFlags_DockSpace);
 		ImGui::DockBuilderSetNodeSize(mMainDockSpaceID, mainViewport->Size);
 
 
-		mDockNodeLeftID = ImGui::DockBuilderSplitNode(mMainDockSpaceID, ImGuiDir_Left, 0.25f, nullptr, &mMainDockSpaceID);
+		mDockNodeLeftID = ImGui::DockBuilderSplitNode(mMainDockSpaceID, ImGuiDir_Left, 0.20f, nullptr, &mMainDockSpaceID);
 		mDockNodeDownLeftID = ImGui::DockBuilderSplitNode(mDockNodeLeftID, ImGuiDir_Down, 0.5f, nullptr, &mDockNodeUpLeftID);
 
 
 		ImGui::DockBuilderDockWindow("mainWindow", mDockNodeUpLeftID);
 		ImGui::DockBuilderDockWindow("zoneView", ImGui::DockBuilderSplitNode(mDockNodeUpLeftID, ImGuiDir_Down, 0.5f, nullptr, nullptr));
 		ImGui::DockBuilderDockWindow("detailWindow", mDockNodeDownLeftID);
+		ImGui::DockBuilderDockWindow("viewportWindow", mMainDockSpaceID);
 
 		ImGui::DockBuilderFinish(mMainDockSpaceID);
 		bIsDockingSetUp = true;
@@ -216,8 +259,6 @@ void UStarForgeContext::Render(float deltaTime) {
 
 	ImGui::SetNextWindowClass(&mainWindowOverride);
 
-	ImGuizmo::BeginFrame();
-	ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
 	ImGui::Begin("detailWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 		if(selected != nullptr){
@@ -244,9 +285,86 @@ void UStarForgeContext::Render(float deltaTime) {
 		}
 
 		ImGui::Separator();
+		if(selected != nullptr) selected->RenderDetailsUI();
+		ImGui::End();
+
+		
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+
+		ImGui::SetNextWindowClass(&mainWindowOverride);
+		ImGui::Begin("viewportWindow");
+
+		std::string markDelete = "";
+
+		ImGui::BeginTabBar("openedGalaxies", ImGuiTabBarFlags_Reorderable);
+		for(auto [galaxyName, galaxy] : mOpenGalaxies){
+			bool shouldClose = true;
+			if(ImGui::BeginTabItem(galaxyName.c_str(), &shouldClose)){
+				if(galaxy != mRoot){
+					mRoot = galaxy;
+				}
+				ImGui::EndTabItem();
+			}
+			if(!shouldClose) markDelete = galaxyName;
+		}
+		ImGui::EndTabBar();
+
+
+		ImVec2 winSize = ImGui::GetContentRegionAvail();
+		ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
+
+		if(winSize.x != mPrevWinWidth || winSize.y != mPrevWinHeight){
+			std::cout << "Regenerating textures..." << std::endl;
+			glDeleteTextures(1, &mViewTex);
+			glDeleteTextures(1, &mPickTex);
+			glDeleteRenderbuffers(1, &mRbo);
+
+			glGenRenderbuffers(1, &mRbo);
+			glBindRenderbuffer(GL_RENDERBUFFER, mRbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, (uint32_t)winSize.x, (uint32_t)winSize.y);
+
+			glGenTextures(1, &mViewTex);
+			glGenTextures(1, &mPickTex);
+
+			glBindTexture(GL_TEXTURE_2D, mViewTex);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (uint32_t)winSize.x, (uint32_t)winSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+			glBindTexture(GL_TEXTURE_2D, mPickTex);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, (uint32_t)winSize.x, (uint32_t)winSize.y, 0, GL_RED_INTEGER, GL_INT, nullptr);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mViewTex, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, mPickTex, 0);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRbo);
+
+			GLenum attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+			glDrawBuffers(2, attachments);
+
+			assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+		}
+		
+		glViewport(0, 0, (uint32_t)winSize.x, (uint32_t)winSize.y);
+
+		
+		glClearColor(0.100f, 0.261f, 0.402f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		int32_t unused = -1;
+		glClearTexImage(mPickTex, 0, GL_RED_INTEGER, GL_INT, &unused);
+
+		mPrevWinWidth = winSize.x;
+		mPrevWinHeight = winSize.y;
+		
+		ImGuizmo::BeginFrame();
+		ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
+		ImGuizmo::SetRect(cursorPos.x, cursorPos.y, winSize.x, winSize.y);
 
 		if(selected != nullptr){
-			selected->RenderDetailsUI();
 			//TODO: make this a switch please
 			if(selected->IsNodeType(EDOMNodeType::Object)){
 				std::shared_ptr<SObjectDOMNode> object = std::static_pointer_cast<SObjectDOMNode>(selected);
@@ -307,7 +425,6 @@ void UStarForgeContext::Render(float deltaTime) {
 			mCamera.SetUp(glm::vec3(up.x, up.y, up.z));
 		}
 
-	ImGui::End();
 
 	glm::mat4 projection, view;
 	projection = mCamera.GetProjectionMatrix();
@@ -320,6 +437,7 @@ void UStarForgeContext::Render(float deltaTime) {
 	
 	mRenderables.clear();
 	mRoot->Render(mRenderables, deltaTime);
+
 
 	J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
 	J3D::Rendering::Render(deltaTime, view, projection, packets);
@@ -343,13 +461,14 @@ void UStarForgeContext::Render(float deltaTime) {
 
 	if(ImGui::IsMouseClicked(0) && !io.WantCaptureMouse){
 		ImVec2 mousePos = ImGui::GetMousePos();
+		ImVec2 cursorPos = ImGui::GetCursorPos();
 
 		// Check picking FB for paths, areas, billboards, etc
 		// Exit early if we found a selection here
 
 
 		// Check picking for J3DUltra 
-		uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x, io.DisplaySize.y - (uint32_t)mousePos.y));
+		uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x - cursorPos.x, io.DisplaySize.y - (uint32_t)mousePos.y - (uint32_t)cursorPos.y));
 
 		for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
 			if(object->GetModel() != nullptr && object->GetModel()->GetModelId()== modelID){
@@ -358,6 +477,36 @@ void UStarForgeContext::Render(float deltaTime) {
 			}
 		}
 	}
+
+	ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
+
+	if(markDelete != ""){
+
+		mOpenGalaxies.erase(markDelete);
+
+		if(!std::filesystem::exists("./res/thumb")){
+			std::filesystem::create_directory("./res/thumb");
+		}
+
+		int wsx = (int)winSize.x;
+		int wsy = (int)winSize.y;
+
+		unsigned char* imgData = new unsigned char[wsx * wsy * 4]{0};
+		unsigned char* imgDataScaled = new unsigned char[84 * 64 *4] {0};
+
+		glReadPixels(0, 0, wsx, wsy, GL_RGBA, GL_UNSIGNED_BYTE, imgData);
+
+		stbir_resize_uint8_linear(imgData, wsx, wsy, 0, imgDataScaled, 84, 64, 0, STBIR_RGBA_NO_AW);
+
+		stbi_write_png(fmt::format("./res/thumb/{}.png", markDelete).c_str(), 84, 64, 4,  imgDataScaled, 84 * 4);
+		delete imgData;
+		delete imgDataScaled;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	ImGui::End();
+	ImGui::PopStyleVar();
 
 	//mGrid.Render(mCamera.GetPosition(), mCamera.GetProjectionMatrix(), mCamera.GetViewMatrix());
 }
@@ -531,6 +680,7 @@ void UStarForgeContext::RenderMenuBar() {
 		try {
 			selected = nullptr;
 			mRoot = std::make_shared<SGalaxyDOMNode>();
+			mOpenGalaxies[galaxyPath] = mRoot;
 			// TODO: add way to set galaxy type
 			// copy from cammie again? or infer based on root structure
 			if(!mRoot->LoadGalaxy(Options.mRootPath / "files" / "StageData" / galaxyPath, std::filesystem::exists(Options.mRootPath / "files" / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){

@@ -15,7 +15,8 @@ private:
     EGameType mGame;
 
     nlohmann::json mGalaxies;
-
+    std::vector<uint32_t> mGalaxyThumbnails;
+ 
     uint32_t mProjImageID { 0xFFFFFFFF };
 
 public:
@@ -25,6 +26,10 @@ public:
     std::filesystem::path GetRootPath() { return mProjectRoot; }
     nlohmann::json GetGalaxies() { return mGalaxies; }
     uint32_t GetImage() { return mProjImageID; }
+    
+    uint32_t GetThumbnail(std::string name);
+
+    void LoadThumbs();
     void AddGalaxy(nlohmann::json newGalaxy) { mGalaxies.push_back(newGalaxy); }
 
     UStarForgeProject(nlohmann::json projectJson);

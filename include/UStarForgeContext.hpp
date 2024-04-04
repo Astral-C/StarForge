@@ -16,7 +16,8 @@ class UStarForgeContext {
 
 	UStarForgeProjectManager mProjects;
 	
-	std::shared_ptr<SGalaxyDOMNode> mRoot;
+	std::shared_ptr<SGalaxyDOMNode> mRoot; // active root
+	std::map<std::string, std::shared_ptr<SGalaxyDOMNode>> mOpenGalaxies;
 	std::shared_ptr<SDOMNodeBase> selected;
 
 	std::vector<std::shared_ptr<J3DModelInstance>> mRenderables;
@@ -44,6 +45,12 @@ class UStarForgeContext {
 	bool bIsSaveDialogOpen { false };
 	bool mSetLights { false };
 	bool mTextEditorActive { false };
+
+	// Rendering surface
+	uint32_t mFbo, mRbo, mViewTex, mPickTex;
+
+	float mPrevWinWidth { -1.0f };
+	float mPrevWinHeight { -1.0f };
 
 	void RenderMainWindow(float deltaTime);
 	void RenderPanels(float deltaTime);

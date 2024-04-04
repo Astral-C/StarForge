@@ -45,6 +45,47 @@ UStarForgeProject::UStarForgeProject(nlohmann::json projectJson){
     mGalaxies = projectJson["galaxies"];
 }
 
+void UStarForgeProject::LoadThumbs(){
+    stbi_set_flip_vertically_on_load(1);
+    for(auto galaxy : mGalaxies){
+        if(std::filesystem::exists("./res/thumb/" + galaxy["internalName"].get<std::string>() + ".png")){
+            std::string path = "./res/thumb/" + galaxy["internalName"].get<std::string>() + ".png";
+
+            int w, h, c;
+            unsigned char* defaultProjImg = stbi_load(path.c_str(), &w, &h, &c, 4);
+
+            uint32_t thumbId;
+            glGenTextures(1, &thumbId);
+            glBindTexture(GL_TEXTURE_2D, thumbId);
+            
+            mGalaxyThumbnails.push_back(thumbId);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, defaultProjImg);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            stbi_image_free(defaultProjImg);
+
+        } else {
+            mGalaxyThumbnails.push_back(0xFFFFFFFF);
+        }
+    }
+    stbi_set_flip_vertically_on_load(0);
+}
+
+uint32_t UStarForgeProject::GetThumbnail(std::string name){
+    for(int i = 0; i < mGalaxies.size(); i++){
+        if(mGalaxies.at(i)["internalName"] == name) return mGalaxyThumbnails.at(i);
+    }
+    return 0xFFFFFFFF;
+}
+
 UStarForgeProject::~UStarForgeProject(){}
 
 UStarForgeProjectManager::UStarForgeProjectManager(){
@@ -128,7 +169,7 @@ std::string UStarForgeProjectManager::RenderGalaxySelectUi(bool& galaxySelectOpe
             }
         } else {
             for(auto galaxy : mCurrentProject->GetGalaxies()){
-                ImGui::BeginChild(fmt::format("##{}", galaxy["name"].get<std::string>()).data(), ImVec2(ImGui::GetContentRegionAvail().x, 64.0f), ImGuiChildFlags_Border);
+                ImGui::BeginChild(fmt::format("##{}", galaxy["name"].get<std::string>()).data(), ImVec2(ImGui::GetContentRegionAvail().x, 80.0f), ImGuiChildFlags_Border);
                     if(ImGui::IsWindowHovered()){
                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
 
@@ -138,20 +179,20 @@ std::string UStarForgeProjectManager::RenderGalaxySelectUi(bool& galaxySelectOpe
                         }
                     }
 
-                    //uint32_t imgId = project->GetImage();
-                    //if(imgId != 0xFFFFFFFF){
-                    //    ImGui::Image((ImTextureID)imgId, ImVec2(48, 48));
-                    //} else {
-                    //    ImGui::Image((ImTextureID)mProjImageID, ImVec2(48, 48));
-                    //}
-                    //ImGui::SameLine();
+                    uint32_t imgId = mCurrentProject->GetThumbnail(galaxy["internalName"].get<std::string>());
+                    if(imgId != 0xFFFFFFFF){
+                        ImGui::Image((ImTextureID)imgId, ImVec2(84, 64));
+                    } else {
+                        ImGui::Image((ImTextureID)mProjImageID, ImVec2(64, 64));
+                    }
+                    ImGui::SameLine();
                     ImGui::BeginGroup();
                     ImGui::Text(galaxy["name"].get<std::string>().data());
                     ImGui::EndGroup();
                 ImGui::EndChild();
             }
         
-                ImGui::BeginChild("##newGalaxyBtn", ImVec2(ImGui::GetContentRegionAvail().x, 32.0f), ImGuiChildFlags_Border | ImGuiChildFlags_AlwaysAutoResize);
+                ImGui::BeginChild("##newGalaxyBtn", ImVec2(ImGui::GetContentRegionAvail().x, 32.0f), ImGuiChildFlags_Border);
                     if(ImGui::IsWindowHovered()){
                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5);
 
@@ -267,7 +308,7 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
                 ImGui::EndChild();
             }
 
-            ImGui::BeginChild("##newProjectBtn", ImVec2(ImGui::GetContentRegionAvail().x, 32.0f), ImGuiChildFlags_Border | ImGuiChildFlags_AlwaysAutoResize);
+            ImGui::BeginChild("##newProjectBtn", ImVec2(ImGui::GetContentRegionAvail().x, 32.0f), ImGuiChildFlags_Border);
                 if(ImGui::IsWindowHovered()){
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5);
 
@@ -301,6 +342,7 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
         }
 
         if(shouldClosePopup){
+            mCurrentProject->LoadThumbs();
             ImGui::CloseCurrentPopup();
             projectManagerOpen = false;
         }
