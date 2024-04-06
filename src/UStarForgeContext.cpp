@@ -471,8 +471,10 @@ void UStarForgeContext::Render(float deltaTime) {
 		// Check picking for J3DUltra 
 		uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x - cursorPos.x, io.DisplaySize.y - (uint32_t)mousePos.y - (uint32_t)cursorPos.y));
 
+		std::cout << "Readback model id is " << modelID << std::endl;
 		for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
 			if(object->GetModel() != nullptr && object->GetModel()->GetModelId()== modelID){
+				std::cout << "Selected model " << object->GetName() << std::endl;
 				selected = object;
 				break;
 			}
