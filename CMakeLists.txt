@@ -18,7 +18,7 @@ file(GLOB_RECURSE STARFORGE_SRC
     "lib/imgui/misc/cpp/*.cpp"
 )
 
-find_package(ICU 61.0 COMPONENTS uc i18n REQUIRED)
+find_package(ICU COMPONENTS uc i18n REQUIRED)
 find_package(CURL REQUIRED)
 
 add_executable(starforge ${STARFORGE_SRC})

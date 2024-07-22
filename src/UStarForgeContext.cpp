@@ -138,7 +138,7 @@ void UStarForgeContext::Render(float deltaTime) {
 	const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 
 	ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar | ImGuiDockNodeFlags_NoDockingInCentralNode;
-	mMainDockSpaceID = ImGui::DockSpaceOverViewport(mainViewport, dockFlags);
+	mMainDockSpaceID = ImGui::DockSpaceOverViewport(0, mainViewport, dockFlags);
 	
 	if(!bIsDockingSetUp){
 
@@ -286,13 +286,13 @@ void UStarForgeContext::Render(float deltaTime) {
 
 		ImGui::Separator();
 		if(selected != nullptr) selected->RenderDetailsUI();
-		ImGui::End();
+	ImGui::End();
 
 		
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
 
-		ImGui::SetNextWindowClass(&mainWindowOverride);
-		ImGui::Begin("viewportWindow");
+	ImGui::SetNextWindowClass(&mainWindowOverride);
+	ImGui::Begin("viewportWindow");
 
 		std::string markDelete = "";
 
@@ -334,7 +334,7 @@ void UStarForgeContext::Render(float deltaTime) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 			glBindTexture(GL_TEXTURE_2D, mPickTex);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32UI, (uint32_t)winSize.x, (uint32_t)winSize.y, 0, GL_RED_INTEGER, GL_INT, nullptr);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, (uint32_t)winSize.x, (uint32_t)winSize.y, 0, GL_RED_INTEGER, GL_INT, nullptr);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -419,7 +419,8 @@ void UStarForgeContext::Render(float deltaTime) {
 
 		glm::mat4 viewMtx = mCamera.GetViewMatrix();
 		ImVec4 forward = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX}, up = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
-		ImGuizmo::ViewManipulate(&viewMtx[0][0], 64, ImVec2(mainViewport->Size.x - 74, mainViewport->Size.y - 74), ImVec2(64, 64), ImColor(ImVec4(0.35,0.2,0.35,0.35)), forward, up);
+		// [veebs]: Fix this, imguizmo update broke it
+		//ImGuizmo::ViewManipulate(&viewMtx[0][0], 64, ImVec2(mainViewport->Size.x - 74, mainViewport->Size.y - 74), ImVec2(64, 64), ImColor(ImVec4(0.35,0.2,0.35,0.35)), forward, up);
 
 		if(forward.x != FLT_MAX && forward.y != FLT_MAX && forward.z != FLT_MAX){
 			mCamera.SetForward(glm::vec3(forward.x, forward.y, forward.z));
@@ -427,86 +428,84 @@ void UStarForgeContext::Render(float deltaTime) {
 		}
 
 
-	glm::mat4 projection, view;
-	projection = mCamera.GetProjectionMatrix();
-	view = mCamera.GetViewMatrix();
+		glm::mat4 projection, view;
+		projection = mCamera.GetProjectionMatrix();
+		view = mCamera.GetViewMatrix();
 
-	//if(!mSetLights) SetLights();
-	J3DUniformBufferObject::SetProjAndViewMatrices(projection, view);
-	
-	//Render Models here
-	
-	mRenderables.clear();
-	mRoot->Render(mRenderables, deltaTime);
-
-
-	J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
-	J3D::Rendering::Render(deltaTime, view, projection, packets);
-	
-
-	if(ImGui::IsMouseClicked(0) && !io.WantCaptureMouse){
-		J3D::Picking::RenderPickingScene(view, projection, packets);
-	}
-
-	// Combine these two into one
-
-	for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
-		std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
-		if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
-	}
-
-	for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
-		std::shared_ptr<SZoneLayerDOMNode> layer = area->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
-		if(layer->GetVisible()) area->Render(&mCamera, &mAreaRenderer, layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform, mRoot->GetGame());
-	}
-
-	if(ImGui::IsMouseClicked(0) && !io.WantCaptureMouse){
-		ImVec2 mousePos = ImGui::GetMousePos();
-		ImVec2 cursorPos = ImGui::GetCursorPos();
-
-		// Check picking FB for paths, areas, billboards, etc
-		// Exit early if we found a selection here
+		//if(!mSetLights) SetLights();
+		J3DUniformBufferObject::SetProjAndViewMatrices(projection, view);
+		
+		//Render Models here
+		
+		mRenderables.clear();
+		mRoot->Render(mRenderables, deltaTime);
 
 
-		// Check picking for J3DUltra 
-		uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x - cursorPos.x, io.DisplaySize.y - (uint32_t)mousePos.y - (uint32_t)cursorPos.y));
+		J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
+		J3D::Rendering::Render(deltaTime, view, projection, packets);
 
-		std::cout << "Readback model id is " << modelID << std::endl;
-		for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
-			if(object->GetModel() != nullptr && object->GetModel()->GetModelId()== modelID){
-				std::cout << "Selected model " << object->GetName() << std::endl;
-				selected = object;
-				break;
+		// Combine these two into one
+
+		for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
+			std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
+			if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
+		}
+
+		for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
+			std::shared_ptr<SZoneLayerDOMNode> layer = area->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
+			if(layer->GetVisible()) area->Render(&mCamera, &mAreaRenderer, layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform, mRoot->GetGame());
+		}
+
+		cursorPos = ImGui::GetCursorScreenPos();
+		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
+
+		if(ImGui::IsItemClicked(0)){
+			J3D::Picking::RenderPickingScene(view, projection, packets);
+			ImVec2 mousePos = ImGui::GetMousePos();
+
+			// Check picking FB for paths, areas, billboards, etc
+			// Exit early if we found a selection here
+
+
+			// Check picking for J3DUltra 
+			uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x - (uint32_t)cursorPos.x, (uint32_t)mousePos.y - (uint32_t)cursorPos.y));
+
+			std::cout << "Readback model id at " << (uint32_t)mousePos.x - (uint32_t)cursorPos.x << "," << (uint32_t)mousePos.y - (uint32_t)cursorPos.y << 
+				" is " << modelID << std::endl;
+			for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
+				if(object->GetModel() != nullptr && object->GetModel()->GetModelId()== modelID){
+					std::cout << "Selected model " << object->GetName() << std::endl;
+					selected = object;
+					break;
+				}
 			}
 		}
-	}
 
-	ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
 
-	if(markDelete != ""){
+		if(markDelete != ""){
 
-		mOpenGalaxies.erase(markDelete);
+			mOpenGalaxies.erase(markDelete);
 
-		if(!std::filesystem::exists("./res/thumb")){
-			std::filesystem::create_directory("./res/thumb");
+			if(!std::filesystem::exists("./res/thumb")){
+				std::filesystem::create_directory("./res/thumb");
+			}
+
+			int wsx = (int)winSize.x;
+			int wsy = (int)winSize.y;
+
+			unsigned char* imgData = new unsigned char[wsx * wsy * 4]{0};
+			unsigned char* imgDataScaled = new unsigned char[84 * 64 *4] {0};
+
+			glReadPixels(0, 0, wsx, wsy, GL_RGBA, GL_UNSIGNED_BYTE, imgData);
+
+			stbir_resize_uint8_linear(imgData, wsx, wsy, 0, imgDataScaled, 84, 64, 0, STBIR_RGBA_NO_AW);
+
+			stbi_write_png(fmt::format("./res/thumb/{}.png", markDelete).c_str(), 84, 64, 4,  imgDataScaled, 84 * 4);
+			delete imgData;
+			delete imgDataScaled;
 		}
 
-		int wsx = (int)winSize.x;
-		int wsy = (int)winSize.y;
-
-		unsigned char* imgData = new unsigned char[wsx * wsy * 4]{0};
-		unsigned char* imgDataScaled = new unsigned char[84 * 64 *4] {0};
-
-		glReadPixels(0, 0, wsx, wsy, GL_RGBA, GL_UNSIGNED_BYTE, imgData);
-
-		stbir_resize_uint8_linear(imgData, wsx, wsy, 0, imgDataScaled, 84, 64, 0, STBIR_RGBA_NO_AW);
-
-		stbi_write_png(fmt::format("./res/thumb/{}.png", markDelete).c_str(), 84, 64, 4,  imgDataScaled, 84 * 4);
-		delete imgData;
-		delete imgDataScaled;
-	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	ImGui::End();
 	ImGui::PopStyleVar();
