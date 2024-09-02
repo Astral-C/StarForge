@@ -345,7 +345,7 @@ void UStarForgeContext::Render(float deltaTime) {
 			GLenum attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 			glDrawBuffers(2, attachments);
 
-			//assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+			assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
 		}
 		
@@ -361,6 +361,59 @@ void UStarForgeContext::Render(float deltaTime) {
 		mPrevWinWidth = winSize.x;
 		mPrevWinHeight = winSize.y;
 		
+		glm::mat4 projection, view;
+		projection = mCamera.GetProjectionMatrix();
+		view = mCamera.GetViewMatrix();
+
+		//if(!mSetLights) SetLights();
+		J3DUniformBufferObject::SetProjAndViewMatrices(projection, view);
+		
+		//Render Models here
+		
+		mRenderables.clear();
+		mRoot->Render(mRenderables, deltaTime);
+
+
+		J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
+		J3D::Rendering::Render(deltaTime, view, projection, packets);
+
+		// Combine these two into one
+
+		for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
+			std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
+			if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
+		}
+
+		for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
+			std::shared_ptr<SZoneLayerDOMNode> layer = area->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
+			if(layer->GetVisible()) area->Render(&mCamera, &mAreaRenderer, layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform, mRoot->GetGame());
+		}
+
+		cursorPos = ImGui::GetCursorScreenPos();
+		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
+
+		if(ImGui::IsItemClicked(0) && !ImGuizmo::IsOver()){
+			J3D::Picking::RenderPickingScene(view, projection, packets);
+			ImVec2 mousePos = ImGui::GetMousePos();
+
+			// Check picking FB for paths, areas, billboards, etc
+			// Exit early if we found a selection here
+
+
+			// Check picking for J3DUltra 
+			uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x - (uint32_t)cursorPos.x, (uint32_t)mousePos.y - (uint32_t)cursorPos.y));
+
+			std::cout << "Readback model id at " << (uint32_t)mousePos.x - (uint32_t)cursorPos.x << "," << (uint32_t)mousePos.y - (uint32_t)cursorPos.y << 
+				" is " << modelID << std::endl;
+			for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
+				if(object->GetModel() != nullptr && object->GetModel()->GetModelId()== modelID){
+					std::cout << "Selected model " << object->GetName() << std::endl;
+					selected = object;
+					break;
+				}
+			}
+		}
+
 		ImGuizmo::BeginFrame();
 		ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
 		ImGuizmo::SetRect(cursorPos.x, cursorPos.y, winSize.x, winSize.y);
@@ -425,60 +478,6 @@ void UStarForgeContext::Render(float deltaTime) {
 		if(forward.x != FLT_MAX && forward.y != FLT_MAX && forward.z != FLT_MAX){
 			mCamera.SetForward(glm::vec3(forward.x, forward.y, forward.z));
 			mCamera.SetUp(glm::vec3(up.x, up.y, up.z));
-		}
-
-
-		glm::mat4 projection, view;
-		projection = mCamera.GetProjectionMatrix();
-		view = mCamera.GetViewMatrix();
-
-		//if(!mSetLights) SetLights();
-		J3DUniformBufferObject::SetProjAndViewMatrices(projection, view);
-		
-		//Render Models here
-		
-		mRenderables.clear();
-		mRoot->Render(mRenderables, deltaTime);
-
-
-		J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
-		J3D::Rendering::Render(deltaTime, view, projection, packets);
-
-		// Combine these two into one
-
-		for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
-			std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
-			if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
-		}
-
-		for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
-			std::shared_ptr<SZoneLayerDOMNode> layer = area->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
-			if(layer->GetVisible()) area->Render(&mCamera, &mAreaRenderer, layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform, mRoot->GetGame());
-		}
-
-		cursorPos = ImGui::GetCursorScreenPos();
-		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
-
-		if(ImGui::IsItemClicked(0)){
-			J3D::Picking::RenderPickingScene(view, projection, packets);
-			ImVec2 mousePos = ImGui::GetMousePos();
-
-			// Check picking FB for paths, areas, billboards, etc
-			// Exit early if we found a selection here
-
-
-			// Check picking for J3DUltra 
-			uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x - (uint32_t)cursorPos.x, (uint32_t)mousePos.y - (uint32_t)cursorPos.y));
-
-			std::cout << "Readback model id at " << (uint32_t)mousePos.x - (uint32_t)cursorPos.x << "," << (uint32_t)mousePos.y - (uint32_t)cursorPos.y << 
-				" is " << modelID << std::endl;
-			for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
-				if(object->GetModel() != nullptr && object->GetModel()->GetModelId()== modelID){
-					std::cout << "Selected model " << object->GetName() << std::endl;
-					selected = object;
-					break;
-				}
-			}
 		}
 
 
