@@ -52,6 +52,8 @@ public:
     std::array<std::string, 8> mObjArgNames;
     std::array<int, 8> mObjArgs;
 
+    std::unordered_map < std::string, int> mSwitches;
+
     glm::mat4 mTransform;
     typedef SDOMNodeSerializable Super; 
 
