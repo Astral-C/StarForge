@@ -398,14 +398,14 @@ void UStarForgeContext::Render(float deltaTime) {
 			ImVec2 mousePos = ImGui::GetMousePos();
 			
 			ImVec2 pickPos = {
-				static_cast<uint32_t>(mousePos.x) - static_cast<uint32_t>(cursorPos.x),
-				static_cast<uint32_t>(winSize.y) - (static_cast<uint32_t>(mousePos.y) - static_cast<uint32_t>(cursorPos.y))
+				mousePos.x - cursorPos.x,
+				winSize.y - (mousePos.y - cursorPos.y)
 			};
 
 			glPixelStorei(GL_PACK_ALIGNMENT, 1);
 			glReadBuffer(GL_COLOR_ATTACHMENT1);
 			uint32_t id = 0xFFFFFFFF;
-			glReadPixels((uint32_t)pickPos.x, (uint32_t)pickPos.y, 1, 1, GL_RED_INTEGER, GL_INT, (void*)&id);
+			glReadPixels(static_cast<GLint>(pickPos.x), static_cast<GLint>(pickPos.y), 1, 1, GL_RED_INTEGER, GL_INT, (void*)&id);
 
 			if(id != 0){
 				
