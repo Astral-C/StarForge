@@ -39,6 +39,7 @@ class UStarForgeContext {
 	bool mProjectManagerOpen { true };
 	bool mGalaxySelectOpen { false };
 	bool mAboutOpen { false };
+	bool mViewportIsFocused { false };
 
 	bool bIsDockingSetUp { false };
 	bool bIsFileDialogOpen { false };

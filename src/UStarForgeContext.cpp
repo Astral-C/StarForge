@@ -105,26 +105,28 @@ UStarForgeContext::UStarForgeContext(){
 }
 
 bool UStarForgeContext::Update(float deltaTime) {
-	mCamera.Update(deltaTime);
+	if(mViewportIsFocused){
+		mCamera.Update(deltaTime);
 
-	if(ImGui::IsKeyPressed(ImGuiKey_1)){
-		mGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
-	}
+		if(ImGui::IsKeyPressed(ImGuiKey_1)){
+			mGizmoOperation = ImGuizmo::OPERATION::TRANSLATE;
+		}
 
-	if(ImGui::IsKeyPressed(ImGuiKey_2)){
-		mGizmoOperation = ImGuizmo::OPERATION::ROTATE;
-	}
+		if(ImGui::IsKeyPressed(ImGuiKey_2)){
+			mGizmoOperation = ImGuizmo::OPERATION::ROTATE;
+		}
 
-	if(ImGui::IsKeyPressed(ImGuiKey_3)){
-		mGizmoOperation = ImGuizmo::OPERATION::SCALE;
-	}
+		if(ImGui::IsKeyPressed(ImGuiKey_3)){
+			mGizmoOperation = ImGuizmo::OPERATION::SCALE;
+		}
 
-	if(ImGui::IsKeyPressed(ImGuiKey_Escape)){
-		selected = nullptr;
-	}
+		if(ImGui::IsKeyPressed(ImGuiKey_Escape)){
+			selected = nullptr;
+		}
 
-	if(ImGui::IsKeyPressed(ImGuiKey_O)){
-		mCamera.ToggleOrtho();
+		if(ImGui::IsKeyPressed(ImGuiKey_O)){
+			mCamera.ToggleOrtho();
+		}
 	}
 
 	return true;
@@ -393,6 +395,12 @@ void UStarForgeContext::Render(float deltaTime) {
 
 		cursorPos = ImGui::GetCursorScreenPos();
 		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
+
+		if(ImGui::IsWindowFocused()){
+			mViewportIsFocused = true;
+		} else {
+			mViewportIsFocused = false;
+		}
 
 		if(ImGui::IsItemClicked(0) && !ImGuizmo::IsOver()){
 			ImVec2 mousePos = ImGui::GetMousePos();
