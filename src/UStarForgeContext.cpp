@@ -347,6 +347,9 @@ void UStarForgeContext::Render(float deltaTime) {
 
 			assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
+		
+			J3D::Picking::ResizeFramebuffer((uint32_t)winSize.x, (uint32_t)winSize.y);
+		
 		}
 		
 		glViewport(0, 0, (uint32_t)winSize.x, (uint32_t)winSize.y);
@@ -373,12 +376,11 @@ void UStarForgeContext::Render(float deltaTime) {
 		mRenderables.clear();
 		mRoot->Render(mRenderables, deltaTime);
 
-
 		J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
 		J3D::Rendering::Render(deltaTime, view, projection, packets);
 
 		// Combine these two into one
-
+		
 		for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
 			std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
 			if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
@@ -392,24 +394,30 @@ void UStarForgeContext::Render(float deltaTime) {
 		cursorPos = ImGui::GetCursorScreenPos();
 		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
 
+		J3D::Picking::RenderPickingScene(view, projection, packets);
 		if(ImGui::IsItemClicked(0) && !ImGuizmo::IsOver()){
-			J3D::Picking::RenderPickingScene(view, projection, packets);
 			ImVec2 mousePos = ImGui::GetMousePos();
+
+			ImVec2 pickPos = {
+				((uint32_t)mousePos.x - (uint32_t)cursorPos.x), // what?
+				(uint32_t)winSize.y - ((uint32_t)mousePos.y - (uint32_t)cursorPos.y) // flip the y coordinate
+			};
 
 			// Check picking FB for paths, areas, billboards, etc
 			// Exit early if we found a selection here
 
 
 			// Check picking for J3DUltra 
-			uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)mousePos.x - (uint32_t)cursorPos.x, (uint32_t)mousePos.y - (uint32_t)cursorPos.y));
+			uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)pickPos.x,  (uint32_t)pickPos.y));
 
-			std::cout << "Readback model id at " << (uint32_t)mousePos.x - (uint32_t)cursorPos.x << "," << (uint32_t)mousePos.y - (uint32_t)cursorPos.y << 
-				" is " << modelID << std::endl;
+			std::cout << "Readback model id at " << (uint32_t)pickPos.x<< "," << (uint32_t)pickPos.y << " is " << modelID << std::endl;
 			for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
-				if(object->GetModel() != nullptr && object->GetModel()->GetModelId()== modelID){
-					std::cout << "Selected model " << object->GetName() << std::endl;
-					selected = object;
-					break;
+				if(object->GetModel() != nullptr){
+					std::cout << "Model " << object->GetName() << " has ID " << object->GetModel()->GetModelId() << " : " << modelID << std::endl;
+					if(object->GetModel()->GetModelId() == modelID){
+						selected = object;
+						break;
+					}
 				}
 			}
 		}

@@ -78,11 +78,16 @@ bool UStarForgeApplication::Setup() {
 	ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
 	ImGui_ImplOpenGL3_Init("#version 150");
 
+	J3D::Picking::InitFramebuffer(1280,720); //resize as a todo
+
+	if(!J3D::Picking::IsPickingEnabled()){
+		std::cout << "[StarForge]: Picking Ready" << std::endl;
+	}
+
 	glEnable(GL_MULTISAMPLE);
 
 	GCResourceManager.Init();
 	
-	J3D::Picking::InitFramebuffer(1280,720); //resize as a todo
 
 	// Create viewer context
 	mContext = new UStarForgeContext();
