@@ -49,11 +49,19 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         mPathArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Path_arg{0}", i));
     }
 
+    std::array<std::string, 7> switchNames = { "SW_APPEAR", "SW_DEAD", "SW_A", "SW_B", "SW_SLEEP", "SW_AWAKE", "SW_PARAM"};
+
     for(auto& obj : objectDB["Classes"]){
         if(obj["InternalName"] == mName){
             for (size_t i = 0; i < 8; i++){
                 if(!obj["Parameters"].contains(fmt::format("Obj_arg{0}", i))) continue;
                 mObjArgNames[i] = obj["Parameters"][fmt::format("Obj_arg{0}", i)]["Name"];
+            }
+
+            for (auto s : switchNames) {
+                if (obj["Parameters"].contains(s)) {
+                    mSwitches[s] = bcsv->GetSignedInt(entry, s);
+                }
             }
         }
     }
@@ -62,11 +70,6 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
     mLinkID = bcsv->GetSignedInt(entry, "l_id");
     mCameraSetID = bcsv->GetSignedInt(entry, "CameraSetId");
-    mSW_Appear = bcsv->GetSignedInt(entry, "SW_APPEAR");
-    mSW_Dead = bcsv->GetSignedInt(entry, "SW_DEAD");
-    mSW_A = bcsv->GetSignedInt(entry, "SW_A");
-    mSW_B = bcsv->GetSignedInt(entry, "SW_B");
-    mSW_Sleep = bcsv->GetSignedInt(entry, "SW_SLEEP");
     mMessageID = bcsv->GetSignedInt(entry, "MessageId");
     mCastID = bcsv->GetSignedInt(entry, "CastId");
     mViewGroupID = bcsv->GetSignedInt(entry, "ViewGroupId");
@@ -78,8 +81,6 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mDemoGroupID = bcsv->GetShort(entry, "DemoGroupId");
     mMapPartID = bcsv->GetShort(entry, "MapParts_ID");
 
-    mSwitchAwake = bcsv->GetSignedInt(entry, "SW_AWAKE");
-    mSwitchParam = bcsv->GetSignedInt(entry, "SW_PARAM");
     mParamScale = bcsv->GetFloat(entry, "ParamScale");
     mObjID = bcsv->GetShort(entry, "Obj_ID");
     mGeneratorID = bcsv->GetShort(entry, "GeneratorID");
@@ -193,6 +194,12 @@ void SObjectDOMNode::RenderDetailsUI(){
 
     for (size_t i = 0; i < 8; i++){
         ImGui::InputInt(mObjArgNames[i].data(), &mObjArgs[i]);
+    }
+
+    ImGui::Separator();
+
+    for (auto& pair : mSwitches) {
+        ImGui::InputInt(pair.first.c_str(), &pair.second);
     }
 }
 

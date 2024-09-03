@@ -4,5 +4,7 @@
     "dependencies": [
         "icu",
         "curl"
-    ]
+    ],
+	
+	"builtin-baseline": "036916f2ca7fbf3effec439119500da00ae478dd"
 }
