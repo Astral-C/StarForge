@@ -394,8 +394,8 @@ void UStarForgeContext::Render(float deltaTime) {
 		cursorPos = ImGui::GetCursorScreenPos();
 		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
 
-		J3D::Picking::RenderPickingScene(view, projection, packets);
 		if(ImGui::IsItemClicked(0) && !ImGuizmo::IsOver()){
+			J3D::Picking::RenderPickingScene(view, projection, packets);
 			ImVec2 mousePos = ImGui::GetMousePos();
 
 			ImVec2 pickPos = {
