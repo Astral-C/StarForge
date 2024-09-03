@@ -11,6 +11,7 @@ typedef struct {
     glm::vec4 Color;
     glm::vec3 LeftHandle;
     glm::vec3 RightHandle;
+    int32_t PickID;
 } CPathPoint;
 
 

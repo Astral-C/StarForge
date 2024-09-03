@@ -395,28 +395,53 @@ void UStarForgeContext::Render(float deltaTime) {
 		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
 
 		if(ImGui::IsItemClicked(0) && !ImGuizmo::IsOver()){
-			J3D::Picking::RenderPickingScene(view, projection, packets);
 			ImVec2 mousePos = ImGui::GetMousePos();
-
+			
 			ImVec2 pickPos = {
-				((uint32_t)mousePos.x - (uint32_t)cursorPos.x), // what?
-				(uint32_t)winSize.y - ((uint32_t)mousePos.y - (uint32_t)cursorPos.y) // flip the y coordinate
+				((uint32_t)mousePos.x - (uint32_t)cursorPos.x),
+				(uint32_t)winSize.y - ((uint32_t)mousePos.y - (uint32_t)cursorPos.y)
 			};
 
-			// Check picking FB for paths, areas, billboards, etc
-			// Exit early if we found a selection here
+			glPixelStorei(GL_PACK_ALIGNMENT, 1);
+			glReadBuffer(GL_COLOR_ATTACHMENT1);
+			uint32_t id = 0xFFFFFFFF;
+			glReadPixels((uint32_t)pickPos.x, (uint32_t)pickPos.y, 1, 1, GL_RED_INTEGER, GL_INT, (void*)&id);
 
-
-			// Check picking for J3DUltra 
-			uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)pickPos.x,  (uint32_t)pickPos.y));
-
-			std::cout << "Readback model id at " << (uint32_t)pickPos.x<< "," << (uint32_t)pickPos.y << " is " << modelID << std::endl;
-			for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
-				if(object->GetModel() != nullptr){
-					std::cout << "Model " << object->GetName() << " has ID " << object->GetModel()->GetModelId() << " : " << modelID << std::endl;
-					if(object->GetModel()->GetModelId() == modelID){
-						selected = object;
+			if(id != 0){
+				
+				for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
+					if(path->GetPickID() == id){
+						selected = path;
 						break;
+					}
+				}
+				
+				for(std::shared_ptr<SPathPointDOMNode> path : mRoot->GetChildrenOfType<SPathPointDOMNode>(EDOMNodeType::PathPoint)){
+					if(path->GetPickID() == id){
+						selected = path;
+						break;
+					}
+				}
+
+				for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
+					if(area->GetPickID() == id){
+						selected = area;
+						break;
+					}
+				}
+				
+			} else {
+				// model picking
+
+				J3D::Picking::RenderPickingScene(view, projection, packets);
+
+				// Check picking for J3DUltra 
+				uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)pickPos.x,  (uint32_t)pickPos.y));
+
+				for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
+					if(object->GetModel() != nullptr && object->GetModel()->GetModelId() == modelID){
+							selected = object;
+							break;
 					}
 				}
 			}

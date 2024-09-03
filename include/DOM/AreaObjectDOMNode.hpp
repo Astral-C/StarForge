@@ -47,6 +47,8 @@ public:
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
 
+    int32_t GetPickID() { return mPickId; }
+
     SAreaObjectDOMNode();
     ~SAreaObjectDOMNode();
 

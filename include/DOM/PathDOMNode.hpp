@@ -47,6 +47,8 @@ public:
     void RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected);
     void RenderDetailsUI();
 
+    int32_t GetPickID() { return mPickId; }
+
     SPathDOMNode();
     ~SPathDOMNode();
 
@@ -81,6 +83,8 @@ public:
 
     SPathPointDOMNode();
     ~SPathPointDOMNode();
+
+    int32_t GetPickID() { return mPickId; }
 
     virtual bool IsNodeType(EDOMNodeType type) const override {
         if(type == EDOMNodeType::PathPoint){

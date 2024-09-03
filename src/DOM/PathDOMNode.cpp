@@ -33,7 +33,8 @@ void SPathDOMNode::Update(){
 			.Position = point->GetPosition(),
 			.Color = glm::vec4((float)(mColor >> 16 & 0xFF) / 255.0f, (float)(mColor >> 8 & 0xFF) / 255.0f, (float)(mColor & 0xFF) / 255.0f, 1.0f),
 			.LeftHandle = point->GetLeftHandle(),
-			.RightHandle = point->GetRightHandle()
+			.RightHandle = point->GetRightHandle(),
+            .PickID = point->GetPickID()
 		};
         mRenderer.mPath.push_back(pnt);
     }

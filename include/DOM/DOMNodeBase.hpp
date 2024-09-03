@@ -47,7 +47,7 @@ enum class EDOMNodeType
 	StartObj
 };
 
-extern std::atomic<uint32_t> SPickingID;
+extern std::atomic<int32_t> SPickingID;
 
 // Base class for all DOM (Document Object Model) nodes.
 class SDOMNodeBase : public std::enable_shared_from_this<SDOMNodeBase>

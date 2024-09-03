@@ -6,7 +6,11 @@
 const char* default_path_vtx_shader_source = "#version 330\n\
 layout (location = 0) in vec3 position;\n\
 layout (location = 1) in vec4 color;\n\
+layout (location = 2) in vec3 righthandle;\n\
+layout (location = 3) in vec3 lefthandle;\n\
+layout (location = 4) in int pick;\n\
 out vec4 mPath_color;\n\
+flat out int mPoint_pick;\n\
 uniform mat4 gpu_ModelViewProjectionMatrix;\n\
 uniform bool isOrtho;\n\
 void main()\n\
@@ -18,12 +22,14 @@ void main()\n\
         gl_PointSize = min(16000, 16000 / gl_Position.w);\n\
     }\n\
     mPath_color = color;\n\
+    mPoint_pick = pick;\n\
 }\
 ";
 
 const char* default_path_frg_shader_source = "#version 330\n\
 uniform sampler2D spriteTexture;\n\
 in vec4 mPath_color;\n\
+flat in int mPoint_pick;\n\
 uniform bool pointMode;\n\
 uniform int id;\n\
 out vec4 outColor;\n\
@@ -36,12 +42,12 @@ void main()\n\
         if(dot(p,p) > r){\n\
             discard;\n\
         } else {\n\
+            outPick = mPoint_pick;\n\
             outColor = mPath_color;\n\
-            outPick = id;\n\
         }\n\
     } else {\n\
         outColor = mPath_color;\n\
-        outPick = -1;\n\
+        outPick = id;\n\
     }\n\
 }\
 ";
@@ -124,6 +130,8 @@ void CPathRenderer::Init() {
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, LeftHandle));
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, RightHandle));
+    glEnableVertexAttribArray(4);
+    glVertexAttribIPointer(4, 1, GL_INT, sizeof(CPathPoint), (void*)offsetof(CPathPoint, PickID));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -142,6 +150,8 @@ void CPathRenderer::Init() {
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, LeftHandle));
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(CPathPoint), (void*)offsetof(CPathPoint, RightHandle));
+    glEnableVertexAttribArray(4);
+    glVertexAttribIPointer(4, 1, GL_INT, sizeof(CPathPoint), (void*)offsetof(CPathPoint, PickID));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -162,8 +172,8 @@ void CPathRenderer::UpdateData(){
 
     for(int i = 0; i < mPath.size(); i++){
         circles.push_back(mPath.at(i));
-        circles.push_back({.Position = mPath.at(i).RightHandle, .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
-        circles.push_back({.Position = mPath.at(i).LeftHandle, .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
+        circles.push_back({.Position = mPath.at(i).RightHandle, .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}, .PickID = mPath.at(i).PickID});
+        circles.push_back({.Position = mPath.at(i).LeftHandle, .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}, .PickID = mPath.at(i).PickID});
 
         points.push_back(mPath.at(i));
         points.push_back({.Position = mPath.at(i).RightHandle, .Color = mPath.at(i).Color, .LeftHandle = {0,0,0}, .RightHandle = {0,0,0}});
