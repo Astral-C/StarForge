@@ -439,6 +439,13 @@ void UStarForgeContext::Render(float deltaTime) {
 					}
 				}
 
+				for(std::shared_ptr<SStartObjDOMNode> start : mRoot->GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj)){
+					if(start->GetPickID() == id){
+						selected = start;
+						break;
+					}
+				}
+
 				for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
 					if(area->GetPickID() == id){
 						selected = area;

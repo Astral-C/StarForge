@@ -151,8 +151,6 @@ void CPointSpriteManager::SetBillboardTexture(std::filesystem::path ImagePath, i
 }
 
 void CPointSpriteManager::UpdateData(std::shared_ptr<SGalaxyDOMNode> Root){
-    std::cout << "Updating billboard data" << std::endl;
-
     mBillboards.clear();
 
     auto startNodes = Root->GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj);
