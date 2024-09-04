@@ -103,7 +103,7 @@ void SToadDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         auto wait_anim = GCResourceManager.LoadJointAnimation("Kinopio", "wait.bck");
 
         if(wait_anim == nullptr){
-            wait_anim = GCResourceManager.LoadColorAnimation("Kinopio", "Wait.brk");
+            wait_anim = GCResourceManager.LoadJointAnimation("Kinopio", "Wait.brk");
         }
 
         mRenderable->SetJointAnimation(wait_anim);
