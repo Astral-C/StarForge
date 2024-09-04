@@ -73,11 +73,19 @@ void SBooDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         mRenderable->SetLight(LightingConfigs["Strong"].Light2, 2);
 
         auto anim = GCResourceManager.LoadColorAnimation("Teresa", "teresa.brk");
+        if(anim == nullptr){
+            anim = GCResourceManager.LoadColorAnimation("Teresa", "Teresa.brk");
+        }
 
         mRenderable->SetRegisterColorAnimation(anim);
         mRenderable->GetRegisterColorAnimation()->SetFrame(0, true);
 
         auto wait_anim = GCResourceManager.LoadJointAnimation("Teresa", "wait.bck");
+
+        if(wait_anim == nullptr){
+            wait_anim = GCResourceManager.LoadColorAnimation("Teresa", "Wait.brk");
+        }
+
         mRenderable->SetJointAnimation(wait_anim);
         mRenderable->GetJointAnimation()->SetFrame(rand() % 20);
     }

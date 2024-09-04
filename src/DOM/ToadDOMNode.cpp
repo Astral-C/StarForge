@@ -89,6 +89,10 @@ void SToadDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
 		auto anim = GCResourceManager.LoadColorAnimation("Kinopio", "colorchange.brk");
 
+		if(anim == nullptr){
+			anim = GCResourceManager.LoadColorAnimation("Kinopio", "ColorChange.brk");
+		}
+
         mRenderable->SetLight(LightingConfigs["Strong"].Light0, 0);
         mRenderable->SetLight(LightingConfigs["Strong"].Light1, 1);
         mRenderable->SetLight(LightingConfigs["Strong"].Light2, 2);
@@ -97,6 +101,11 @@ void SToadDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 		mRenderable->GetRegisterColorAnimation()->SetFrame(glm::max(mObjArgs[1], 0), true);
 
         auto wait_anim = GCResourceManager.LoadJointAnimation("Kinopio", "wait.bck");
+
+        if(wait_anim == nullptr){
+            wait_anim = GCResourceManager.LoadColorAnimation("Kinopio", "Wait.brk");
+        }
+
         mRenderable->SetJointAnimation(wait_anim);
         mRenderable->GetJointAnimation()->SetFrame(rand() % 20);
 	}

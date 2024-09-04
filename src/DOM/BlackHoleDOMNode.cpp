@@ -73,6 +73,11 @@ void SBlackHoleDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
         mRenderable->SetLight(LightingConfigs["Strong"].Light2, 2);
 
         auto anim = GCResourceManager.LoadTextureAnimation("BlackHole", "blackhole.btk");
+
+        if(anim == nullptr){
+            anim = GCResourceManager.LoadTextureAnimation("BlackHole", "BlackHole.btk");
+        }
+
         mRenderable->SetTexMatrixAnimation(anim);
     }
 
