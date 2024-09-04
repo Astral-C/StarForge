@@ -25,6 +25,7 @@
 #include "DOM/PathDOMNode.hpp"
 #include "DOM/AreaObjectDOMNode.hpp"
 #include "DOM/StartDOMNode.hpp"
+#include "DOM/SoundObjectDOMNode.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -446,6 +447,13 @@ void UStarForgeContext::Render(float deltaTime) {
 					}
 				}
 
+				for(std::shared_ptr<SSoundObjDOMNode> sound : mRoot->GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj)){
+					if(sound->GetPickID() == id){
+						selected = sound;
+						break;
+					}
+				}
+
 				for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
 					if(area->GetPickID() == id){
 						selected = area;
@@ -532,7 +540,16 @@ void UStarForgeContext::Render(float deltaTime) {
 					start->mTransform = glm::inverse(zoneTransform) * transform;
 					mBillboardRenderer.UpdateData(mRoot);
 				}
-			}
+			} else if (selected->IsNodeType(EDOMNodeType::SoundObj)){
+				std::shared_ptr<SSoundObjDOMNode> start = std::static_pointer_cast<SSoundObjDOMNode>(selected);
+				glm::mat4 zoneTransform = start->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+				glm::mat4 transform = (zoneTransform * start->mTransform), delta = glm::identity<glm::mat4>();
+
+				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+					start->mTransform = glm::inverse(zoneTransform) * transform;
+					mBillboardRenderer.UpdateData(mRoot);
+				}
+			} 
 		}
 
 		glm::mat4 viewMtx = mCamera.GetViewMatrix();

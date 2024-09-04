@@ -1,5 +1,6 @@
 #include "UPointSpriteManager.hpp"
 #include "DOM/StartDOMNode.hpp"
+#include "DOM/SoundObjectDOMNode.hpp"
 #include <filesystem>
 #include "stb_image.h"
 #include <glad/glad.h>
@@ -157,6 +158,12 @@ void CPointSpriteManager::UpdateData(std::shared_ptr<SGalaxyDOMNode> Root){
 
     for(auto node: startNodes){
         mBillboards.push_back({ .Position = glm::vec3((node->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * node->mTransform)[3]), .SpriteSize = 51200, .Texture = 0, .SizeFixed = false, .ID = node->GetPickID()});
+    };
+
+    auto soundNodes = Root->GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj);
+
+    for(auto node: soundNodes){
+        mBillboards.push_back({ .Position = glm::vec3((node->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * node->mTransform)[3]), .SpriteSize = 51200, .Texture = 1, .SizeFixed = false, .ID = node->GetPickID()});
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, mVbo);

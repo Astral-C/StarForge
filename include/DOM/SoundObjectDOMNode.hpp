@@ -22,6 +22,8 @@ public:
     SSoundObjDOMNode();
     ~SSoundObjDOMNode();
 
+    int32_t GetPickID() { return mPickId; }
+
     virtual bool IsNodeType(EDOMNodeType type) const override {
         if(type == EDOMNodeType::SoundObj){
             return true;

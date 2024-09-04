@@ -11,6 +11,7 @@
 #include "DOM/BooDOMNode.hpp"
 #include "DOM/PathDOMNode.hpp"
 #include "DOM/StartDOMNode.hpp"
+#include "DOM/SoundObjectDOMNode.hpp"
 #include <Archive.hpp>
 #include "imgui.h"
 #include "UStarForgeContext.hpp"
@@ -30,7 +31,7 @@ SZoneLayerDOMNode::~SZoneLayerDOMNode() {
 }
 
 void SZoneLayerDOMNode::SaveLayer(){
-    std::vector<std::shared_ptr<SDOMNodeSerializable>> objects, areaObjects, startObjects;
+    std::vector<std::shared_ptr<SDOMNodeSerializable>> objects, areaObjects, startObjects, soundObjects;
 
     if(Children.size() == 0) return;
 
@@ -91,15 +92,32 @@ void SZoneLayerDOMNode::SaveLayer(){
     objects.reserve(Children.size());
     areaObjects.reserve(Children.size());
     startObjects.reserve(Children.size());
+    soundObjects.reserve(Children.size());
 
     for(auto child : GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
         std::cout << fmt::format("[Save Zone Layer {0}]: Adding object {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
         objects.push_back(std::dynamic_pointer_cast<SDOMNodeSerializable>(child));
     }
 
-    if(objects.size() == 0) {
-        return;
+    for(auto child : GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
+        std::cout << fmt::format("[Save Zone Layer {0}]: Adding area {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
+        areaObjects.push_back(std::dynamic_pointer_cast<SDOMNodeSerializable>(child));
     }
+
+    for(auto child : GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj)){
+        std::cout << fmt::format("[Save Zone Layer {0}]: Adding spawn {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
+        startObjects.push_back(std::dynamic_pointer_cast<SDOMNodeSerializable>(child));
+    }
+
+    for(auto child : GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj)){
+        std::cout << fmt::format("[Save Zone Layer {0}]: Adding sound objh {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
+        soundObjects.push_back(std::dynamic_pointer_cast<SDOMNodeSerializable>(child));
+    }
+
+
+    //if(objects.size() == 0) {
+    //    return;
+    //}
 
     bStream::CMemoryStream objSaveStream(mObjInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
     mObjInfo.Save(objects, objSaveStream);
@@ -109,20 +127,28 @@ void SZoneLayerDOMNode::SaveLayer(){
         mObjInfoFile->SetData(objSaveStream.getBuffer(), objSaveStream.getSize());
     }
 
-    bStream::CMemoryStream areaSaveStream(mAreaObjInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
-    mObjInfo.Save(objects, areaSaveStream);
+    bStream::CMemoryStream areaSaveStream(mAreaObjInfo.CalculateNewFileSize(areaObjects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    mObjInfo.Save(areaObjects, areaSaveStream);
 
-    if(mObjInfoFile != nullptr){
+    if(mAreaObjInfoFile != nullptr){
         std::cout << "Saving areaobjinfo" << std::endl;
         mAreaObjInfoFile->SetData(areaSaveStream.getBuffer(), areaSaveStream.getSize());
     }
 
-    bStream::CMemoryStream startSaveStream(mStartInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
-    mObjInfo.Save(objects, startSaveStream);
+    bStream::CMemoryStream startSaveStream(mStartInfo.CalculateNewFileSize(startObjects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    mObjInfo.Save(startObjects, startSaveStream);
 
-    if(mObjInfoFile != nullptr){
+    if(mStartInfoFile != nullptr){
         std::cout << "Saving startinfo" << std::endl;
         mStartInfoFile->SetData(startSaveStream.getBuffer(), startSaveStream.getSize());
+    }
+
+    bStream::CMemoryStream soundSaveStream(mSoundObjInfo.CalculateNewFileSize(soundObjects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    mObjInfo.Save(soundObjects, soundSaveStream);
+
+    if(mSoundObjInfoFile != nullptr){
+        std::cout << "Saving soundinfo" << std::endl;
+        mSoundObjInfoFile->SetData(soundSaveStream.getBuffer(), soundSaveStream.getSize());
     }
 
 }
@@ -218,6 +244,22 @@ void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer)
 	}
 
 
+    mSoundObjInfoFile = layer->GetFile(std::filesystem::path("soundinfo"));
+    if(mSoundObjInfoFile == nullptr){
+        mSoundObjInfoFile = layer->GetFile(std::filesystem::path("SoundInfo"));
+    }
+
+    if(mSoundObjInfoFile == nullptr) return; // couldnt load path
+    
+	bStream::CMemoryStream SoundInfoStream(mSoundObjInfoFile->GetData(), mSoundObjInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+	mSoundObjInfo.Load(&SoundInfoStream);
+
+	for(size_t soundObjEntry = 0; soundObjEntry < mSoundObjInfo.GetEntryCount(); soundObjEntry++){
+        auto object = std::make_shared<SSoundObjDOMNode>();
+        object->Deserialize(&mSoundObjInfo, soundObjEntry);
+        AddChild(object);  
+    }
+
     mAreaObjInfoFile = layer->GetFile(std::filesystem::path("areaobjinfo"));
     if(mAreaObjInfoFile == nullptr){
         mAreaObjInfoFile = layer->GetFile(std::filesystem::path("AreaObjInfo"));
@@ -295,6 +337,23 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
             ImGui::TreePop();
         }
 
+        treeOpen = ImGui::TreeNode("Sound Objects");
+
+        if(treeOpen){
+            for (auto node : GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj)){
+                node->RenderHeirarchyUI(selected);
+            }
+            
+            ImGui::Text(ICON_FK_PLUS_CIRCLE);
+            if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+                auto object = std::make_shared<SSoundObjDOMNode>();
+                AddChild(object);
+                selected = object;
+            }
+            ImGui::TreePop();
+        }
+
+
         treeOpen = ImGui::TreeNode("Mario Spawns");
 
         if(treeOpen){
@@ -310,7 +369,6 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
             }
             ImGui::TreePop();
         }
-
 
         ImGui::TreePop();
     }

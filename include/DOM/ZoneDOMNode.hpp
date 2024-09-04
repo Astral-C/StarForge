@@ -8,9 +8,11 @@
 
 class SZoneLayerDOMNode : public SDOMNodeBase {
     bool mVisible;
-    SBcsvIO mObjInfo, mAreaObjInfo, mStartInfo;
-    std::shared_ptr<Archive::File> mObjInfoFile, mAreaObjInfoFile, mStartInfoFile;
+    SBcsvIO mObjInfo, mAreaObjInfo, mStartInfo, mSoundObjInfo;
+    std::shared_ptr<Archive::File> mObjInfoFile, mAreaObjInfoFile, mStartInfoFile, mSoundObjInfoFile;
+    
     // string should be the full path!
+    // TODO: Finish this lol
     std::map<std::string, std::pair<SBcsvIO, std::shared_ptr<Archive::File>>> mLayerBcsvFiles;
 
 public:
