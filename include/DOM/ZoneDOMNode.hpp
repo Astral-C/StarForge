@@ -8,8 +8,8 @@
 
 class SZoneLayerDOMNode : public SDOMNodeBase {
     bool mVisible;
-    SBcsvIO mObjInfo, mAreaObjInfo;
-    std::shared_ptr<Archive::File> mObjInfoFile, mAreaObjInfoFile;
+    SBcsvIO mObjInfo, mAreaObjInfo, mStartInfo;
+    std::shared_ptr<Archive::File> mObjInfoFile, mAreaObjInfoFile, mStartInfoFile;
     // string should be the full path!
     std::map<std::string, std::pair<SBcsvIO, std::shared_ptr<Archive::File>>> mLayerBcsvFiles;
 
@@ -21,8 +21,11 @@ public:
     void Render(std::vector<std::shared_ptr<J3DModelInstance>>& renderables, glm::mat4 transform, float dt);
 
     void LoadLayerObjects(std::shared_ptr<Archive::Folder> layer);
+    void LoadLayerStarts(std::shared_ptr<Archive::Folder> layer);
     void LoadLayerPaths(std::shared_ptr<Archive::Folder> layer);
+
     void SaveLayer();
+    
     bool GetVisible(){ return mVisible; }
     void SetVisible(bool v) { mVisible = v; }
     std::string mLayerName;

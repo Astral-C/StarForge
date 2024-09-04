@@ -5,6 +5,8 @@
 #include <vector>
 #include <filesystem>
 #include <UCamera.hpp>
+#include <DOM/GalaxyDOMNode.hpp>
+#include <DOM/DOMNodeSerializable.hpp>
 
 typedef struct {
     glm::vec3 Position;
@@ -23,13 +25,13 @@ class CPointSpriteManager {
     uint32_t mVao;
     uint32_t mVbo;
 
-public:
 	std::vector<CPointSprite> mBillboards;
+public:
 	
 	void SetBillboardTexture(std::filesystem::path ImagePath, int TextureIndex);
 	void Draw(USceneCamera* Camera);
 
-    void UpdateData();
+    void UpdateData(std::shared_ptr<SGalaxyDOMNode> Root);
 	void Init(int BillboardResolution, int BillboardImageCount);
 
 	CPointSpriteManager();

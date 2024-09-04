@@ -1,4 +1,5 @@
 #include "UPointSpriteManager.hpp"
+#include "DOM/StartDOMNode.hpp"
 #include <filesystem>
 #include "stb_image.h"
 #include <glad/glad.h>
@@ -149,7 +150,17 @@ void CPointSpriteManager::SetBillboardTexture(std::filesystem::path ImagePath, i
 	stbi_image_free(img);
 }
 
-void CPointSpriteManager::UpdateData(){
+void CPointSpriteManager::UpdateData(std::shared_ptr<SGalaxyDOMNode> Root){
+    std::cout << "Updating billboard data" << std::endl;
+
+    mBillboards.clear();
+
+    auto startNodes = Root->GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj);
+
+    for(auto node: startNodes){
+        mBillboards.push_back({ .Position = glm::vec3((node->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * node->mTransform)[3]), .SpriteSize = 51200, .Texture = 0, .SizeFixed = false, .ID = node->GetPickID()});
+    };
+
     glBindBuffer(GL_ARRAY_BUFFER, mVbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(CPointSprite) * mBillboards.size(), mBillboards.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);

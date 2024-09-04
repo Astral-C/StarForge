@@ -24,6 +24,7 @@
 #include "DOM/ObjectDOMNode.hpp"
 #include "DOM/PathDOMNode.hpp"
 #include "DOM/AreaObjectDOMNode.hpp"
+#include "DOM/StartDOMNode.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -70,6 +71,11 @@ UStarForgeContext::UStarForgeContext(){
 	mGrid.Init();
 	mProjects.Init();
 	mAreaRenderer.Init();
+	
+	mBillboardRenderer.Init(512, 2);
+	mBillboardRenderer.SetBillboardTexture(std::filesystem::current_path() / "res" / "textures" / "startobj.png", 0);
+	mBillboardRenderer.SetBillboardTexture(std::filesystem::current_path() / "res" / "textures" / "soundobj.png", 1);
+
 	srand(time(0));
 
 	auto objectDBPath = std::filesystem::current_path() / "res" / "objectdb.json";
@@ -393,6 +399,8 @@ void UStarForgeContext::Render(float deltaTime) {
 			if(layer->GetVisible()) area->Render(&mCamera, &mAreaRenderer, layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform, mRoot->GetGame());
 		}
 
+		mBillboardRenderer.Draw(&mCamera);
+
 		cursorPos = ImGui::GetCursorScreenPos();
 		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
 
@@ -508,6 +516,15 @@ void UStarForgeContext::Render(float deltaTime) {
 			} else if (selected->IsNodeType(EDOMNodeType::Zone)){
 				std::shared_ptr<SZoneDOMNode> zone = std::static_pointer_cast<SZoneDOMNode>(selected);
 				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &zone->mTransform[0][0]);
+			} else if (selected->IsNodeType(EDOMNodeType::StartObj)){
+				std::shared_ptr<SStartObjDOMNode> start = std::static_pointer_cast<SStartObjDOMNode>(selected);
+				glm::mat4 zoneTransform = start->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+				glm::mat4 transform = (zoneTransform * start->mTransform), delta = glm::identity<glm::mat4>();
+
+				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+					start->mTransform = glm::inverse(zoneTransform) * transform;
+					mBillboardRenderer.UpdateData(mRoot);
+				}
 			}
 		}
 
@@ -738,6 +755,7 @@ void UStarForgeContext::RenderMenuBar() {
 				}
 
 				mRenderables.reserve(renderableCountEstimation*3);
+				mBillboardRenderer.UpdateData(mRoot);
 			}
 		}
 		catch (std::runtime_error e) {

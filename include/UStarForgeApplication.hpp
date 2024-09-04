@@ -10,6 +10,7 @@ class UStarForgeApplication : public UApplication {
 
 	
 public:
+
 	UStarForgeApplication();
 	virtual ~UStarForgeApplication() {}
 

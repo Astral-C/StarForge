@@ -10,6 +10,7 @@
 #include "DOM/AstroObjectDOMNode.hpp"
 #include "DOM/BooDOMNode.hpp"
 #include "DOM/PathDOMNode.hpp"
+#include "DOM/StartDOMNode.hpp"
 #include <Archive.hpp>
 #include "imgui.h"
 #include "UStarForgeContext.hpp"
@@ -29,7 +30,7 @@ SZoneLayerDOMNode::~SZoneLayerDOMNode() {
 }
 
 void SZoneLayerDOMNode::SaveLayer(){
-    std::vector<std::shared_ptr<SDOMNodeSerializable>> objects;
+    std::vector<std::shared_ptr<SDOMNodeSerializable>> objects, areaObjects, startObjects;
 
     if(Children.size() == 0) return;
 
@@ -88,6 +89,8 @@ void SZoneLayerDOMNode::SaveLayer(){
     */
 
     objects.reserve(Children.size());
+    areaObjects.reserve(Children.size());
+    startObjects.reserve(Children.size());
 
     for(auto child : GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
         std::cout << fmt::format("[Save Zone Layer {0}]: Adding object {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
@@ -98,18 +101,33 @@ void SZoneLayerDOMNode::SaveLayer(){
         return;
     }
 
-    bStream::CMemoryStream saveStream(mObjInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
-    mObjInfo.Save(objects, saveStream);
+    bStream::CMemoryStream objSaveStream(mObjInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    mObjInfo.Save(objects, objSaveStream);
 
     if(mObjInfoFile != nullptr){
         std::cout << "Saving objinfo" << std::endl;
-        mObjInfoFile->SetData(saveStream.getBuffer(), saveStream.getSize());
+        mObjInfoFile->SetData(objSaveStream.getBuffer(), objSaveStream.getSize());
+    }
+
+    bStream::CMemoryStream areaSaveStream(mAreaObjInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    mObjInfo.Save(objects, areaSaveStream);
+
+    if(mObjInfoFile != nullptr){
+        std::cout << "Saving areaobjinfo" << std::endl;
+        mAreaObjInfoFile->SetData(areaSaveStream.getBuffer(), areaSaveStream.getSize());
+    }
+
+    bStream::CMemoryStream startSaveStream(mStartInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    mObjInfo.Save(objects, startSaveStream);
+
+    if(mObjInfoFile != nullptr){
+        std::cout << "Saving startinfo" << std::endl;
+        mStartInfoFile->SetData(startSaveStream.getBuffer(), startSaveStream.getSize());
     }
 
 }
 
 void SZoneLayerDOMNode::LoadLayerPaths(std::shared_ptr<Archive::Folder> layer){
-
     std::shared_ptr<Archive::File> commonPathInfoFile = layer->GetFile(std::filesystem::path("commonpathinfo"));
     if(commonPathInfoFile == nullptr){
         commonPathInfoFile = layer->GetFile(std::filesystem::path("CommonPathInfo"));
@@ -217,6 +235,27 @@ void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer)
     }
 }
 
+void SZoneLayerDOMNode::LoadLayerStarts(std::shared_ptr<Archive::Folder> layer){
+    if(layer == nullptr) return;
+
+    mStartInfoFile = layer->GetFile(std::filesystem::path("startinfo"));
+    if(mStartInfoFile == nullptr){
+        mStartInfoFile = layer->GetFile(std::filesystem::path("StartInfo"));
+    }
+
+    if(mStartInfoFile == nullptr) return; // couldnt load path
+    
+	bStream::CMemoryStream StartInfoStream(mStartInfoFile->GetData(), mStartInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+	mStartInfo.Load(&StartInfoStream);
+
+	for(size_t startEntry = 0; startEntry < mStartInfo.GetEntryCount(); startEntry++){
+        std::cout << fmt::format("Loading start entry in layer {}...", layer->GetName()) << std::endl;
+        auto object = std::make_shared<SStartObjDOMNode>();
+        object->Deserialize(&mStartInfo, startEntry);
+        AddChild(object);
+	}
+}
+
 void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected) {
     //ImGui::Checkbox(fmt::format("##isVisible{}", mName).data(), &mVisible);
     ImGui::Text((mVisible ? ICON_FK_EYE : ICON_FK_EYE_SLASH));
@@ -255,7 +294,24 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
             }
             ImGui::TreePop();
         }
-        
+
+        treeOpen = ImGui::TreeNode("Mario Spawns");
+
+        if(treeOpen){
+            for (auto node : GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj)){
+                node->RenderHeirarchyUI(selected);
+            }
+            
+            ImGui::Text(ICON_FK_PLUS_CIRCLE);
+            if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+                auto object = std::make_shared<SStartObjDOMNode>();
+                AddChild(object);
+                selected = object;
+            }
+            ImGui::TreePop();
+        }
+
+
         ImGui::TreePop();
     }
 
@@ -357,6 +413,7 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
 
     std::shared_ptr<Archive::Folder> layerCommonObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/placement/common"));
     std::shared_ptr<Archive::Folder> layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/path"));
+    std::shared_ptr<Archive::Folder> layerCommonStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/start/common"));
 
     mGameType = game;
     
@@ -368,10 +425,15 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
         layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Path"));
     }
 
-    if(layerCommonObjects == nullptr || layerCommonPaths == nullptr) return;
+    if(layerCommonStarts == nullptr){
+        layerCommonStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Start"));
+    }
+
+    if(layerCommonObjects == nullptr || layerCommonStarts == nullptr || layerCommonPaths == nullptr) return;
     
     layer->LoadLayerObjects(layerCommonObjects);
     layer->LoadLayerPaths(layerCommonPaths);
+    layer->LoadLayerStarts(layerCommonStarts);
     
     AddChild(layer);
 
@@ -386,12 +448,18 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
         }
 
         std::shared_ptr<Archive::Folder> layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/placement/layer{}", char('a'+l))));
+        std::shared_ptr<Archive::Folder> layerStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/start/layer{}", char('a'+l))));
 
         if(layerObjects == nullptr){
             layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/Placement/Layer{}", char('A'+l))));
         }
 
+        if(layerStarts == nullptr){
+            layerStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/Start/Layer{}", char('A'+l))));
+        }
+
         layer->LoadLayerObjects(layerObjects);
+        layer->LoadLayerStarts(layerStarts);
         
         AddChild(layer);
     }

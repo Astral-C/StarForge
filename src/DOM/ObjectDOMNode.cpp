@@ -68,11 +68,11 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
     //Collect arg types from object DB and load data accordingly into array of obj/path args
 
-    mLinkID = bcsv->GetSignedInt(entry, "l_id");
-    mCameraSetID = bcsv->GetSignedInt(entry, "CameraSetId");
-    mMessageID = bcsv->GetSignedInt(entry, "MessageId");
-    mCastID = bcsv->GetSignedInt(entry, "CastId");
-    mViewGroupID = bcsv->GetSignedInt(entry, "ViewGroupId");
+    mLinkID = bcsv->GetUnsignedInt(entry, "l_id");
+    mCameraSetID = bcsv->GetUnsignedInt(entry, "CameraSetId");
+    mMessageID = bcsv->GetUnsignedInt(entry, "MessageId");
+    mCastID = bcsv->GetUnsignedInt(entry, "CastId");
+    mViewGroupID = bcsv->GetUnsignedInt(entry, "ViewGroupId");
 
     mShapeModelNo = bcsv->GetShort(entry, "ShapeModelNo");
     mCommonPathID = bcsv->GetShort(entry, "CommonPath_ID");
@@ -121,23 +121,23 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     bcsv->SetFloat(entry, "scale_z", scale.z);
 
     for (size_t i = 0; i < 8; i++){
-        bcsv->SetSignedInt(entry, fmt::format("Obj_arg{0}", i), mObjArgs[i]);
+        bcsv->SetUnsignedInt(entry, fmt::format("Obj_arg{0}", i), mObjArgs[i]);
     }
 
     for (size_t i = 0; i < 8; i++){
-        bcsv->SetSignedInt(entry, fmt::format("Path_arg{0}", i), mPathArgs[i]);
+        bcsv->SetUnsignedInt(entry, fmt::format("Path_arg{0}", i), mPathArgs[i]);
     }
 
-    bcsv->SetSignedInt(entry, "l_id", mLinkID);
-    bcsv->SetSignedInt(entry, "CameraSetId", mCameraSetID);
-    bcsv->SetSignedInt(entry, "SW_APPEAR", mSW_Appear);
-    bcsv->SetSignedInt(entry, "SW_DEAD", mSW_Dead);
-    bcsv->SetSignedInt(entry, "SW_A", mSW_A);
-    bcsv->SetSignedInt(entry, "SW_B", mSW_B);
-    bcsv->SetSignedInt(entry, "SW_SLEEP", mSW_Sleep);
-    bcsv->SetSignedInt(entry, "MessageId", mMessageID);
-    bcsv->SetSignedInt(entry, "CastId", mCastID);
-    bcsv->SetSignedInt(entry, "ViewGroupId", mViewGroupID);
+    bcsv->SetUnsignedInt(entry, "l_id", mLinkID);
+    bcsv->SetUnsignedInt(entry, "CameraSetId", mCameraSetID);
+    bcsv->SetUnsignedInt(entry, "SW_APPEAR", mSW_Appear);
+    bcsv->SetUnsignedInt(entry, "SW_DEAD", mSW_Dead);
+    bcsv->SetUnsignedInt(entry, "SW_A", mSW_A);
+    bcsv->SetUnsignedInt(entry, "SW_B", mSW_B);
+    bcsv->SetUnsignedInt(entry, "SW_SLEEP", mSW_Sleep);
+    bcsv->SetUnsignedInt(entry, "MessageId", mMessageID);
+    bcsv->SetUnsignedInt(entry, "CastId", mCastID);
+    bcsv->SetUnsignedInt(entry, "ViewGroupId", mViewGroupID);
 
     bcsv->SetShort(entry, "ShapeModelNo", mShapeModelNo);
     bcsv->SetShort(entry, "CommonPath_ID", mCommonPathID);
@@ -147,8 +147,8 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     bcsv->SetShort(entry, "MapParts_ID", mMapPartID);
 
 
-    bcsv->SetSignedInt(entry, "SW_AWAKE", mSwitchAwake);
-    bcsv->SetSignedInt(entry, "SW_PARAM", mSwitchParam);
+    bcsv->SetUnsignedInt(entry, "SW_AWAKE", mSwitchAwake);
+    bcsv->SetUnsignedInt(entry, "SW_PARAM", mSwitchParam);
     bcsv->SetFloat(entry, "ParamScale", mParamScale);
     bcsv->SetShort(entry, "Obj_ID", mObjID);
     bcsv->SetShort(entry, "GeneratorID", mGeneratorID);

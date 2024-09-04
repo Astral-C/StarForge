@@ -10,7 +10,10 @@
 #include "ModelCache.hpp"
 #include "UPathRenderer.hpp"
 #include "UAreaRenderer.hpp"
+#include "UPointSpriteManager.hpp"
 #include "UProject.hpp"
+
+CPointSpriteManager* GetBillboardRenderer();
 
 class UStarForgeContext {
 
@@ -22,6 +25,7 @@ class UStarForgeContext {
 
 	std::vector<std::shared_ptr<J3DModelInstance>> mRenderables;
 	CAreaRenderer mAreaRenderer;
+	CPointSpriteManager mBillboardRenderer;
 
 	uint32_t mGizmoOperation { 0 };
 
@@ -62,9 +66,11 @@ class UStarForgeContext {
 
 	void SaveModel(std::filesystem::path filePath);
 
+
 public:
 	UStarForgeContext();
 	~UStarForgeContext();
+
 
 	void HandleSelect();
 	bool Update(float deltaTime);
