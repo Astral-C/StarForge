@@ -51,11 +51,12 @@ void main()\n\
 
 const char* default_area_frg_shader_source = "#version 330\n\
 uniform int id;\n\
+uniform vec4 modColor;\n\
 out vec4 outColor;\n\
 out int outPick;\n\
 void main()\n\
 {\n\
-    outColor = vec4(0.0,1.0,0.0,1.0);\n\
+    outColor = modColor;\n\
     outPick = id;\n\
 }\
 ";
@@ -213,6 +214,7 @@ void CAreaRenderer::Init() {
     mMVPUniform = glGetUniformLocation(mShaderID, "gpu_ModelViewProjectionMatrix");
     mYOffsetUniform = glGetUniformLocation(mShaderID, "y_offset");
     mPickUniform = glGetUniformLocation(mShaderID, "id");
+    mColorUniform = glGetUniformLocation(mShaderID, "modColor");
     
 }
 
@@ -223,7 +225,7 @@ CAreaRenderer::~CAreaRenderer() {
     glDeleteBuffers(SHAPES_COUNT, mShapeBuffers);
 }
 
-void CAreaRenderer::DrawShape(USceneCamera* camera, AreaRenderShape shape,  int32_t id, glm::mat4 transform) {
+void CAreaRenderer::DrawShape(USceneCamera* camera, AreaRenderShape shape,  int32_t id, glm::mat4 transform, glm::vec4 color) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
@@ -240,6 +242,7 @@ void CAreaRenderer::DrawShape(USceneCamera* camera, AreaRenderShape shape,  int3
 
     // Set Uniforms
     glUniformMatrix4fv(mMVPUniform, 1, 0, (float*)&mvp[0]);
+    glUniform4fv(mColorUniform, 1, (float*)&color[0]);
     glUniform1i(mPickUniform, id);
 
     if(shape == BOX_BASE){ // bowl is also not centered, but its y offset is the radius

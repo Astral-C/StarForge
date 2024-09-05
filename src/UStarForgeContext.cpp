@@ -400,6 +400,20 @@ void UStarForgeContext::Render(float deltaTime) {
 			if(layer->GetVisible()) area->Render(&mCamera, &mAreaRenderer, layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform, mRoot->GetGame());
 		}
 
+		for(std::shared_ptr<SStartObjDOMNode> start : mRoot->GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj)){
+			std::shared_ptr<SZoneLayerDOMNode> layer = start->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
+			if(layer->GetVisible()){
+				mAreaRenderer.DrawShape(&mCamera, AreaRenderShape::BOX_CENTER, start->GetPickID(), layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * glm::scale(start->mTransform, glm::vec3(0.1, 0.1, 0.1)), glm::vec4(0.8,0.85,0.1,1.0));
+			}
+		}
+
+		for(std::shared_ptr<SSoundObjDOMNode> sound : mRoot->GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj)){
+			std::shared_ptr<SZoneLayerDOMNode> layer = sound->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
+			if(layer->GetVisible()){
+				mAreaRenderer.DrawShape(&mCamera, AreaRenderShape::BOX_CENTER, sound->GetPickID(), layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * glm::scale(sound->mTransform, glm::vec3(0.1, 0.1, 0.1)), glm::vec4(0.25,0.75,0.65,1.0));
+			}
+		}
+
 		mBillboardRenderer.Draw(&mCamera);
 
 		cursorPos = ImGui::GetCursorScreenPos();
