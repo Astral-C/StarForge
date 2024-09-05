@@ -44,7 +44,9 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 		std::transform(modelNameLower.begin(), modelNameLower.end(), modelNameLower.begin(), [](unsigned char c){ return std::tolower(c); });
 		std::shared_ptr<Archive::File> modelFile = archive->Get<Archive::File>(modelNameLower+".bdl");
 
-		if (modelFile == nullptr) {
+		if (modelFile == nullptr && archive->Get<Archive::File>(modelNameLower+".bmd") != nullptr) {
+			modelFile = archive->Get<Archive::File>(modelNameLower + ".bmd");
+		} else if (modelFile == nullptr) {
 			modelFile = archive->Get<Archive::File>(modelName + ".bdl");
 
 			if (modelFile == nullptr) {
