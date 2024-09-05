@@ -233,7 +233,7 @@ void CAreaRenderer::DrawShape(USceneCamera* camera, AreaRenderShape shape,  int3
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_PROGRAM_POINT_SIZE);
-    glLineWidth(1.65f);
+    glLineWidth(2.15f);
 
 	glm::mat4 mvp;
 	mvp = camera->GetProjectionMatrix() * camera->GetViewMatrix() * transform;

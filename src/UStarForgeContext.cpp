@@ -108,7 +108,6 @@ UStarForgeContext::UStarForgeContext(){
 
 	J3D::Rendering::SetSortFunction(GalaxySort);
 
-	mRoot = std::make_shared<SGalaxyDOMNode>();
 }
 
 bool UStarForgeContext::Update(float deltaTime) {
@@ -206,12 +205,15 @@ void UStarForgeContext::Render(float deltaTime) {
         ImGui::Text(ICON_FK_PLUS_CIRCLE);
 		if(ImGui::IsItemClicked(ImGuiMouseButton_Left) && mRoot->GetGalaxyLoaded()){
 			std::shared_ptr<SScenarioDOMNode> scenarioNode = std::make_shared<SScenarioDOMNode>(mRoot);
-			mRoot->AddChild(scenarioNode);
+			if(mRoot != nullptr){
+				mRoot->AddChild(scenarioNode);
+			}
 		}
 
 		ImGui::Separator();
-		mRoot->RenderScenarios(selected);
-
+		if(mRoot != nullptr){
+			mRoot->RenderScenarios(selected);
+		}
 	ImGui::End();
 
 	ImGui::SetNextWindowClass(&mainWindowOverride);
@@ -226,7 +228,10 @@ void UStarForgeContext::Render(float deltaTime) {
 		}
 
 		ImGui::Separator();
-		mRoot->RenderZones(selected);
+
+		if(mRoot != nullptr){
+			mRoot->RenderZones(selected);
+		}
 
 		bool addZoneDialogOpen = true;
 		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -247,7 +252,9 @@ void UStarForgeContext::Render(float deltaTime) {
 				for (const auto & entry : std::filesystem::directory_iterator(std::filesystem::path(Options.mRootPath)  / "StageData")){
 					if(entry.path().string().find(".arc") != std::string::npos){
 						if(ImGui::Selectable(entry.path().stem().string().c_str())){
-							mRoot->AddZone(entry.path());
+							if(mRoot != nullptr){
+								mRoot->AddZone(entry.path());
+							}
 
 							ImGui::CloseCurrentPopup();
 						}
@@ -318,9 +325,20 @@ void UStarForgeContext::Render(float deltaTime) {
 		}
 		ImGui::EndTabBar();
 
-
 		ImVec2 winSize = ImGui::GetContentRegionAvail();
 		ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+		
+		if(mRoot == nullptr){
+			glViewport(0, 0, (uint32_t)winSize.x, (uint32_t)winSize.y);
+
+
+			glClearColor(0.100f, 0.261f, 0.402f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			
+			ImGui::SetCursorPos(ImVec2(((winSize.x / 2) - (ImGui::CalcTextSize("Open a Galaxy").x / 2)), ((winSize.y / 2) - (ImGui::CalcTextSize("Open a Galaxy").y / 2))));
+			ImGui::Text("Open a Galaxy");
+
+		} 
 
 		glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
 
@@ -382,206 +400,213 @@ void UStarForgeContext::Render(float deltaTime) {
 		
 		//Render Models here
 		
-		mRenderables.clear();
-		mRoot->Render(mRenderables, deltaTime);
+		if(mRoot != nullptr){
+			mRenderables.clear();
+			mRoot->Render(mRenderables, deltaTime);
 
-		J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
-		J3D::Rendering::Render(deltaTime, view, projection, packets);
+			J3D::Rendering::RenderPacketVector packets = J3D::Rendering::SortPackets(mRenderables, mCamera.GetPosition());
+			J3D::Rendering::Render(deltaTime, view, projection, packets);
 
-		// Combine these two into one
-		
-		for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
-			std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
-			if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
-		}
-
-		for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
-			std::shared_ptr<SZoneLayerDOMNode> layer = area->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
-			if(layer->GetVisible()) area->Render(&mCamera, &mAreaRenderer, layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform, mRoot->GetGame());
-		}
-
-		if(Options.mRenderBillboardBounds){
-			for(std::shared_ptr<SStartObjDOMNode> start : mRoot->GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj)){
-				std::shared_ptr<SZoneLayerDOMNode> layer = start->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
-				if(layer->GetVisible()){
-					mAreaRenderer.DrawShape(&mCamera, AreaRenderShape::BOX_CENTER, start->GetPickID(), layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * glm::scale(start->mTransform, glm::vec3(0.1, 0.1, 0.1)), glm::vec4(0.8,0.85,0.1,1.0));
-				}
-			}
-
-			for(std::shared_ptr<SSoundObjDOMNode> sound : mRoot->GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj)){
-				std::shared_ptr<SZoneLayerDOMNode> layer = sound->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
-				if(layer->GetVisible()){
-					mAreaRenderer.DrawShape(&mCamera, AreaRenderShape::BOX_CENTER, sound->GetPickID(), layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * glm::scale(sound->mTransform, glm::vec3(0.1, 0.1, 0.1)), glm::vec4(0.25,0.75,0.65,1.0));
-				}
-			}
-		}
-
-		mBillboardRenderer.Draw(&mCamera);
-
-		cursorPos = ImGui::GetCursorScreenPos();
-		ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), winSize, {0.0f, 1.0f}, {1.0f, 0.0f});
-
-		if(ImGui::IsWindowFocused()){
-			mViewportIsFocused = true;
-		} else {
-			mViewportIsFocused = false;
-		}
-
-		if(ImGui::IsItemClicked(0) && !ImGuizmo::IsOver()){
-			ImVec2 mousePos = ImGui::GetMousePos();
+			// Combine these two into one
 			
-			ImVec2 pickPos = {
-				mousePos.x - cursorPos.x,
-				winSize.y - (mousePos.y - cursorPos.y)
-			};
+			for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
+				std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
+				if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
+			}
 
-			glPixelStorei(GL_PACK_ALIGNMENT, 1);
-			glReadBuffer(GL_COLOR_ATTACHMENT1);
-			uint32_t id = 0xFFFFFFFF;
-			glReadPixels(static_cast<GLint>(pickPos.x), static_cast<GLint>(pickPos.y), 1, 1, GL_RED_INTEGER, GL_INT, (void*)&id);
+			for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
+				std::shared_ptr<SZoneLayerDOMNode> layer = area->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
+				if(layer->GetVisible()) area->Render(&mCamera, &mAreaRenderer, layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform, mRoot->GetGame());
+			}
 
-			if(id != 0){
-				
-				for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
-					if(path->GetPickID() == id){
-						selected = path;
-						break;
-					}
-				}
-				
-				for(std::shared_ptr<SPathPointDOMNode> path : mRoot->GetChildrenOfType<SPathPointDOMNode>(EDOMNodeType::PathPoint)){
-					if(path->GetPickID() == id){
-						selected = path;
-						break;
-					}
-				}
-
+			if(Options.mRenderBillboardBounds){
 				for(std::shared_ptr<SStartObjDOMNode> start : mRoot->GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj)){
-					if(start->GetPickID() == id){
-						selected = start;
-						break;
+					std::shared_ptr<SZoneLayerDOMNode> layer = start->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
+					if(layer->GetVisible()){
+						mAreaRenderer.DrawShape(&mCamera, AreaRenderShape::BOX_CENTER, start->GetPickID(), layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * glm::scale(start->mTransform, glm::vec3(0.1, 0.1, 0.1)), glm::vec4(0.8,0.85,0.1,1.0));
 					}
 				}
 
 				for(std::shared_ptr<SSoundObjDOMNode> sound : mRoot->GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj)){
-					if(sound->GetPickID() == id){
-						selected = sound;
-						break;
-					}
-				}
-
-				for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
-					if(area->GetPickID() == id){
-						selected = area;
-						break;
-					}
-				}
-				
-			} else {
-				// model picking
-
-				J3D::Picking::RenderPickingScene(view, projection, packets);
-
-				// Check picking for J3DUltra 
-				uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)pickPos.x,  (uint32_t)pickPos.y));
-
-				for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
-					if(object->GetModel() != nullptr && object->GetModel()->GetModelId() == modelID){
-							selected = object;
-							break;
+					std::shared_ptr<SZoneLayerDOMNode> layer = sound->GetParentOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer).lock();
+					if(layer->GetVisible()){
+						mAreaRenderer.DrawShape(&mCamera, AreaRenderShape::BOX_CENTER, sound->GetPickID(), layer->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform * glm::scale(sound->mTransform, glm::vec3(0.1, 0.1, 0.1)), glm::vec4(0.25,0.75,0.65,1.0));
 					}
 				}
 			}
-		}
 
-		ImGuizmo::BeginFrame();
-		ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
-		ImGuizmo::SetRect(cursorPos.x, cursorPos.y, winSize.x, winSize.y);
+			mBillboardRenderer.Draw(&mCamera);
 
-		if(selected != nullptr){
-			//TODO: make this a switch please
-			if(selected->IsNodeType(EDOMNodeType::Object)){
-				std::shared_ptr<SObjectDOMNode> object = std::static_pointer_cast<SObjectDOMNode>(selected);
-				glm::mat4 zoneTransform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
-				glm::mat4 transform = (zoneTransform * object->mTransform), delta = glm::identity<glm::mat4>();
+			cursorPos = ImGui::GetCursorScreenPos();
+			ImGui::Image(reinterpret_cast<void*>(static_cast<uintptr_t>(mViewTex)), { winSize.x, winSize.y }, {0.0f, 1.0f}, {1.0f, 0.0f});
 
-				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
-					object->mTransform = glm::inverse(zoneTransform) * transform;
-				}
-			} else if(selected->IsNodeType(EDOMNodeType::AreaObject)){
-				std::shared_ptr<SAreaObjectDOMNode> object = std::static_pointer_cast<SAreaObjectDOMNode>(selected);
-				glm::mat4 zoneTransform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
-				glm::mat4 transform = (zoneTransform * object->mTransform), delta = glm::identity<glm::mat4>();
+			if(ImGui::IsWindowFocused()){
+				mViewportIsFocused = true;
+			} else {
+				mViewportIsFocused = false;
+			}
 
-				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
-					object->mTransform = glm::inverse(zoneTransform) * transform;
-				}
-			}  else if(selected->IsNodeType(EDOMNodeType::PathPoint)) {
-				std::shared_ptr<SPathPointDOMNode> pathpoint = std::static_pointer_cast<SPathPointDOMNode>(selected);
-				std::shared_ptr<SPathDOMNode> path = pathpoint->GetParentOfType<SPathDOMNode>(EDOMNodeType::Path).lock();
-				glm::mat4 zoneTransform = pathpoint->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
-				glm::mat4 transform, delta = glm::identity<glm::mat4>();
-
-				if(ImGui::IsKeyDown(ImGuiKey_LeftCtrl)){
-					transform = (zoneTransform * glm::translate(glm::identity<glm::mat4>(), pathpoint->GetLeftHandle()));
-				} else if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
-					transform = (zoneTransform * glm::translate(glm::identity<glm::mat4>(), pathpoint->GetRightHandle()));
-				} else {
-					transform = (zoneTransform * pathpoint->mTransform);
-				}
-
-				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
-					glm::mat4 out = glm::inverse(zoneTransform) * transform;
+			if(ImGui::IsItemClicked(0) && !ImGuizmo::IsOver()){
+				ImVec2 mousePos = ImGui::GetMousePos();
 				
-					if(ImGui::IsKeyDown(ImGuiKey_LeftCtrl)){
-						pathpoint->SetLeftHandle(out[3]);
-					} else if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
-						pathpoint->SetRightHandle(out[3]);
-					} else {
-						pathpoint->mTransform = out;
+				ImVec2 pickPos = {
+					mousePos.x - cursorPos.x,
+					winSize.y - (mousePos.y - cursorPos.y)
+				};
+
+				glPixelStorei(GL_PACK_ALIGNMENT, 1);
+				glReadBuffer(GL_COLOR_ATTACHMENT1);
+				uint32_t id = 0xFFFFFFFF;
+				glReadPixels(static_cast<GLint>(pickPos.x), static_cast<GLint>(pickPos.y), 1, 1, GL_RED_INTEGER, GL_INT, (void*)&id);
+
+				if(id != 0){
+					
+					for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
+						if(path->GetPickID() == id){
+							selected = path;
+							break;
+						}
 					}
-				
-					path->Update();
-				}
+					
+					for(std::shared_ptr<SPathPointDOMNode> path : mRoot->GetChildrenOfType<SPathPointDOMNode>(EDOMNodeType::PathPoint)){
+						if(path->GetPickID() == id){
+							selected = path;
+							break;
+						}
+					}
 
-			} else if (selected->IsNodeType(EDOMNodeType::Zone)){
-				std::shared_ptr<SZoneDOMNode> zone = std::static_pointer_cast<SZoneDOMNode>(selected);
-				ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &zone->mTransform[0][0]);
-			} else if (selected->IsNodeType(EDOMNodeType::StartObj)){
-				std::shared_ptr<SStartObjDOMNode> start = std::static_pointer_cast<SStartObjDOMNode>(selected);
-				glm::mat4 zoneTransform = start->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
-				glm::mat4 transform = (zoneTransform * start->mTransform), delta = glm::identity<glm::mat4>();
+					for(std::shared_ptr<SStartObjDOMNode> start : mRoot->GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj)){
+						if(start->GetPickID() == id){
+							selected = start;
+							break;
+						}
+					}
 
-				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
-					start->mTransform = glm::inverse(zoneTransform) * transform;
-					mBillboardRenderer.UpdateData(mRoot);
-				}
-			} else if (selected->IsNodeType(EDOMNodeType::SoundObj)){
-				std::shared_ptr<SSoundObjDOMNode> start = std::static_pointer_cast<SSoundObjDOMNode>(selected);
-				glm::mat4 zoneTransform = start->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
-				glm::mat4 transform = (zoneTransform * start->mTransform), delta = glm::identity<glm::mat4>();
+					for(std::shared_ptr<SSoundObjDOMNode> sound : mRoot->GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj)){
+						if(sound->GetPickID() == id){
+							selected = sound;
+							break;
+						}
+					}
 
-				if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
-					start->mTransform = glm::inverse(zoneTransform) * transform;
-					mBillboardRenderer.UpdateData(mRoot);
+					for(std::shared_ptr<SAreaObjectDOMNode> area : mRoot->GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
+						if(area->GetPickID() == id){
+							selected = area;
+							break;
+						}
+					}
+					
+				} else {
+					// model picking
+
+					J3D::Picking::RenderPickingScene(view, projection, packets);
+
+					// Check picking for J3DUltra 
+					uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)pickPos.x,  (uint32_t)pickPos.y));
+
+					for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
+						if(object->GetModel() != nullptr && object->GetModel()->GetModelId() == modelID){
+								selected = object;
+								break;
+						}
+					}
 				}
-			} 
+			}
+
+			ImGuizmo::BeginFrame();
+			ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
+			ImGuizmo::SetRect(cursorPos.x, cursorPos.y, winSize.x, winSize.y);
+
+			if(selected != nullptr){
+				//TODO: make this a switch please
+				if(selected->IsNodeType(EDOMNodeType::Object)){
+					std::shared_ptr<SObjectDOMNode> object = std::static_pointer_cast<SObjectDOMNode>(selected);
+					glm::mat4 zoneTransform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+					glm::mat4 transform = (zoneTransform * object->mTransform), delta = glm::identity<glm::mat4>();
+
+					if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+						object->mTransform = glm::inverse(zoneTransform) * transform;
+					}
+				} else if(selected->IsNodeType(EDOMNodeType::AreaObject)){
+					std::shared_ptr<SAreaObjectDOMNode> object = std::static_pointer_cast<SAreaObjectDOMNode>(selected);
+					glm::mat4 zoneTransform = object->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+					glm::mat4 transform = (zoneTransform * object->mTransform), delta = glm::identity<glm::mat4>();
+
+					if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+						object->mTransform = glm::inverse(zoneTransform) * transform;
+					}
+				}  else if(selected->IsNodeType(EDOMNodeType::PathPoint)) {
+					std::shared_ptr<SPathPointDOMNode> pathpoint = std::static_pointer_cast<SPathPointDOMNode>(selected);
+					std::shared_ptr<SPathDOMNode> path = pathpoint->GetParentOfType<SPathDOMNode>(EDOMNodeType::Path).lock();
+					glm::mat4 zoneTransform = pathpoint->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+					glm::mat4 transform, delta = glm::identity<glm::mat4>();
+
+					if(ImGui::IsKeyDown(ImGuiKey_LeftCtrl)){
+						transform = (zoneTransform * glm::translate(glm::identity<glm::mat4>(), pathpoint->GetLeftHandle()));
+					} else if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
+						transform = (zoneTransform * glm::translate(glm::identity<glm::mat4>(), pathpoint->GetRightHandle()));
+					} else {
+						transform = (zoneTransform * pathpoint->mTransform);
+					}
+
+					if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+						glm::mat4 out = glm::inverse(zoneTransform) * transform;
+					
+						if(ImGui::IsKeyDown(ImGuiKey_LeftCtrl)){
+							pathpoint->SetLeftHandle(out[3]);
+						} else if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
+							pathpoint->SetRightHandle(out[3]);
+						} else {
+							pathpoint->mTransform = out;
+						}
+					
+						path->Update();
+					}
+
+				} else if (selected->IsNodeType(EDOMNodeType::Zone)){
+					std::shared_ptr<SZoneDOMNode> zone = std::static_pointer_cast<SZoneDOMNode>(selected);
+					ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &zone->mTransform[0][0]);
+				} else if (selected->IsNodeType(EDOMNodeType::StartObj)){
+					std::shared_ptr<SStartObjDOMNode> start = std::static_pointer_cast<SStartObjDOMNode>(selected);
+					glm::mat4 zoneTransform = start->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+					glm::mat4 transform = (zoneTransform * start->mTransform), delta = glm::identity<glm::mat4>();
+
+					if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+						start->mTransform = glm::inverse(zoneTransform) * transform;
+						mBillboardRenderer.UpdateData(mRoot);
+					}
+				} else if (selected->IsNodeType(EDOMNodeType::SoundObj)){
+					std::shared_ptr<SSoundObjDOMNode> start = std::static_pointer_cast<SSoundObjDOMNode>(selected);
+					glm::mat4 zoneTransform = start->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock()->mTransform;
+					glm::mat4 transform = (zoneTransform * start->mTransform), delta = glm::identity<glm::mat4>();
+
+					if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
+						start->mTransform = glm::inverse(zoneTransform) * transform;
+						mBillboardRenderer.UpdateData(mRoot);
+					}
+				} 
+			}
+
+			glm::mat4 viewMtx = mCamera.GetViewMatrix();
+			ImVec4 forward = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX}, up = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
+			// [veebs]: Fix this, imguizmo update broke it
+			//ImGuizmo::ViewManipulate(&viewMtx[0][0], 64, ImVec2(mainViewport->Size.x - 74, mainViewport->Size.y - 74), ImVec2(64, 64), ImColor(ImVec4(0.35,0.2,0.35,0.35)), forward, up);
+
+			if(forward.x != FLT_MAX && forward.y != FLT_MAX && forward.z != FLT_MAX){
+				mCamera.SetForward(glm::vec3(forward.x, forward.y, forward.z));
+				mCamera.SetUp(glm::vec3(up.x, up.y, up.z));
+			}
+
 		}
-
-		glm::mat4 viewMtx = mCamera.GetViewMatrix();
-		ImVec4 forward = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX}, up = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
-		// [veebs]: Fix this, imguizmo update broke it
-		//ImGuizmo::ViewManipulate(&viewMtx[0][0], 64, ImVec2(mainViewport->Size.x - 74, mainViewport->Size.y - 74), ImVec2(64, 64), ImColor(ImVec4(0.35,0.2,0.35,0.35)), forward, up);
-
-		if(forward.x != FLT_MAX && forward.y != FLT_MAX && forward.z != FLT_MAX){
-			mCamera.SetForward(glm::vec3(forward.x, forward.y, forward.z));
-			mCamera.SetUp(glm::vec3(up.x, up.y, up.z));
-		}
-
 
 		if(markDelete != ""){
 
 			mOpenGalaxies.erase(markDelete);
+			if(mOpenGalaxies.size() > 0){
+				mRoot = mOpenGalaxies.begin()->second;
+			} else {
+				mRoot = nullptr;
+			}
 
 			if(!std::filesystem::exists("./res/thumb")){
 				std::filesystem::create_directory("./res/thumb");

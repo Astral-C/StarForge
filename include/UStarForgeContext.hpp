@@ -19,7 +19,7 @@ class UStarForgeContext {
 
 	UStarForgeProjectManager mProjects;
 	
-	std::shared_ptr<SGalaxyDOMNode> mRoot; // active root
+	std::shared_ptr<SGalaxyDOMNode> mRoot { nullptr }; // active root
 	std::map<std::string, std::shared_ptr<SGalaxyDOMNode>> mOpenGalaxies;
 	std::shared_ptr<SDOMNodeBase> selected;
 
