@@ -37,6 +37,7 @@ namespace SResUtility
 		std::string mObjectDBUrl;
 
 		public:
+			bool mRenderBillboardBounds { false };
 			std::filesystem::path mRootPath;
 			std::filesystem::path mProjectsPath { "projects" }; //defaults to "projects" in cwd
 

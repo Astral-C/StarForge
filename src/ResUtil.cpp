@@ -171,6 +171,11 @@ void SResUtility::SOptions::LoadOptions(){
 		const char* url = ini_get(config, "settings", "objectdb_url");
 		if(url != nullptr) mObjectDBUrl = std::string(url);
 
+		const char* enabled = ini_get(config, "settings", "render_billboard_bounds");
+		if(enabled != nullptr){
+			std::sscanf(enabled, "%b", &mRenderBillboardBounds);
+		}
+
 		ini_free(config);
 	}
 }
@@ -221,6 +226,10 @@ void SResUtility::SOptions::RenderOptionMenu(){
 	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
 	if (ImGui::BeginPopupModal("Options", NULL, ImGuiWindowFlags_AlwaysAutoResize)){
+		ImGui::Text("Render Bounding Boxes on Billboards");
+		ImGui::SameLine();
+		ImGui::Checkbox("##renderBullboardBounds", &mRenderBillboardBounds);
+
 		ImGui::Text(fmt::format("Projects Path: {0}", mProjectsPath.string()).data());
 		ImGui::SameLine();
 		if(ImGui::Button("Open")){
@@ -236,7 +245,7 @@ void SResUtility::SOptions::RenderOptionMenu(){
 
 		if(ImGui::Button("Save")){
 			std::ofstream settingsFile(std::filesystem::current_path() / "settings.ini");
-			settingsFile << fmt::format("[settings]\nprojects_directory={0}\nobjectdb_url={1}", mProjectsPath.string(), mObjectDBUrl);
+			settingsFile << fmt::format("[settings]\nprojects_directory={0}\nobjectdb_url={1}\nrender_billboard_bounds={2}\n", mProjectsPath.string(), mObjectDBUrl, std::to_string(mRenderBillboardBounds));
 			settingsFile.close();
 			ImGui::CloseCurrentPopup();
 		}
