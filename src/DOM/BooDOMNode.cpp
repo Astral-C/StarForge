@@ -82,7 +82,7 @@ void SBooDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
 
         auto wait_anim = GCResourceManager.LoadJointAnimation("Teresa", "wait.bck");
 
-        if(wait_anim != nullptr){
+        if(wait_anim == nullptr){
             wait_anim = GCResourceManager.LoadJointAnimation("Teresa", "Wait.bck");
         }
 
