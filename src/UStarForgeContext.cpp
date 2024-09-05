@@ -244,7 +244,7 @@ void UStarForgeContext::Render(float deltaTime) {
 			ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.98f);
 			ImGui::SetCursorPosX(0.2f);
 			ImGui::BeginListBox("##zoneArchives");
-				for (const auto & entry : std::filesystem::directory_iterator(std::filesystem::path(Options.mRootPath) / "files" / "StageData")){
+				for (const auto & entry : std::filesystem::directory_iterator(std::filesystem::path(Options.mRootPath)  / "StageData")){
 					if(entry.path().string().find(".arc") != std::string::npos){
 						if(ImGui::Selectable(entry.path().stem().string().c_str())){
 							mRoot->AddZone(entry.path());
@@ -657,7 +657,7 @@ void UStarForgeContext::RenderMenuBar() {
 
 	if (bIsFileDialogOpen) {
 		IGFD::FileDialogConfig config;
-		config.path = Options.mRootPath.string() == "" ? "." : (Options.mRootPath / "files" / "StageData" / ".").string();
+		config.path = Options.mRootPath.string() == "" ? "." : (Options.mRootPath  / "StageData" / ".").string();
 		ImGuiFileDialog::Instance()->OpenDialog("OpenGalaxyDialog", "Choose Stage Directory", nullptr, config);
 	}
 
@@ -671,7 +671,7 @@ void UStarForgeContext::RenderMenuBar() {
 				if(mRoot == nullptr) mRoot = std::make_shared<SGalaxyDOMNode>();
 				// TODO: add way to set galaxy type
 				// copy from cammie again? or infer based on root structure
-				if(!mRoot->LoadGalaxy(FilePath, std::filesystem::exists(Options.mRootPath / "files" / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
+				if(!mRoot->LoadGalaxy(FilePath, std::filesystem::exists(Options.mRootPath  / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
 					ImGui::OpenPopup("Galaxy Load Error");
 				} else {
 					ModelCache.erase(ModelCache.begin(), ModelCache.end());
@@ -780,7 +780,7 @@ void UStarForgeContext::RenderMenuBar() {
 			mOpenGalaxies[galaxyPath] = mRoot;
 			// TODO: add way to set galaxy type
 			// copy from cammie again? or infer based on root structure
-			if(!mRoot->LoadGalaxy(Options.mRootPath / "files" / "StageData" / galaxyPath, std::filesystem::exists(Options.mRootPath / "files" / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
+			if(!mRoot->LoadGalaxy(Options.mRootPath  / "StageData" / galaxyPath, std::filesystem::exists(Options.mRootPath  / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
 				ImGui::OpenPopup("Galaxy Load Error");
 			} else {
 				ModelCache.erase(ModelCache.begin(), ModelCache.end());
@@ -797,10 +797,10 @@ void UStarForgeContext::RenderMenuBar() {
 			}
 		}
 		catch (std::runtime_error e) {
-			std::cout << "Failed to load galaxy " << Options.mRootPath / "files" / "StageData" / galaxyPath << "! Exception: " << e.what() << "\n";
+			std::cout << "Failed to load galaxy " << Options.mRootPath  / "StageData" / galaxyPath << "! Exception: " << e.what() << "\n";
 		}
 		catch (std::exception e) {
-			std::cout << "Failed to load galaxy " << Options.mRootPath / "files" / "StageData" / galaxyPath << "! Exception: " << e.what() << "\n";
+			std::cout << "Failed to load galaxy " << Options.mRootPath  / "StageData" / galaxyPath << "! Exception: " << e.what() << "\n";
 		}
 	}
 }

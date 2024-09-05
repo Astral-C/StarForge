@@ -29,7 +29,7 @@ void SResUtility::SGCResourceManager::Init()
 }
 
 void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
-	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
+	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
@@ -70,7 +70,7 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 }
 
 std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourceManager::LoadColorAnimation(std::string modelName, std::string animName){
-	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
+	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath)  / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
@@ -100,7 +100,7 @@ std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourc
 }
 
 std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> SResUtility::SGCResourceManager::LoadJointAnimation(std::string modelName, std::string animName){
-	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
+	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath)  / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
@@ -130,7 +130,7 @@ std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> SResUtility::SGCResourc
 }
 
 std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> SResUtility::SGCResourceManager::LoadTextureAnimation(std::string modelName, std::string animName){
-	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "files" / "ObjectData" / (modelName + ".arc");
+	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath)  / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();

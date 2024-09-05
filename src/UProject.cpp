@@ -19,7 +19,7 @@ UStarForgeProject::UStarForgeProject(nlohmann::json projectJson){
     mIsDolphinRoot = projectJson["isDolphinRoot"];
 
     if(mIsDolphinRoot && mProjectRoot.parent_path() != "DATA") {
-        mProjectRoot = mProjectRoot / "DATA";
+        mProjectRoot = mProjectRoot / "DATA" / "files"; // this is a hack  - just to support most non-dolphin roots not having a files dir
     }
 
     if(projectJson.contains("icon") && std::filesystem::exists(projectJson["icon"])){
