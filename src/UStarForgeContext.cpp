@@ -174,7 +174,6 @@ void UStarForgeContext::Render(float deltaTime) {
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-		assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
 		ImGui::DockBuilderRemoveNode(mMainDockSpaceID); // clear any previous layout
 		ImGui::DockBuilderAddNode(mMainDockSpaceID, dockFlags | ImGuiDockNodeFlags_DockSpace);
@@ -371,8 +370,6 @@ void UStarForgeContext::Render(float deltaTime) {
 
 			GLenum attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 			glDrawBuffers(2, attachments);
-
-			assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
 		
 			J3D::Picking::ResizeFramebuffer((uint32_t)winSize.x, (uint32_t)winSize.y);

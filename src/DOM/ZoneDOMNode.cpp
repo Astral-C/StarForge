@@ -492,6 +492,7 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
     layer->LoadLayerObjects(layerCommonObjects);
     layer->LoadLayerPaths(layerCommonPaths);
     layer->LoadLayerStarts(layerCommonStarts);
+    layer->Children.shrink_to_fit();
     
     AddChild(layer);
 
@@ -518,11 +519,14 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
 
         layer->LoadLayerObjects(layerObjects);
         layer->LoadLayerStarts(layerStarts);
+        layer->Children.shrink_to_fit();
         
         AddChild(layer);
     }
 
     mZoneArchiveLoaded = true;
+
+    Children.shrink_to_fit();
 
 }
 
@@ -668,6 +672,8 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
 
         AddChild(layer);
     }
+
+    Children.shrink_to_fit();
 
     return zoneTransforms;
 }

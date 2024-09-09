@@ -196,6 +196,10 @@ void CAreaRenderer::Init() {
         }
     }
     
+    Cylinder.shrink_to_fit();
+    Sphere.shrink_to_fit();
+    Bowl.shrink_to_fit();
+
     glBindBuffer(GL_ARRAY_BUFFER, mShapeBuffers[BOX_BASE]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(CShapeVertex) * Box.size(), &Box[0], GL_STATIC_DRAW);
 

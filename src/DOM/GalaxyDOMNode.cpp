@@ -272,6 +272,9 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
             scenario->Deserialize(&mScenarioData, entry);
         }
     }
+
+    Children.shrink_to_fit();
+
     mGalaxyLoaded = true;
     return true;
 }

@@ -28,7 +28,9 @@ void SPathDOMNode::Render(USceneCamera* cam, glm::mat4 referenceFrame){
 void SPathDOMNode::Update(){
 	mRenderer.mPath.clear();
     mRenderer.isClosed = mIsClosed;
-    for(auto point : GetChildrenOfType<SPathPointDOMNode>(EDOMNodeType::PathPoint)){
+    auto points = GetChildrenOfType<SPathPointDOMNode>(EDOMNodeType::PathPoint);
+    mRenderer.mPath.reserve(points.size());
+    for(auto point : points){
 		CPathPoint pnt = {
 			.Position = point->GetPosition(),
 			.Color = glm::vec4((float)(mColor >> 16 & 0xFF) / 255.0f, (float)(mColor >> 8 & 0xFF) / 255.0f, (float)(mColor & 0xFF) / 255.0f, 1.0f),
