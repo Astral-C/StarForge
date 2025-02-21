@@ -8,9 +8,6 @@
 [submodule "lib/ImGuiFileDialog"]
 	path = lib/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
-[submodule "lib/fmt"]
-	path = lib/fmt
-	url = https://github.com/fmtlib/fmt.git
 [submodule "lib/gctoolsplusplus"]
 	path = lib/gctoolsplusplus
 	url = https://github.com/Astral-C/gctoolsplusplus.git

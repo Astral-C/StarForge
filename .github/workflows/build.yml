@@ -21,7 +21,7 @@ jobs:
             artifact: windows
             upload_path_suffix: '/*'
           - name: Linux Build
-            os: ubuntu-20.04
+            os: ubuntu-24.04
             architecture: x64
             artifact: linux
             upload_path_suffix: '/*'
@@ -85,13 +85,13 @@ jobs:
           for f in "build/"*.dll; do cp $f "starforge-build/${f##*/}"; done
       - name: Upload App Windows
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: starforge-windows
           path: starforge-build
       - name: Upload App Linux
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: starforge-linux
           path: starforge-build
