@@ -2,7 +2,7 @@
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
 #include <filesystem>
-#include <fmt/core.h>
+#include <format>
 #include <bstream.h>
 #include "../lib/ImGuiFileDialog/ImGuiFileDialog.h"
 
@@ -230,7 +230,7 @@ void SResUtility::SOptions::RenderOptionMenu(){
 		ImGui::SameLine();
 		ImGui::Checkbox("##renderBullboardBounds", &mRenderBillboardBounds);
 
-		ImGui::Text(fmt::format("Projects Path: {0}", mProjectsPath.string()).data());
+		ImGui::Text(std::format("Projects Path: {0}", mProjectsPath.string()).data());
 		ImGui::SameLine();
 		if(ImGui::Button("Open")){
 			mSelectRootDialogOpen = true;
@@ -245,7 +245,7 @@ void SResUtility::SOptions::RenderOptionMenu(){
 
 		if(ImGui::Button("Save")){
 			std::ofstream settingsFile(std::filesystem::current_path() / "settings.ini");
-			settingsFile << fmt::format("[settings]\nprojects_directory={0}\nobjectdb_url={1}\nrender_billboard_bounds={2}\n", mProjectsPath.string(), mObjectDBUrl, std::to_string(mRenderBillboardBounds));
+			settingsFile << std::format("[settings]\nprojects_directory={0}\nobjectdb_url={1}\nrender_billboard_bounds={2}\n", mProjectsPath.string(), mObjectDBUrl, std::to_string(mRenderBillboardBounds));
 			settingsFile.close();
 			ImGui::CloseCurrentPopup();
 		}

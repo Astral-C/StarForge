@@ -16,7 +16,7 @@
 #include "imgui.h"
 #include "UStarForgeContext.hpp"
 #include "IconsForkAwesome.h"
-#include <fmt/core.h>
+#include <format>
 #include <glm/gtx/matrix_decompose.hpp>
 
 SZoneLayerDOMNode::SZoneLayerDOMNode(std::string name) : Super("Layer") {
@@ -95,22 +95,22 @@ void SZoneLayerDOMNode::SaveLayer(){
     soundObjects.reserve(Children.size());
 
     for(auto child : GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
-        std::cout << fmt::format("[Save Zone Layer {0}]: Adding object {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
+        std::cout << std::format("[Save Zone Layer {0}]: Adding object {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
         objects.push_back(std::dynamic_pointer_cast<SDOMNodeSerializable>(child));
     }
 
     for(auto child : GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
-        std::cout << fmt::format("[Save Zone Layer {0}]: Adding area {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
+        std::cout << std::format("[Save Zone Layer {0}]: Adding area {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
         areaObjects.push_back(std::dynamic_pointer_cast<SDOMNodeSerializable>(child));
     }
 
     for(auto child : GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj)){
-        std::cout << fmt::format("[Save Zone Layer {0}]: Adding spawn {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
+        std::cout << std::format("[Save Zone Layer {0}]: Adding spawn {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
         startObjects.push_back(std::dynamic_pointer_cast<SDOMNodeSerializable>(child));
     }
 
     for(auto child : GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj)){
-        std::cout << fmt::format("[Save Zone Layer {0}]: Adding sound objh {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
+        std::cout << std::format("[Save Zone Layer {0}]: Adding sound objh {1} type {2}", mName, child->GetName(), child->GetNodeTypeString()) << std::endl;
         soundObjects.push_back(std::dynamic_pointer_cast<SDOMNodeSerializable>(child));
     }
 
@@ -170,10 +170,10 @@ void SZoneLayerDOMNode::LoadLayerPaths(std::shared_ptr<Archive::Folder> layer){
         path->Deserialize(&commonPathInfo, pathEntry);
         std::cout << "Path " << path->GetName() << " Deserialized" << std::endl;
         
-        std::shared_ptr<Archive::File> pathFile =  layer->GetFile(std::filesystem::path(fmt::format("commonpathpointinfo.{}", path->GetPathNumber())));
+        std::shared_ptr<Archive::File> pathFile =  layer->GetFile(std::filesystem::path(std::format("commonpathpointinfo.{}", path->GetPathNumber())));
 
         if(pathFile == nullptr){
-            pathFile = layer->GetFile(std::filesystem::path(fmt::format("CommonPathPointInfo.{}", path->GetPathNumber())));
+            pathFile = layer->GetFile(std::filesystem::path(std::format("CommonPathPointInfo.{}", path->GetPathNumber())));
         }
 
         if(pathFile == nullptr) continue;
@@ -291,7 +291,7 @@ void SZoneLayerDOMNode::LoadLayerStarts(std::shared_ptr<Archive::Folder> layer){
 	mStartInfo.Load(&StartInfoStream);
 
 	for(size_t startEntry = 0; startEntry < mStartInfo.GetEntryCount(); startEntry++){
-        std::cout << fmt::format("Loading start entry in layer {}...", layer->GetName()) << std::endl;
+        std::cout << std::format("Loading start entry in layer {}...", layer->GetName()) << std::endl;
         auto object = std::make_shared<SStartObjDOMNode>();
         object->Deserialize(&mStartInfo, startEntry);
         AddChild(object);
@@ -299,7 +299,7 @@ void SZoneLayerDOMNode::LoadLayerStarts(std::shared_ptr<Archive::Folder> layer){
 }
 
 void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected) {
-    //ImGui::Checkbox(fmt::format("##isVisible{}", mName).data(), &mVisible);
+    //ImGui::Checkbox(std::format("##isVisible{}", mName).data(), &mVisible);
     ImGui::Text((mVisible ? ICON_FK_EYE : ICON_FK_EYE_SLASH));
     if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
         mVisible = !mVisible;
@@ -498,23 +498,23 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
 
     // Can layers other than common have paths?
     for(int l = 0; l < 16; l++){
-        auto layer = std::make_shared<SZoneLayerDOMNode>(fmt::format("Layer {}", char('A'+l)));
+        auto layer = std::make_shared<SZoneLayerDOMNode>(std::format("Layer {}", char('A'+l)));
 
         if(mGameType == EGameType::SMG1){
-            layer->mLayerName = fmt::format("/jmp/placement/layer{}", char('a'+l));
+            layer->mLayerName = std::format("/jmp/placement/layer{}", char('a'+l));
         } else {
-            layer->mLayerName = fmt::format("/jmp/Placement/Layer{}", char('A'+l));
+            layer->mLayerName = std::format("/jmp/Placement/Layer{}", char('A'+l));
         }
 
-        std::shared_ptr<Archive::Folder> layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/placement/layer{}", char('a'+l))));
-        std::shared_ptr<Archive::Folder> layerStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/start/layer{}", char('a'+l))));
+        std::shared_ptr<Archive::Folder> layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(std::format("/jmp/placement/layer{}", char('a'+l))));
+        std::shared_ptr<Archive::Folder> layerStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(std::format("/jmp/start/layer{}", char('a'+l))));
 
         if(layerObjects == nullptr){
-            layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/Placement/Layer{}", char('A'+l))));
+            layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(std::format("/jmp/Placement/Layer{}", char('A'+l))));
         }
 
         if(layerStarts == nullptr){
-            layerStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/Start/Layer{}", char('A'+l))));
+            layerStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(std::format("/jmp/Start/Layer{}", char('A'+l))));
         }
 
         layer->LoadLayerObjects(layerObjects);
@@ -604,11 +604,11 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
     std::shared_ptr<Archive::File> layerCommonStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/placement/common/stageobjinfo"));
     std::shared_ptr<Archive::Folder> layerCommonObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/placement/common"));
     std::shared_ptr<Archive::Folder> layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/path"));
-    layer->mLayerName = fmt::format("/jmp/placement/common");    
+    layer->mLayerName = std::format("/jmp/placement/common");    
 
     if(layerCommonStageObj == nullptr){
         layerCommonStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/Placement/Common/StageObjInfo"));
-        layer->mLayerName = fmt::format("/jmp/Placement/Common");
+        layer->mLayerName = std::format("/jmp/Placement/Common");
     }
 
     if(layerCommonObjects == nullptr){
@@ -639,19 +639,19 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
 
     // Can layers other than common have paths?
     for(int l = 0; l < 16; l++){
-        auto layer = std::make_shared<SZoneLayerDOMNode>(fmt::format("Layer {}", char('A'+l)));
+        auto layer = std::make_shared<SZoneLayerDOMNode>(std::format("Layer {}", char('A'+l)));
 
-        std::shared_ptr<Archive::File> layerStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path(fmt::format("jmp/placement/layer{}/stageobjinfo", char('a'+l))));
-        std::shared_ptr<Archive::Folder> layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("jmp/placement/layer{}", char('a'+l))));
-        layer->mLayerName = fmt::format("layer{}", char('a'+l));
+        std::shared_ptr<Archive::File> layerStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path(std::format("jmp/placement/layer{}/stageobjinfo", char('a'+l))));
+        std::shared_ptr<Archive::Folder> layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(std::format("jmp/placement/layer{}", char('a'+l))));
+        layer->mLayerName = std::format("layer{}", char('a'+l));
 
         if(layerStageObj == nullptr){
-            layer->mLayerName = fmt::format("Layer{}", char('A'+l));
-            layerStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path(fmt::format("/jmp/Placement/Layer{}/StageObjInfo",  char('A'+l))));
+            layer->mLayerName = std::format("Layer{}", char('A'+l));
+            layerStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path(std::format("/jmp/Placement/Layer{}/StageObjInfo",  char('A'+l))));
         }
 
         if(layerObjects == nullptr){
-            layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(fmt::format("/jmp/Placement/Layer{}", char('A'+l))));
+            layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(std::format("/jmp/Placement/Layer{}", char('A'+l))));
         }
 
         if(layerObjects != nullptr) layer->LoadLayerObjects(layerObjects);

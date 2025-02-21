@@ -3,7 +3,7 @@
 #include "ResUtil.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
-#include <fmt/core.h>
+#include <format>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
 
@@ -28,11 +28,11 @@ void SAstroObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mTransform = SGenUtility::CreateMTX(scale, rotation, position);
 
     for (size_t i = 0; i < 8; i++){
-        mObjArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Obj_arg{0}", i));
+        mObjArgs[i] = bcsv->GetSignedInt(entry, std::format("Obj_arg{0}", i));
     }
     
     for (size_t i = 0; i < 8; i++){
-        mPathArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Path_arg{0}", i));
+        mPathArgs[i] = bcsv->GetSignedInt(entry, std::format("Path_arg{0}", i));
     }
 
     //Collect arg types from object DB and load data accordingly into array of obj/path args

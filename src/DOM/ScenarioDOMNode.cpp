@@ -1,7 +1,7 @@
 #include "DOM/ScenarioDOMNode.hpp"
 #include "DOM/GalaxyDOMNode.hpp"
 #include "DOM/ZoneDOMNode.hpp"
-#include <fmt/core.h>
+#include <format>
 #include "GenUtil.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
@@ -114,7 +114,7 @@ void SScenarioDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 
 void SScenarioDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     if(this == GetParentOfType<SGalaxyDOMNode>(EDOMNodeType::Galaxy).lock()->GetSelectedScenario().get()){
-        ImGui::TextColored(ImColor(0,255,0),fmt::format("{0} : {1} {2}", mScenarioNo, mScenarioName, mComet.empty() ? "" : "["+mComet+"]").data());
+        ImGui::TextColored(ImColor(0,255,0),std::format("{0} : {1} {2}", mScenarioNo, mScenarioName, mComet.empty() ? "" : "["+mComet+"]").data());
         ImGui::SameLine();
         ImGui::Text(ICON_FK_MINUS_CIRCLE);
         if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
@@ -122,7 +122,7 @@ void SScenarioDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
             return;
         }
     } else {
-        ImGui::Text(fmt::format("{0} : {1} {2}", mScenarioNo, mScenarioName, mComet.empty() ? "" : "["+mComet+"]").data());
+        ImGui::Text(std::format("{0} : {1} {2}", mScenarioNo, mScenarioName, mComet.empty() ? "" : "["+mComet+"]").data());
     }
 
     if(ImGui::IsItemClicked(0)){
@@ -208,7 +208,7 @@ void SScenarioDOMNode::RenderDetailsUI(){
             ImGui::TableNextColumn();
 
             bool enabled = mZoneLayers[mSelectedZone] & (1 << layer);
-            if(ImGui::Checkbox(fmt::format("{}", char('A' + layer)).c_str(), &enabled)){
+            if(ImGui::Checkbox(std::format("{}", char('A' + layer)).c_str(), &enabled)){
                 mZoneLayers[mSelectedZone] ^= (1 << layer);
                 
                 // Reshow-hide layers

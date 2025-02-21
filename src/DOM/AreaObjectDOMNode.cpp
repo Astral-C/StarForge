@@ -3,7 +3,7 @@
 #include "ResUtil.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
-#include <fmt/core.h>
+#include <format>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
 #include "UAreaRenderer.hpp"
@@ -99,9 +99,9 @@ void SAreaObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
 
 void SAreaObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     if(selected == GetSharedPtr<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
-        ImGui::TextColored(ImColor(0,255,0), fmt::format("{0}", mName.data()).c_str());
+        ImGui::TextColored(ImColor(0,255,0), std::format("{0}", mName.data()).c_str());
     } else {
-        ImGui::Text(fmt::format("{0}", mName.data()).c_str());
+        ImGui::Text(std::format("{0}", mName.data()).c_str());
     }
     if(ImGui::IsItemClicked(0)){
         selected = GetSharedPtr<SAreaObjectDOMNode>(EDOMNodeType::AreaObject);
@@ -111,7 +111,7 @@ void SAreaObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& select
 
 void SAreaObjectDOMNode::RenderDetailsUI(){
     glm::vec3 pos(mTransform[3]);
-    ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
+    ImGui::Text(std::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
 
     int data = mAreaShapeNo;
     ImGui::InputInt("Area Shape ID", &data);

@@ -3,7 +3,7 @@
 #include "ResUtil.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
-#include <fmt/core.h>
+#include <format>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
 #include "IconsForkAwesome.h"
@@ -56,11 +56,11 @@ void STicoDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mTransform = SGenUtility::CreateMTX(scale, rotation, position);
 
     for (size_t i = 0; i < 8; i++){
-        mObjArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Obj_arg{0}", i));
+        mObjArgs[i] = bcsv->GetSignedInt(entry, std::format("Obj_arg{0}", i));
     }
     
     for (size_t i = 0; i < 8; i++){
-        mPathArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Path_arg{0}", i));
+        mPathArgs[i] = bcsv->GetSignedInt(entry, std::format("Path_arg{0}", i));
     }
 
     //Collect arg types from object DB and load data accordingly into array of obj/path args
@@ -125,11 +125,11 @@ void STicoDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     }
     ImGui::SameLine();
     if(selected == GetSharedPtr<STicoDOMNode>(EDOMNodeType::Object)){
-        ImGui::TextColored(ImColor(0,255,0), fmt::format("{0} Luma", LumaColorNames[glm::max(mObjArgs[0], 0)]).c_str());
+        ImGui::TextColored(ImColor(0,255,0), std::format("{0} Luma", LumaColorNames[glm::max(mObjArgs[0], 0)]).c_str());
     } else if(selected == mLinkedObject.lock()) {
-        ImGui::TextColored(ImColor(0,255,150), fmt::format("{0} [Linked]", mName.data()).c_str());
+        ImGui::TextColored(ImColor(0,255,150), std::format("{0} [Linked]", mName.data()).c_str());
     } else {
-        ImGui::Text(fmt::format("{0} Luma", LumaColorNames[glm::max(mObjArgs[0], 0)]).c_str());
+        ImGui::Text(std::format("{0} Luma", LumaColorNames[glm::max(mObjArgs[0], 0)]).c_str());
     }
     if(ImGui::IsItemClicked(0)){
         selected = GetSharedPtr<STicoDOMNode>(EDOMNodeType::Tico);
@@ -145,7 +145,7 @@ void STicoDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
 
 void STicoDOMNode::RenderDetailsUI(){
     glm::vec3 pos(mTransform[3]);
-    ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
+    ImGui::Text(std::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
 
     //ImGui::InputText("Name", &mName);
 

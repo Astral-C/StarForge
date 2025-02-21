@@ -2,7 +2,7 @@
 #include "ResUtil.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
-#include <fmt/core.h>
+#include <format>
 #include <glm/gtx/matrix_decompose.hpp>
 #include "IconsForkAwesome.h"
 
@@ -26,7 +26,7 @@ void SSoundObjDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mTransform = SGenUtility::CreateMTX(scale, rotation, position);
 
     for (size_t i = 0; i < 3; i++){
-        mObjArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Obj_arg{0}", i));
+        mObjArgs[i] = bcsv->GetSignedInt(entry, std::format("Obj_arg{0}", i));
     }
 
     //Collect arg types from object DB and load data accordingly into array of obj/path args
@@ -57,7 +57,7 @@ void SSoundObjDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
     if(selected == GetSharedPtr<SSoundObjDOMNode>(EDOMNodeType::Object)){
         ImGui::TextColored(ImColor(0,255,0), mName.data());
     } else if(selected == mLinkedObject.lock()) {
-        ImGui::TextColored(ImColor(0,255,150), fmt::format("{0} [Linked]", mName.data()).c_str());
+        ImGui::TextColored(ImColor(0,255,150), std::format("{0} [Linked]", mName.data()).c_str());
     } else {
         ImGui::Text(mName.data());
     }
@@ -75,7 +75,7 @@ void SSoundObjDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
 
 void SSoundObjDOMNode::RenderDetailsUI(){
     glm::vec3 pos(mTransform[3]);
-    ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
+    ImGui::Text(std::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
 
     //ImGui::InputText("Name", &mName);
     

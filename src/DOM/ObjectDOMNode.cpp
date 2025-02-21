@@ -3,7 +3,7 @@
 #include "ResUtil.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
-#include <fmt/core.h>
+#include <format>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
 #include "IconsForkAwesome.h"
@@ -42,11 +42,11 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mTransform = SGenUtility::CreateMTX(scale, rotation, position);
 
     for (size_t i = 0; i < 8; i++){
-        mObjArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Obj_arg{0}", i));
+        mObjArgs[i] = bcsv->GetSignedInt(entry, std::format("Obj_arg{0}", i));
     }
     
     for (size_t i = 0; i < 8; i++){
-        mPathArgs[i] = bcsv->GetSignedInt(entry, fmt::format("Path_arg{0}", i));
+        mPathArgs[i] = bcsv->GetSignedInt(entry, std::format("Path_arg{0}", i));
     }
 
     std::array<std::string, 7> switchNames = { "SW_APPEAR", "SW_DEAD", "SW_A", "SW_B", "SW_SLEEP", "SW_AWAKE", "SW_PARAM"};
@@ -54,8 +54,8 @@ void SObjectDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     for(auto& obj : objectDB["Classes"]){
         if(obj["InternalName"] == mName){
             for (size_t i = 0; i < 8; i++){
-                if(!obj["Parameters"].contains(fmt::format("Obj_arg{0}", i))) continue;
-                mObjArgNames[i] = obj["Parameters"][fmt::format("Obj_arg{0}", i)]["Name"];
+                if(!obj["Parameters"].contains(std::format("Obj_arg{0}", i))) continue;
+                mObjArgNames[i] = obj["Parameters"][std::format("Obj_arg{0}", i)]["Name"];
             }
 
             for (auto s : switchNames) {
@@ -121,11 +121,11 @@ void SObjectDOMNode::Serialize(SBcsvIO* bcsv, int entry){
     bcsv->SetFloat(entry, "scale_z", scale.z);
 
     for (size_t i = 0; i < 8; i++){
-        bcsv->SetUnsignedInt(entry, fmt::format("Obj_arg{0}", i), mObjArgs[i]);
+        bcsv->SetUnsignedInt(entry, std::format("Obj_arg{0}", i), mObjArgs[i]);
     }
 
     for (size_t i = 0; i < 8; i++){
-        bcsv->SetUnsignedInt(entry, fmt::format("Path_arg{0}", i), mPathArgs[i]);
+        bcsv->SetUnsignedInt(entry, std::format("Path_arg{0}", i), mPathArgs[i]);
     }
 
     bcsv->SetUnsignedInt(entry, "l_id", mLinkID);
@@ -162,7 +162,7 @@ void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     }
     ImGui::SameLine();
     if(selected == GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object)){
-        ImGui::TextColored(ImColor(0,255,0), fmt::format("{0}", mName.data()).c_str());
+        ImGui::TextColored(ImColor(0,255,0), std::format("{0}", mName.data()).c_str());
         ImGui::SameLine();
 
         ImGui::Text(ICON_FK_MINUS_CIRCLE);
@@ -171,9 +171,9 @@ void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
             GetParentOfType<SDOMNodeBase>(EDOMNodeType::ZoneLayer).lock()->RemoveChild(GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object));
         }
     } else if(selected == mLinkedObject.lock()) {
-        ImGui::TextColored(ImColor(0,255,150), fmt::format("{0} [Linked]", mName.data()).c_str());
+        ImGui::TextColored(ImColor(0,255,150), std::format("{0} [Linked]", mName.data()).c_str());
     } else {
-        ImGui::Text(fmt::format("{0}", mName.data()).c_str());
+        ImGui::Text(std::format("{0}", mName.data()).c_str());
     }
     if(ImGui::IsItemClicked(0)){
         selected = GetSharedPtr<SObjectDOMNode>(EDOMNodeType::Object);
@@ -183,7 +183,7 @@ void SObjectDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
 
 void SObjectDOMNode::RenderDetailsUI(){
     glm::vec3 pos(mTransform[3]);
-    ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
+    ImGui::Text(std::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
 
     if(ImGui::InputText("Name", &mName)){
         if(ModelCache.count(mName) != 0){

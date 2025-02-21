@@ -1,7 +1,7 @@
 #include "io/BcsvIO.hpp"
 #include "GenUtil.hpp"
 #include <map>
-#include <fmt/core.h>
+#include <format>
 
 SBcsvIO::SBcsvIO()
 {

@@ -3,7 +3,7 @@
 #include "ResUtil.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
-#include <fmt/core.h>
+#include <format>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
 #include "IconsForkAwesome.h"
@@ -31,7 +31,7 @@ void SStartObjDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mObjArg0 = bcsv->GetUnsignedInt(entry, "Obj_arg0");
     mCameraId = bcsv->GetUnsignedInt(entry, "Camera_id");
 
-    mName = fmt::format("Start {}", mMarioNo);
+    mName = std::format("Start {}", mMarioNo);
 
 }
 
@@ -71,7 +71,7 @@ void SStartObjDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
     }
     ImGui::SameLine();
     if(selected == GetSharedPtr<SStartObjDOMNode>(EDOMNodeType::StartObj)){
-        ImGui::TextColored(ImColor(0,255,0), fmt::format("{0}", mName).c_str());
+        ImGui::TextColored(ImColor(0,255,0), std::format("{0}", mName).c_str());
         ImGui::SameLine();
 
         ImGui::Text(ICON_FK_MINUS_CIRCLE);
@@ -80,7 +80,7 @@ void SStartObjDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
             GetParentOfType<SDOMNodeBase>(EDOMNodeType::ZoneLayer).lock()->RemoveChild(GetSharedPtr<SStartObjDOMNode>(EDOMNodeType::StartObj));
         }
     } else {
-        ImGui::Text(fmt::format("{0}", mName).c_str());
+        ImGui::Text(std::format("{0}", mName).c_str());
     }
     if(ImGui::IsItemClicked(0)){
         selected = GetSharedPtr<SStartObjDOMNode>(EDOMNodeType::StartObj);
@@ -90,7 +90,7 @@ void SStartObjDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected
 
 void SStartObjDOMNode::RenderDetailsUI(){
     glm::vec3 pos(mTransform[3]);
-    ImGui::Text(fmt::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
+    ImGui::Text(std::format("Position: {0},{1},{2}", pos.x,pos.y,pos.z).c_str());
 
     //bcsv->SetUnsignedInt(entry, "MarioNo", mMarioNo);
     //bcsv->SetUnsignedInt(entry, "Obj_arg0", mObjArg0);

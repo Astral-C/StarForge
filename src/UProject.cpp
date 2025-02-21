@@ -1,5 +1,5 @@
 #include "UProject.hpp"
-#include <fmt/format.h>
+#include <format>
 #include <imgui.h>
 #include "stb_image.h"
 #include "glad/glad.h"
@@ -169,7 +169,7 @@ std::string UStarForgeProjectManager::RenderGalaxySelectUi(bool& galaxySelectOpe
             }
         } else {
             for(auto galaxy : mCurrentProject->GetGalaxies()){
-                ImGui::BeginChild(fmt::format("##{}", galaxy["name"].get<std::string>()).data(), ImVec2(ImGui::GetContentRegionAvail().x, 80.0f), ImGuiChildFlags_Border);
+                ImGui::BeginChild(std::format("##{}", galaxy["name"].get<std::string>()).data(), ImVec2(ImGui::GetContentRegionAvail().x, 80.0f), ImGuiChildFlags_Border);
                     if(ImGui::IsWindowHovered()){
                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
 
@@ -274,7 +274,7 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
         } else {
             std::shared_ptr<UStarForgeProject> markDelete = nullptr;
             for(auto project : mProjects){
-                ImGui::BeginChild(fmt::format("##{}", project->GetName()).data(), ImVec2(0.0f, 64.0f), ImGuiChildFlags_Border);
+                ImGui::BeginChild(std::format("##{}", project->GetName()).data(), ImVec2(0.0f, 64.0f), ImGuiChildFlags_Border);
                     if(ImGui::IsWindowHovered()){
 
                         float ypos = ImGui::GetCursorPosY();

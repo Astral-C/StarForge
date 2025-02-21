@@ -17,7 +17,7 @@
 #include <bstream.h>
 #include <ResUtil.hpp>
 #include "ImGuizmo.h"
-#include <fmt/format.h>
+#include <format>
 
 #include "DOM/ZoneDOMNode.hpp"
 #include "DOM/ScenarioDOMNode.hpp"
@@ -619,7 +619,7 @@ void UStarForgeContext::Render(float deltaTime) {
 
 			stbir_resize_uint8_linear(imgData, wsx, wsy, 0, imgDataScaled, 84, 64, 0, STBIR_RGBA_NO_AW);
 
-			stbi_write_png(fmt::format("./res/thumb/{}.png", markDelete).c_str(), 84, 64, 4,  imgDataScaled, 84 * 4);
+			stbi_write_png(std::format("./res/thumb/{}.png", markDelete).c_str(), 84, 64, 4,  imgDataScaled, 84 * 4);
 			delete imgData;
 			delete imgDataScaled;
 		}

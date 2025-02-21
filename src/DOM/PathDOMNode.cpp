@@ -3,7 +3,7 @@
 #include "ResUtil.hpp"
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
-#include <fmt/core.h>
+#include <format>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <LightConfigs.hpp>
 #include "IconsForkAwesome.h"
@@ -51,7 +51,7 @@ void SPathDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     mLinkID = bcsv->GetUnsignedInt(entry, "l_id");
     
     for(int i = 0; i < 8; i++){
-        mPathArgs[i] = bcsv->GetUnsignedInt(entry, fmt::format("path_arg{}", i));
+        mPathArgs[i] = bcsv->GetUnsignedInt(entry, std::format("path_arg{}", i));
     }
 
     mUsage = bcsv->GetString(entry, "usage");
@@ -93,7 +93,7 @@ void SPathDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
 }
 
 void SPathDOMNode::RenderDetailsUI(){
-    ImGui::Text(fmt::format("Name: {}", mName).c_str());
+    ImGui::Text(std::format("Name: {}", mName).c_str());
     ImGui::Text("Path Type: %s", mPathType.c_str());
     ImGui::Text("Usage: %s", mUsage.c_str());
     ImGui::Checkbox("Is Closed", &mIsClosed);
@@ -118,7 +118,7 @@ SPathPointDOMNode::~SPathPointDOMNode(){}
 
 void SPathPointDOMNode::Deserialize(SBcsvIO* bcsv, int entry){
     for(int i = 0; i < 8; i++){
-        mPointArgs[i] = bcsv->GetUnsignedInt(entry, fmt::format("point_arg{}", i));
+        mPointArgs[i] = bcsv->GetUnsignedInt(entry, std::format("point_arg{}", i));
     }
     
     glm::vec3 pos;
