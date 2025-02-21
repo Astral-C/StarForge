@@ -24,4 +24,4 @@ find_package(CURL REQUIRED)
 add_executable(starforge ${STARFORGE_SRC})
 target_include_directories(starforge PUBLIC include include/utillib/ImGuiFileDialog/ImGuiFileDialog  lib/glfw/include lib/gctoolsplusplus/include lib/fmt/include)
 
-target_link_libraries(starforge PUBLIC j3dultra imgui ImGuiFileDialog glfw gctools++ fmt ICU::uc ICU::i18n CURL::libcurl)
+target_link_libraries(starforge PUBLIC j3dultra imgui ImGuiFileDialog glfw gctools++ ICU::uc ICU::i18n CURL::libcurl)
