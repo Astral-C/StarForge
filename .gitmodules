@@ -8,9 +8,6 @@
 [submodule "lib/ImGuiFileDialog"]
 	path = lib/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog.git
-[submodule "lib/gctoolsplusplus"]
-	path = lib/gctoolsplusplus
-	url = https://github.com/Astral-C/gctoolsplusplus.git
 [submodule "lib/J3DUltra"]
 	path = lib/J3DUltra
 	url = https://github.com/Sage-of-Mirrors/J3DUltra.git
@@ -18,3 +15,6 @@
 [submodule "lib/glm"]
 	path = lib/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "lib/gctoolsplusplus"]
+	path = lib/gctoolsplusplus
+	url = git@github.com:Astral-C/gctoolsplusplus.git

@@ -1,5 +1,5 @@
-add_subdirectory(gctoolsplusplus)
 add_subdirectory(glfw)
 add_subdirectory(J3DUltra)
+add_subdirectory(gctoolsplusplus)
 include( imgui.cmake )
 add_subdirectory(ImGuiFileDialog)
