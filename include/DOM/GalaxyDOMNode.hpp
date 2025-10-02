@@ -9,6 +9,7 @@
 
 class SGalaxyDOMNode : public SDOMNodeBase {
     EGameType mGame;
+    bStream::Endianess mSystemEd { bStream::Endianess::Big };
     std::string mGalaxyName;
     std::string mScenarioArchivePath;
     std::shared_ptr<Archive::Rarc> mScenarioArchive;
@@ -25,7 +26,7 @@ class SGalaxyDOMNode : public SDOMNodeBase {
 
 public:
     typedef SDOMNodeBase Super;
-    
+
     SGalaxyDOMNode();
     ~SGalaxyDOMNode();
 
@@ -39,7 +40,7 @@ public:
     void SaveGalaxy();
     void AddZone(std::filesystem::path zonePath);
     void RemoveZone(std::shared_ptr<SZoneDOMNode> zone);
-    bool LoadGalaxy(std::filesystem::path galaxy_path, EGameType game);
+    bool LoadGalaxy(std::filesystem::path galaxy_path, EGameType game, EGameSystem system);
     bool GetGalaxyLoaded() { return mGalaxyLoaded; }
 
     std::shared_ptr<SScenarioDOMNode> GetSelectedScenario() { return mSelectedScenario; }

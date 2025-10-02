@@ -28,15 +28,15 @@ void SResUtility::SGCResourceManager::Init()
 	mInitialized = true;
 }
 
-void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
+void SResUtility::SGCResourceManager::CacheModel(std::string modelName, bStream::Endianess endian){
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath) / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
-		bStream::CFileStream modelArchive(modelPath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CFileStream modelArchive(modelPath.string(), endian, bStream::OpenMode::In);
 
 		if(!archive->Load(&modelArchive)){
-			std::cout << "Couldn't load archive " << modelPath << std::endl; 
+			std::cout << "Couldn't load archive " << modelPath << std::endl;
 			return;
 		}
 
@@ -60,8 +60,8 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 		}
 
 		J3DModelLoader Loader;
-		bStream::CMemoryStream modelStream(modelFile->GetData(), modelFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
-				
+		bStream::CMemoryStream modelStream(modelFile->GetData(), modelFile->GetSize(), endian, bStream::OpenMode::In);
+
 		std::shared_ptr<J3DModelData> data = Loader.Load(&modelStream, NULL);
 		ModelCache.insert({modelName, data});
 	} else {
@@ -69,15 +69,15 @@ void SResUtility::SGCResourceManager::CacheModel(std::string modelName){
 	}
 }
 
-std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourceManager::LoadColorAnimation(std::string modelName, std::string animName){
+std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourceManager::LoadColorAnimation(std::string modelName, std::string animName, bStream::Endianess endian){
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath)  / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
-		bStream::CFileStream modelArchive(modelPath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CFileStream modelArchive(modelPath.string(), endian, bStream::OpenMode::In);
 
 		if(!archive->Load(&modelArchive)){
-			std::cout << "Couldn't load archive " << modelPath << std::endl; 
+			std::cout << "Couldn't load archive " << modelPath << std::endl;
 			return nullptr;
 		}
 
@@ -89,7 +89,7 @@ std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourc
 		}
 
 		J3DAnimation::J3DAnimationLoader Loader;
-		bStream::CMemoryStream animStream(modelFile->GetData(), modelFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CMemoryStream animStream(modelFile->GetData(), modelFile->GetSize(), endian, bStream::OpenMode::In);
 
 		std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DColorAnimationInstance>(animStream);
 		return instance;
@@ -99,15 +99,15 @@ std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> SResUtility::SGCResourc
 	return nullptr;
 }
 
-std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> SResUtility::SGCResourceManager::LoadJointAnimation(std::string modelName, std::string animName){
+std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> SResUtility::SGCResourceManager::LoadJointAnimation(std::string modelName, std::string animName, bStream::Endianess endian){
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath)  / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
-		bStream::CFileStream modelArchive(modelPath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CFileStream modelArchive(modelPath.string(), endian, bStream::OpenMode::In);
 
 		if(!archive->Load(&modelArchive)){
-			std::cout << "Couldn't load archive " << modelPath << std::endl; 
+			std::cout << "Couldn't load archive " << modelPath << std::endl;
 			return nullptr;
 		}
 
@@ -119,7 +119,7 @@ std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> SResUtility::SGCResourc
 		}
 
 		J3DAnimation::J3DAnimationLoader Loader;
-		bStream::CMemoryStream animStream(modelFile->GetData(), modelFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CMemoryStream animStream(modelFile->GetData(), modelFile->GetSize(), endian, bStream::OpenMode::In);
 
 		std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DJointAnimationInstance>(animStream);
 		return instance;
@@ -129,15 +129,15 @@ std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> SResUtility::SGCResourc
 	return nullptr;
 }
 
-std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> SResUtility::SGCResourceManager::LoadTextureAnimation(std::string modelName, std::string animName){
+std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> SResUtility::SGCResourceManager::LoadTextureAnimation(std::string modelName, std::string animName, bStream::Endianess endian){
 	std::filesystem::path modelPath = std::filesystem::path(Options.mRootPath)  / "ObjectData" / (modelName + ".arc");
 	//std::cout << "Trying to load archive" << modelPath << std::endl;
 	if(std::filesystem::exists(modelPath)){
 		std::shared_ptr<Archive::Rarc> archive = Archive::Rarc::Create();
-		bStream::CFileStream modelArchive(modelPath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CFileStream modelArchive(modelPath.string(), endian, bStream::OpenMode::In);
 
 		if(!archive->Load(&modelArchive)){
-			std::cout << "Couldn't load archive " << modelPath << std::endl; 
+			std::cout << "Couldn't load archive " << modelPath << std::endl;
 			return nullptr;
 		}
 
@@ -149,7 +149,7 @@ std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> SResUtility::SGCRes
 		}
 
 		J3DAnimation::J3DAnimationLoader Loader;
-		bStream::CMemoryStream animStream(modelFile->GetData(), modelFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+		bStream::CMemoryStream animStream(modelFile->GetData(), modelFile->GetSize(), endian, bStream::OpenMode::In);
 
 		std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> instance = Loader.LoadAnimation<J3DAnimation::J3DTexMatrixAnimationInstance>(animStream);
 		return instance;

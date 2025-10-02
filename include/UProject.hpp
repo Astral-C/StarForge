@@ -8,15 +8,16 @@
 class UStarForgeProject
 {
 private:
-    std::string mName;
-    std::string mDescription;
-    std::filesystem::path mProjectRoot;
-    bool mIsDolphinRoot;
-    EGameType mGame;
+    std::string mName { "" };
+    std::string mDescription { "" };
+    std::filesystem::path mProjectRoot { "." };
+    bool mIsDolphinRoot { false };
+    EGameType mGame { EGameType::SMG1 };
+    EGameSystem mSystem { EGameSystem::Wii };
 
     nlohmann::json mGalaxies;
     std::vector<uint32_t> mGalaxyThumbnails;
- 
+
     uint32_t mProjImageID { 0xFFFFFFFF };
 
 public:
@@ -26,7 +27,9 @@ public:
     std::filesystem::path GetRootPath() { return mProjectRoot; }
     nlohmann::json GetGalaxies() { return mGalaxies; }
     uint32_t GetImage() { return mProjImageID; }
-    
+    EGameType GetGame() { return mGame; }
+    EGameSystem GetSystem() { return mSystem; }
+
     uint32_t GetThumbnail(std::string name);
 
     void LoadThumbs();
@@ -55,12 +58,15 @@ private:
     std::string mNewProjectDescription { "A Project for StarForge!" };
     std::string mNewProjectRoot { "." };
     std::string mNewProjectIconPath { "" };
-    uint32_t mNewProjectGame { 1 };
+    uint32_t mNewProjectGame { 0 };
+    uint32_t mNewProjectSystem { 0 };
     bool mNewProjectDolphinRoot { false };
 
 
 public:
     void Init();
+
+    std::shared_ptr<UStarForgeProject> CurrentProject() { return mCurrentProject; }
 
     std::string RenderGalaxySelectUi(bool& galaxySelectOpen);
     void RenderUi(bool& projectManagerOpen);

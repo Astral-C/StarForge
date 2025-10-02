@@ -1,4 +1,5 @@
 #include <filesystem>
+#include "DOM/DOMNodeBase.hpp"
 #include "ResUtil.hpp"
 #include "DOM/ZoneDOMNode.hpp"
 #include "DOM/ObjectDOMNode.hpp"
@@ -30,7 +31,7 @@ SZoneLayerDOMNode::~SZoneLayerDOMNode() {
 
 }
 
-void SZoneLayerDOMNode::SaveLayer(){
+void SZoneLayerDOMNode::SaveLayer(bStream::Endianess endianess){
     std::vector<std::shared_ptr<SDOMNodeSerializable>> objects, areaObjects, startObjects, soundObjects;
 
     if(Children.size() == 0) return;
@@ -77,7 +78,7 @@ void SZoneLayerDOMNode::SaveLayer(){
         if(layerFolder == nullptr){
             std::shared_ptr<Archive::Folder> newLayerFolder = Archive::Folder::Create(zone.lock()->mZoneArchive);
             newLayerFolder->SetName(std::filesystem::path(mLayerName).stem().string());
-                
+
             std::shared_ptr<Archive::File> newLayerObjInfo = Archive::File::Create();
             newLayerObjInfo->SetName("ObjInfo");
             newLayerFolder->AddFile(newLayerObjInfo);
@@ -119,7 +120,7 @@ void SZoneLayerDOMNode::SaveLayer(){
     //    return;
     //}
 
-    bStream::CMemoryStream objSaveStream(mObjInfo.CalculateNewFileSize(objects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    bStream::CMemoryStream objSaveStream(mObjInfo.CalculateNewFileSize(objects.size()), endianess, bStream::OpenMode::Out);
     mObjInfo.Save(objects, objSaveStream);
 
     if(mObjInfoFile != nullptr){
@@ -127,7 +128,7 @@ void SZoneLayerDOMNode::SaveLayer(){
         mObjInfoFile->SetData(objSaveStream.getBuffer(), objSaveStream.getSize());
     }
 
-    bStream::CMemoryStream areaSaveStream(mAreaObjInfo.CalculateNewFileSize(areaObjects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    bStream::CMemoryStream areaSaveStream(mAreaObjInfo.CalculateNewFileSize(areaObjects.size()), endianess, bStream::OpenMode::Out);
     mObjInfo.Save(areaObjects, areaSaveStream);
 
     if(mAreaObjInfoFile != nullptr){
@@ -135,7 +136,7 @@ void SZoneLayerDOMNode::SaveLayer(){
         mAreaObjInfoFile->SetData(areaSaveStream.getBuffer(), areaSaveStream.getSize());
     }
 
-    bStream::CMemoryStream startSaveStream(mStartInfo.CalculateNewFileSize(startObjects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    bStream::CMemoryStream startSaveStream(mStartInfo.CalculateNewFileSize(startObjects.size()), endianess, bStream::OpenMode::Out);
     mObjInfo.Save(startObjects, startSaveStream);
 
     if(mStartInfoFile != nullptr){
@@ -143,7 +144,7 @@ void SZoneLayerDOMNode::SaveLayer(){
         mStartInfoFile->SetData(startSaveStream.getBuffer(), startSaveStream.getSize());
     }
 
-    bStream::CMemoryStream soundSaveStream(mSoundObjInfo.CalculateNewFileSize(soundObjects.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+    bStream::CMemoryStream soundSaveStream(mSoundObjInfo.CalculateNewFileSize(soundObjects.size()), endianess, bStream::OpenMode::Out);
     mObjInfo.Save(soundObjects, soundSaveStream);
 
     if(mSoundObjInfoFile != nullptr){
@@ -153,23 +154,23 @@ void SZoneLayerDOMNode::SaveLayer(){
 
 }
 
-void SZoneLayerDOMNode::LoadLayerPaths(std::shared_ptr<Archive::Folder> layer){
+void SZoneLayerDOMNode::LoadLayerPaths(std::shared_ptr<Archive::Folder> layer, bStream::Endianess endianess){
     std::shared_ptr<Archive::File> commonPathInfoFile = layer->GetFile(std::filesystem::path("commonpathinfo"));
     if(commonPathInfoFile == nullptr){
         commonPathInfoFile = layer->GetFile(std::filesystem::path("CommonPathInfo"));
     }
 
     if(commonPathInfoFile == nullptr) return; // couldnt load path
-    
+
     SBcsvIO commonPathInfo;
-	bStream::CMemoryStream commonPathInfoStream(commonPathInfoFile->GetData(), commonPathInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+	bStream::CMemoryStream commonPathInfoStream(commonPathInfoFile->GetData(), commonPathInfoFile->GetSize(), endianess, bStream::OpenMode::In);
 	commonPathInfo.Load(&commonPathInfoStream);
 
-    for(size_t pathEntry = 0; pathEntry < commonPathInfo.GetEntryCount(); pathEntry++){            
+    for(size_t pathEntry = 0; pathEntry < commonPathInfo.GetEntryCount(); pathEntry++){
         auto path = std::make_shared<SPathDOMNode>();
         path->Deserialize(&commonPathInfo, pathEntry);
         std::cout << "Path " << path->GetName() << " Deserialized" << std::endl;
-        
+
         std::shared_ptr<Archive::File> pathFile =  layer->GetFile(std::filesystem::path(std::format("commonpathpointinfo.{}", path->GetPathNumber())));
 
         if(pathFile == nullptr){
@@ -181,7 +182,7 @@ void SZoneLayerDOMNode::LoadLayerPaths(std::shared_ptr<Archive::Folder> layer){
         std::cout << "Loading Path " <<  path->GetName() << std::endl;
 
         SBcsvIO pathInfo;
-	    bStream::CMemoryStream pathInfoStream(pathFile->GetData(), pathFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+	    bStream::CMemoryStream pathInfoStream(pathFile->GetData(), pathFile->GetSize(), endianess, bStream::OpenMode::In);
 	    pathInfo.Load(&pathInfoStream);
 
         for(size_t pointEntry = 0; pointEntry < pathInfo.GetEntryCount(); pointEntry++){
@@ -189,14 +190,14 @@ void SZoneLayerDOMNode::LoadLayerPaths(std::shared_ptr<Archive::Folder> layer){
             point->Deserialize(&pathInfo, pointEntry);
             path->AddChild(point);
         }
-    
+
         path->Update();
         AddChild(path);
     }
 
 }
 
-void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer){
+void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer, bStream::Endianess endianess){
     if(layer == nullptr) return;
 
     mObjInfoFile = layer->GetFile(std::filesystem::path("objinfo"));
@@ -205,8 +206,8 @@ void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer)
     }
 
     if(mObjInfoFile == nullptr) return; // couldnt load path
-    
-	bStream::CMemoryStream ObjInfoStream(mObjInfoFile->GetData(), mObjInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+
+	bStream::CMemoryStream ObjInfoStream(mObjInfoFile->GetData(), mObjInfoFile->GetSize(), endianess, bStream::OpenMode::In);
 	mObjInfo.Load(&ObjInfoStream);
 
 	for(size_t objEntry = 0; objEntry < mObjInfo.GetEntryCount(); objEntry++){
@@ -227,7 +228,7 @@ void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer)
         } else if (ActorName.find("Planet") != std::string::npos || ActorName == "AstroDomeComet") {
             auto object = std::make_shared<SPlanetDOMNode>();
             object->Deserialize(&mObjInfo, objEntry);
-            AddChild(object);                    
+            AddChild(object);
         } else if(ActorName.find("Astro") != std::string::npos){
             auto object = std::make_shared<SAstroObjectDOMNode>();
             object->Deserialize(&mObjInfo, objEntry);
@@ -250,14 +251,14 @@ void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer)
     }
 
     if(mSoundObjInfoFile == nullptr) return; // couldnt load path
-    
-	bStream::CMemoryStream SoundInfoStream(mSoundObjInfoFile->GetData(), mSoundObjInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+
+	bStream::CMemoryStream SoundInfoStream(mSoundObjInfoFile->GetData(), mSoundObjInfoFile->GetSize(), endianess, bStream::OpenMode::In);
 	mSoundObjInfo.Load(&SoundInfoStream);
 
 	for(size_t soundObjEntry = 0; soundObjEntry < mSoundObjInfo.GetEntryCount(); soundObjEntry++){
         auto object = std::make_shared<SSoundObjDOMNode>();
         object->Deserialize(&mSoundObjInfo, soundObjEntry);
-        AddChild(object);  
+        AddChild(object);
     }
 
     mAreaObjInfoFile = layer->GetFile(std::filesystem::path("areaobjinfo"));
@@ -266,18 +267,18 @@ void SZoneLayerDOMNode::LoadLayerObjects(std::shared_ptr<Archive::Folder> layer)
     }
 
     if(mAreaObjInfoFile == nullptr) return; // couldnt load path
-    
-	bStream::CMemoryStream AreaInfoStream(mAreaObjInfoFile->GetData(), mAreaObjInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+
+	bStream::CMemoryStream AreaInfoStream(mAreaObjInfoFile->GetData(), mAreaObjInfoFile->GetSize(), endianess, bStream::OpenMode::In);
 	mAreaObjInfo.Load(&AreaInfoStream);
 
 	for(size_t areaObjEntry = 0; areaObjEntry < mAreaObjInfo.GetEntryCount(); areaObjEntry++){
         auto object = std::make_shared<SAreaObjectDOMNode>();
         object->Deserialize(&mAreaObjInfo, areaObjEntry);
-        AddChild(object);  
+        AddChild(object);
     }
 }
 
-void SZoneLayerDOMNode::LoadLayerStarts(std::shared_ptr<Archive::Folder> layer){
+void SZoneLayerDOMNode::LoadLayerStarts(std::shared_ptr<Archive::Folder> layer, bStream::Endianess endianess){
     if(layer == nullptr) return;
 
     mStartInfoFile = layer->GetFile(std::filesystem::path("startinfo"));
@@ -286,8 +287,8 @@ void SZoneLayerDOMNode::LoadLayerStarts(std::shared_ptr<Archive::Folder> layer){
     }
 
     if(mStartInfoFile == nullptr) return; // couldnt load path
-    
-	bStream::CMemoryStream StartInfoStream(mStartInfoFile->GetData(), mStartInfoFile->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+
+	bStream::CMemoryStream StartInfoStream(mStartInfoFile->GetData(), mStartInfoFile->GetSize(), endianess, bStream::OpenMode::In);
 	mStartInfo.Load(&StartInfoStream);
 
 	for(size_t startEntry = 0; startEntry < mStartInfo.GetEntryCount(); startEntry++){
@@ -327,7 +328,7 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
             for (auto node : GetChildrenOfType<SAreaObjectDOMNode>(EDOMNodeType::AreaObject)){
                 node->RenderHeirarchyUI(selected);
             }
-            
+
             ImGui::Text(ICON_FK_PLUS_CIRCLE);
             if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
                 auto object = std::make_shared<SAreaObjectDOMNode>();
@@ -343,7 +344,7 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
             for (auto node : GetChildrenOfType<SSoundObjDOMNode>(EDOMNodeType::SoundObj)){
                 node->RenderHeirarchyUI(selected);
             }
-            
+
             ImGui::Text(ICON_FK_PLUS_CIRCLE);
             if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
                 auto object = std::make_shared<SSoundObjDOMNode>();
@@ -360,7 +361,7 @@ void SZoneLayerDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selecte
             for (auto node : GetChildrenOfType<SStartObjDOMNode>(EDOMNodeType::StartObj)){
                 node->RenderHeirarchyUI(selected);
             }
-            
+
             ImGui::Text(ICON_FK_PLUS_CIRCLE);
             if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
                 auto object = std::make_shared<SStartObjDOMNode>();
@@ -399,7 +400,7 @@ SZoneDOMNode::SZoneDOMNode() : Super("Zone") {
 SZoneDOMNode::~SZoneDOMNode(){}
 
 void SZoneDOMNode::RenderDetailsUI(){
-    
+
 }
 
 void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
@@ -407,7 +408,7 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
     if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
         mVisible = !mVisible;
     }
-    
+
     ImGui::SameLine();
 
     bool opened = ImGui::TreeNodeEx(mName.data(), GetIsSelected() ? ImGuiTreeNodeFlags_Selected : 0);
@@ -439,7 +440,7 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
             for (auto node : GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
                 node->RenderHeirarchyUI(selected);
             }
-            
+
             ImGui::Text(ICON_FK_PLUS_CIRCLE);
             if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
                 auto object = std::make_shared<SPathDOMNode>();
@@ -448,12 +449,12 @@ void SZoneDOMNode::RenderHeirarchyUI(std::shared_ptr<SDOMNodeBase>& selected){
             }
             ImGui::TreePop();
         }
-        
+
         ImGui::TreePop();
     }
 }
 
-void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
+void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game, bStream::Endianess endianess){
     if(!std::filesystem::exists(zonePath)) return;
 
     mIsMainZone = false;
@@ -461,7 +462,7 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
     mZoneArchivePath = zonePath;
     mZoneArchive = Archive::Rarc::Create();
 
-    bStream::CFileStream zoneFileStream(zonePath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
+    bStream::CFileStream zoneFileStream(zonePath.string(), endianess, bStream::OpenMode::In);
     if(!mZoneArchive->Load(&zoneFileStream)){
         std::cout << "Error Loading Zone Archive" << std::endl;
         return;
@@ -474,11 +475,11 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
     std::shared_ptr<Archive::Folder> layerCommonStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/start/common"));
 
     mGameType = game;
-    
+
     if(layerCommonObjects == nullptr){
         layerCommonObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Placement/Common"));
     }
-    
+
     if(layerCommonPaths == nullptr){
         layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Path"));
     }
@@ -488,12 +489,12 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
     }
 
     if(layerCommonObjects == nullptr || layerCommonStarts == nullptr || layerCommonPaths == nullptr) return;
-    
-    layer->LoadLayerObjects(layerCommonObjects);
-    layer->LoadLayerPaths(layerCommonPaths);
-    layer->LoadLayerStarts(layerCommonStarts);
+
+    layer->LoadLayerObjects(layerCommonObjects, endianess);
+    layer->LoadLayerPaths(layerCommonPaths, endianess);
+    layer->LoadLayerStarts(layerCommonStarts, endianess);
     layer->Children.shrink_to_fit();
-    
+
     AddChild(layer);
 
     // Can layers other than common have paths?
@@ -517,10 +518,10 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
             layerStarts = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(std::format("/jmp/Start/Layer{}", char('A'+l))));
         }
 
-        layer->LoadLayerObjects(layerObjects);
-        layer->LoadLayerStarts(layerStarts);
+        layer->LoadLayerObjects(layerObjects, endianess);
+        layer->LoadLayerStarts(layerStarts, endianess);
         layer->Children.shrink_to_fit();
-        
+
         AddChild(layer);
     }
 
@@ -530,7 +531,7 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game){
 
 }
 
-void SZoneDOMNode::SaveZone(){
+void SZoneDOMNode::SaveZone(bStream::Endianess endianess){
 
     if(!mZoneArchiveLoaded) return;
 
@@ -549,7 +550,7 @@ void SZoneDOMNode::SaveZone(){
 
 
         std::cout << "[Save Main Zone]: Saving Stage Object Info" << std::endl;
-        bStream::CMemoryStream saveStream(mStageObjInfo.CalculateNewFileSize(zones.size()), bStream::Endianess::Big, bStream::OpenMode::Out);
+        bStream::CMemoryStream saveStream(mStageObjInfo.CalculateNewFileSize(zones.size()), endianess, bStream::OpenMode::Out);
         mStageObjInfo.Save(zones, saveStream);
 
         if(stageObjInfoFile != nullptr){
@@ -559,14 +560,14 @@ void SZoneDOMNode::SaveZone(){
 
     std::cout << "[Save Zone]: Saving Zone " << mName << std::endl;
     for(auto& layer : GetChildrenOfType<SZoneLayerDOMNode>(EDOMNodeType::ZoneLayer)){
-        layer->SaveLayer();
+        layer->SaveLayer(endianess);
     }
 
-    mZoneArchive->SaveToFile(mZoneArchivePath, Compression::Format::YAZ0, 9);
+    mZoneArchive->SaveToFile(mZoneArchivePath, Compression::Format::YAZ0, 9, endianess);
 
 }
 
-std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(std::filesystem::path zonePath){
+std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(std::filesystem::path zonePath, bStream::Endianess endianess){
     if(!std::filesystem::exists(zonePath)){
         std::cout << "Couldn't find zone " << zonePath << std::endl;
         return {};
@@ -576,7 +577,7 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
     mZoneArchivePath = zonePath;
     mZoneArchive = Archive::Rarc::Create();
 
-    bStream::CFileStream zoneFileStream(zonePath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
+    bStream::CFileStream zoneFileStream(zonePath.string(), endianess, bStream::OpenMode::In);
     if(!mZoneArchive->Load(&zoneFileStream)){
         std::cout << "Couldn't load zone archive " << zonePath << std::endl;
         return {};
@@ -604,7 +605,7 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
     std::shared_ptr<Archive::File> layerCommonStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/placement/common/stageobjinfo"));
     std::shared_ptr<Archive::Folder> layerCommonObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/placement/common"));
     std::shared_ptr<Archive::Folder> layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/path"));
-    layer->mLayerName = std::format("/jmp/placement/common");    
+    layer->mLayerName = std::format("/jmp/placement/common");
 
     if(layerCommonStageObj == nullptr){
         layerCommonStageObj = mZoneArchive->Get<Archive::File>(std::filesystem::path("/jmp/Placement/Common/StageObjInfo"));
@@ -614,24 +615,24 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
     if(layerCommonObjects == nullptr){
         layerCommonObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Placement/Common"));
     }
-    
+
     if(layerCommonPaths == nullptr){
         layerCommonPaths = mZoneArchive->Get<Archive::Folder>(std::filesystem::path("/jmp/Path"));
     }
 
     if(layerCommonObjects == nullptr || layerCommonPaths == nullptr) return {};
-    
-    layer->LoadLayerObjects(layerCommonObjects);
-    layer->LoadLayerPaths(layerCommonPaths);
-    
-    bStream::CMemoryStream StageObjInfoStream(layerCommonStageObj->GetData(), layerCommonStageObj->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+
+    layer->LoadLayerObjects(layerCommonObjects, endianess);
+    layer->LoadLayerPaths(layerCommonPaths, endianess);
+
+    bStream::CMemoryStream StageObjInfoStream(layerCommonStageObj->GetData(), layerCommonStageObj->GetSize(), endianess, bStream::OpenMode::In);
     mStageObjInfo.Load(&StageObjInfoStream);
     for(size_t stageObjEntry = 0; stageObjEntry < mStageObjInfo.GetEntryCount(); stageObjEntry++){
         std::string zoneName = mStageObjInfo.GetString(stageObjEntry, "name");
-        
+
         glm::vec3 position = {mStageObjInfo.GetFloat(stageObjEntry, "pos_x"), mStageObjInfo.GetFloat(stageObjEntry, "pos_y"), mStageObjInfo.GetFloat(stageObjEntry, "pos_z")};
         glm::vec3 rotation = {mStageObjInfo.GetFloat(stageObjEntry, "dir_x"), mStageObjInfo.GetFloat(stageObjEntry, "dir_y"), mStageObjInfo.GetFloat(stageObjEntry, "dir_z")};
-        
+
         zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), mStageObjInfo.GetUnsignedInt(stageObjEntry, "l_id")}});
     }
 
@@ -654,18 +655,18 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
             layerObjects = mZoneArchive->Get<Archive::Folder>(std::filesystem::path(std::format("/jmp/Placement/Layer{}", char('A'+l))));
         }
 
-        if(layerObjects != nullptr) layer->LoadLayerObjects(layerObjects);
-        
+        if(layerObjects != nullptr) layer->LoadLayerObjects(layerObjects, endianess);
+
         if(layerStageObj != nullptr){
-            bStream::CMemoryStream LayerStageObjInfoStream(layerStageObj->GetData(), layerStageObj->GetSize(), bStream::Endianess::Big, bStream::OpenMode::In);
+            bStream::CMemoryStream LayerStageObjInfoStream(layerStageObj->GetData(), layerStageObj->GetSize(), endianess, bStream::OpenMode::In);
             SBcsvIO layerStageObjInfo;
             layerStageObjInfo.Load(&LayerStageObjInfoStream);
             for(size_t stageObjEntry = 0; stageObjEntry < layerStageObjInfo.GetEntryCount(); stageObjEntry++){
                 std::string zoneName = layerStageObjInfo.GetString(stageObjEntry, "name");
-                
+
                 glm::vec3 position = {layerStageObjInfo.GetFloat(stageObjEntry, "pos_x"), layerStageObjInfo.GetFloat(stageObjEntry, "pos_y"), layerStageObjInfo.GetFloat(stageObjEntry, "pos_z")};
                 glm::vec3 rotation = {layerStageObjInfo.GetFloat(stageObjEntry, "dir_x"), layerStageObjInfo.GetFloat(stageObjEntry, "dir_y"), layerStageObjInfo.GetFloat(stageObjEntry, "dir_z")};
-                
+
                 zoneTransforms.insert({zoneName, {SGenUtility::CreateMTX({1,1,1}, rotation, position), layerStageObjInfo.GetUnsignedInt(stageObjEntry, "l_id")}});
             }
         }

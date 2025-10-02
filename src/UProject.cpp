@@ -1,12 +1,25 @@
 #include "UProject.hpp"
 #include <format>
 #include <imgui.h>
+#include "DOM/DOMNodeBase.hpp"
 #include "stb_image.h"
 #include "glad/glad.h"
 #include "IconsForkAwesome.h"
 #include "util/UUIUtil.hpp"
 #include "../lib/imgui/misc/cpp/imgui_stdlib.h"
 #include "ImGuiFileDialog.h"
+
+namespace {
+    const char* GameName[] = {
+        "Super Mario Galaxy",
+        "Super Mario Galaxy 2"
+    };
+
+    const char* SystemName[] = {
+        "Wii",
+        "Switch"
+    };
+}
 
 UStarForgeProject::UStarForgeProject(){}
 
@@ -16,6 +29,7 @@ UStarForgeProject::UStarForgeProject(nlohmann::json projectJson){
     mDescription = projectJson["description"];
     mProjectRoot = std::filesystem::path(projectJson["root"].get<std::string>());
     mGame = (EGameType)projectJson["game"];
+    mSystem = (EGameSystem)projectJson["system"];
     mIsDolphinRoot = projectJson["isDolphinRoot"];
 
     if(mIsDolphinRoot && mProjectRoot.parent_path() != "DATA") {
@@ -57,7 +71,7 @@ void UStarForgeProject::LoadThumbs(){
             uint32_t thumbId;
             glGenTextures(1, &thumbId);
             glBindTexture(GL_TEXTURE_2D, thumbId);
-            
+
             mGalaxyThumbnails.push_back(thumbId);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -191,7 +205,7 @@ std::string UStarForgeProjectManager::RenderGalaxySelectUi(bool& galaxySelectOpe
                     ImGui::EndGroup();
                 ImGui::EndChild();
             }
-        
+
                 ImGui::BeginChild("##newGalaxyBtn", ImVec2(ImGui::GetContentRegionAvail().x, 32.0f), ImGuiChildFlags_Border);
                     if(ImGui::IsWindowHovered()){
                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5);
@@ -233,7 +247,7 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
 	if (ImGui::BeginPopupModal("Projects", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)){
 		// ImGui::CloseCurrentPopup();
         if(mNewProjectDialogOpen) {
-            ImGui::BeginChild("New Project", ImVec2(0.0f, 164.0f), ImGuiChildFlags_Border);
+            ImGui::BeginChild("New Project", ImVec2(0.0f, 196.0f), ImGuiChildFlags_Border);
             ImGui::InputText("Name", &mNewProjectName);
             ImGui::InputText("Description", &mNewProjectDescription);
             ImGui::Text("Root: %s", mNewProjectRoot.data());
@@ -247,6 +261,30 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
                 mSelectIconDialogOpen = true;
             }
             ImGui::Checkbox("Dolphin Root", &mNewProjectDolphinRoot);
+            if(ImGui::BeginCombo("Game", GameName[mNewProjectGame])){
+                for(int i = 0; i < EGameType::GameTypeCount; i++){
+                    bool isSelected = (mNewProjectGame == i);
+                    if (ImGui::Selectable(GameName[i], isSelected)){
+                        mNewProjectGame = i;
+                    }
+                    if (isSelected){
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            if(ImGui::BeginCombo("System", SystemName[mNewProjectSystem])){
+                for(int i = 0; i < EGameSystem::SystemTypeCount; i++){
+                    bool isSelected = (mNewProjectSystem == i);
+                    if (ImGui::Selectable(SystemName[i], isSelected)){
+                        mNewProjectSystem = i;
+                    }
+                    if (isSelected){
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
             ImGui::EndChild();
             if(UIUtil::CenteredButton(ICON_FK_PLUS " Create")){
                 nlohmann::json newProject;
@@ -256,6 +294,7 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
                 newProject["root"] = mNewProjectRoot;
                 newProject["icon"] = mNewProjectIconPath;
                 newProject["game"] = mNewProjectGame;
+                newProject["system"] = mNewProjectGame;
                 newProject["isDolphinRoot"] = mNewProjectDolphinRoot;
 
                 mProjects.push_back(std::make_shared<UStarForgeProject>(newProject));
@@ -371,7 +410,7 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
 			config.path = ".";
 			ImGuiFileDialog::Instance()->OpenDialog("OpenIconDialog", "Choose 48x48 Project Icon Path", ".png", config);
 		}
-        
+
 		if (ImGuiFileDialog::Instance()->Display("OpenIconDialog")) {
 			if (ImGuiFileDialog::Instance()->IsOk()) {
 				mNewProjectIconPath = (std::filesystem::path(ImGuiFileDialog::Instance()->GetCurrentPath()) / ImGuiFileDialog::Instance()->GetCurrentFileName()).string();

@@ -76,7 +76,7 @@ bool SBcsvIO::Load(bStream::CMemoryStream* stream)
 
 					size_t stringOffset = stream->readUInt32();
 					stream->seek(stringTableOffset + stringOffset);
-					
+
 					while((c = stream->readUInt8()) != '\0'){
 						str.push_back(c);
 					}
@@ -319,7 +319,7 @@ bool SBcsvIO::SetFloat(uint32_t entry_index, std::string field_name, float value
 		return true;
 	} else {
 		return false;
-	}	
+	}
 }
 
 bool SBcsvIO::SetBoolean(uint32_t entry_index, std::string field_name, bool value){
@@ -329,7 +329,7 @@ bool SBcsvIO::SetBoolean(uint32_t entry_index, std::string field_name, bool valu
 		return SetUnsignedInt(entry_index, field_name, (uint32_t)value);
 	} else {
 		return false;
-	}	
+	}
 }
 
 
@@ -341,12 +341,12 @@ bool SBcsvIO::SetString(uint32_t entry_index, std::string field_name, std::strin
 		return true;
 	} else {
 		return false;
-	}	
+	}
 }
 
 void SBcsvIO::AddField(std::string name, EJmpFieldType type){
 	SBcsvFieldInfo fieldInfo;
-	
+
 	fieldInfo.Hash = HashFieldName(name);
 	fieldInfo.Bitmask = 0xFFFFFFFF;
 	fieldInfo.Shift = 0;
@@ -419,8 +419,8 @@ bool SBcsvIO::Save(std::vector<std::shared_ptr<SDOMNodeSerializable>> entities, 
 
 		uint8_t* tempBuffer = new uint8_t[mEntryCount * mEntrySize]{};
 
-		bStream::CMemoryStream ReadStream(tempBuffer, mEntryCount * mEntrySize, bStream::Endianess::Big, bStream::OpenMode::In);
-		bStream::CMemoryStream WriteStream(tempBuffer, mEntryCount * mEntrySize, bStream::Endianess::Big, bStream::OpenMode::Out);
+		bStream::CMemoryStream ReadStream(tempBuffer, mEntryCount * mEntrySize, stream.getOrder(), bStream::OpenMode::In);
+		bStream::CMemoryStream WriteStream(tempBuffer, mEntryCount * mEntrySize, stream.getOrder(), bStream::OpenMode::Out);
 
 		for (uint32_t i = 0; i < entities.size(); i++)
 		{

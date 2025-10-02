@@ -22,11 +22,11 @@ namespace SResUtility
 		bool mInitialized = false;
 		public:
 
-			void CacheModel(std::string modelName);
+			void CacheModel(std::string modelName, bStream::Endianess endian=bStream::Endianess::Big);
 
-			std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> LoadColorAnimation(std::string modelName, std::string animName);
-			std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> LoadJointAnimation(std::string modelName, std::string animName);
-			std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> LoadTextureAnimation(std::string modelName, std::string animName);
+			std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> LoadColorAnimation(std::string modelName, std::string animName, bStream::Endianess endian=bStream::Endianess::Big);
+			std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> LoadJointAnimation(std::string modelName, std::string animName, bStream::Endianess endian=bStream::Endianess::Big);
+			std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> LoadTextureAnimation(std::string modelName, std::string animName, bStream::Endianess endian=bStream::Endianess::Big);
 
 			void Init();
 	};

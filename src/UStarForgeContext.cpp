@@ -1,5 +1,6 @@
 #include "UStarForgeContext.hpp"
 
+#include "DOM/DOMNodeBase.hpp"
 #include "util/UUIUtil.hpp"
 
 #include <J3D/J3DModelLoader.hpp>
@@ -72,7 +73,7 @@ UStarForgeContext::UStarForgeContext(){
 	mGrid.Init();
 	mProjects.Init();
 	mAreaRenderer.Init();
-	
+
 	mBillboardRenderer.Init(512, 2);
 	mBillboardRenderer.SetBillboardTexture(std::filesystem::current_path() / "res" / "textures" / "startobj.png", 0);
 	mBillboardRenderer.SetBillboardTexture(std::filesystem::current_path() / "res" / "textures" / "soundobj.png", 1);
@@ -86,20 +87,20 @@ UStarForgeContext::UStarForgeContext(){
 	}
 
 	ImGuiIO& io = ImGui::GetIO();
-	
+
 	if(std::filesystem::exists((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf"))){
 		io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "NotoSansJP-Regular.otf").string().c_str(), 16.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	}
 
 	if(std::filesystem::exists((std::filesystem::current_path() / "res" / "forkawesome.ttf"))){
 		static const ImWchar icons_ranges[] = { ICON_MIN_FK, ICON_MAX_16_FK, 0 };
-		ImFontConfig icons_config; 
-		icons_config.MergeMode = true; 
-		icons_config.PixelSnapH = true; 
+		ImFontConfig icons_config;
+		icons_config.MergeMode = true;
+		icons_config.PixelSnapH = true;
 		icons_config.GlyphMinAdvanceX = 16.0f;
 		io.Fonts->AddFontFromFileTTF((std::filesystem::current_path() / "res" / "forkawesome.ttf").string().c_str(), icons_config.GlyphMinAdvanceX, &icons_config, icons_ranges );
 	}
-	
+
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	Options.LoadOptions();
@@ -142,12 +143,12 @@ void UStarForgeContext::Render(float deltaTime) {
 	ImGuiIO& io = ImGui::GetIO();
 
 	RenderMenuBar();
-	
+
 	const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 
 	ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar | ImGuiDockNodeFlags_NoDockingInCentralNode;
 	mMainDockSpaceID = ImGui::DockSpaceOverViewport(0, mainViewport, dockFlags);
-	
+
 	if(!bIsDockingSetUp){
 
 		glGenFramebuffers(1, &mFbo);
@@ -197,7 +198,7 @@ void UStarForgeContext::Render(float deltaTime) {
 	ImGuiWindowClass mainWindowOverride;
 	mainWindowOverride.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
 	ImGui::SetNextWindowClass(&mainWindowOverride);
-	
+
 	ImGui::Begin("mainWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 	ImGui::Text("Scenarios");
 		ImGui::SameLine();
@@ -220,7 +221,7 @@ void UStarForgeContext::Render(float deltaTime) {
 		ImGui::Text("Zones");
 		ImGui::SameLine();
         ImGui::Text(ICON_FK_PLUS_CIRCLE);
-        
+
 		if(ImGui::IsItemClicked(ImGuiMouseButton_Left) && mRoot->GetGalaxyLoaded()){
 			// Add Zone code goes here. Should be a call to Galaxy->AddZone
 			ImGui::OpenPopup("addZoneDialog");
@@ -242,9 +243,9 @@ void UStarForgeContext::Render(float deltaTime) {
 			float textWidth = ImGui::CalcTextSize("Zone Archives").x;
 
 			ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-	
+
 			ImGui::Text("Zone Archives");
-			
+
 			ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.98f);
 			ImGui::SetCursorPosX(0.2f);
 			ImGui::BeginListBox("##zoneArchives");
@@ -290,7 +291,7 @@ void UStarForgeContext::Render(float deltaTime) {
 			case EDOMNodeType::Object:
 				ImGui::Text("Object Properties");
 				break;
-			
+
 			default:
 				ImGui::Text("Selection Properties");
 				break;
@@ -303,7 +304,7 @@ void UStarForgeContext::Render(float deltaTime) {
 		if(selected != nullptr) selected->RenderDetailsUI();
 	ImGui::End();
 
-		
+
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
 
 	ImGui::SetNextWindowClass(&mainWindowOverride);
@@ -326,18 +327,18 @@ void UStarForgeContext::Render(float deltaTime) {
 
 		ImVec2 winSize = ImGui::GetContentRegionAvail();
 		ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-		
+
 		if(mRoot == nullptr){
 			glViewport(0, 0, (uint32_t)winSize.x, (uint32_t)winSize.y);
 
 
 			glClearColor(0.100f, 0.261f, 0.402f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
+
 			ImGui::SetCursorPos(ImVec2(((winSize.x / 2) - (ImGui::CalcTextSize("Open a Galaxy").x / 2)), ((winSize.y / 2) - (ImGui::CalcTextSize("Open a Galaxy").y / 2))));
 			ImGui::Text("Open a Galaxy");
 
-		} 
+		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
 
@@ -371,14 +372,14 @@ void UStarForgeContext::Render(float deltaTime) {
 			GLenum attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 			glDrawBuffers(2, attachments);
 
-		
+
 			J3D::Picking::ResizeFramebuffer((uint32_t)winSize.x, (uint32_t)winSize.y);
-		
+
 		}
-		
+
 		glViewport(0, 0, (uint32_t)winSize.x, (uint32_t)winSize.y);
 
-		
+
 		glClearColor(0.100f, 0.261f, 0.402f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -387,16 +388,16 @@ void UStarForgeContext::Render(float deltaTime) {
 
 		mPrevWinWidth = winSize.x;
 		mPrevWinHeight = winSize.y;
-		
+
 		glm::mat4 projection, view;
 		projection = mCamera.GetProjectionMatrix();
 		view = mCamera.GetViewMatrix();
 
 		//if(!mSetLights) SetLights();
 		J3DUniformBufferObject::SetProjAndViewMatrices(projection, view);
-		
+
 		//Render Models here
-		
+
 		if(mRoot != nullptr){
 			mRenderables.clear();
 			mRoot->Render(mRenderables, deltaTime);
@@ -405,7 +406,7 @@ void UStarForgeContext::Render(float deltaTime) {
 			J3D::Rendering::Render(deltaTime, view, projection, packets);
 
 			// Combine these two into one
-			
+
 			for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
 				std::shared_ptr<SZoneDOMNode> zone = path->GetParentOfType<SZoneDOMNode>(EDOMNodeType::Zone).lock();
 				if(zone->isVisible()) path->Render(&mCamera, zone->mTransform);
@@ -445,7 +446,7 @@ void UStarForgeContext::Render(float deltaTime) {
 
 			if(ImGui::IsItemClicked(0) && !ImGuizmo::IsOver()){
 				ImVec2 mousePos = ImGui::GetMousePos();
-				
+
 				ImVec2 pickPos = {
 					mousePos.x - cursorPos.x,
 					winSize.y - (mousePos.y - cursorPos.y)
@@ -457,14 +458,14 @@ void UStarForgeContext::Render(float deltaTime) {
 				glReadPixels(static_cast<GLint>(pickPos.x), static_cast<GLint>(pickPos.y), 1, 1, GL_RED_INTEGER, GL_INT, (void*)&id);
 
 				if(id != 0){
-					
+
 					for(std::shared_ptr<SPathDOMNode> path : mRoot->GetChildrenOfType<SPathDOMNode>(EDOMNodeType::Path)){
 						if(path->GetPickID() == id){
 							selected = path;
 							break;
 						}
 					}
-					
+
 					for(std::shared_ptr<SPathPointDOMNode> path : mRoot->GetChildrenOfType<SPathPointDOMNode>(EDOMNodeType::PathPoint)){
 						if(path->GetPickID() == id){
 							selected = path;
@@ -492,13 +493,13 @@ void UStarForgeContext::Render(float deltaTime) {
 							break;
 						}
 					}
-					
+
 				} else {
 					// model picking
 
 					J3D::Picking::RenderPickingScene(view, projection, packets);
 
-					// Check picking for J3DUltra 
+					// Check picking for J3DUltra
 					uint16_t modelID = std::get<0>(J3D::Picking::Query((uint32_t)pickPos.x,  (uint32_t)pickPos.y));
 
 					for(auto object : mRoot->GetChildrenOfType<SObjectDOMNode>(EDOMNodeType::Object)){
@@ -548,7 +549,7 @@ void UStarForgeContext::Render(float deltaTime) {
 
 					if(ImGuizmo::Manipulate(&mCamera.GetViewMatrix()[0][0], &mCamera.GetProjectionMatrix()[0][0], (ImGuizmo::OPERATION)mGizmoOperation, ImGuizmo::WORLD, &transform[0][0], &delta[0][0])){
 						glm::mat4 out = glm::inverse(zoneTransform) * transform;
-					
+
 						if(ImGui::IsKeyDown(ImGuiKey_LeftCtrl)){
 							pathpoint->SetLeftHandle(out[3]);
 						} else if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
@@ -556,7 +557,7 @@ void UStarForgeContext::Render(float deltaTime) {
 						} else {
 							pathpoint->mTransform = out;
 						}
-					
+
 						path->Update();
 					}
 
@@ -581,7 +582,7 @@ void UStarForgeContext::Render(float deltaTime) {
 						start->mTransform = glm::inverse(zoneTransform) * transform;
 						mBillboardRenderer.UpdateData(mRoot);
 					}
-				} 
+				}
 			}
 
 			glm::mat4 viewMtx = mCamera.GetViewMatrix();
@@ -685,6 +686,7 @@ void UStarForgeContext::RenderMenuBar() {
 		ImGuiFileDialog::Instance()->OpenDialog("OpenGalaxyDialog", "Choose Stage Directory", nullptr, config);
 	}
 
+	// This isnt used anymore, should probably remove it
 	if (ImGuiFileDialog::Instance()->Display("OpenGalaxyDialog")) {
 		if (ImGuiFileDialog::Instance()->IsOk()) {
 			std::string FilePath = ImGuiFileDialog::Instance()->GetCurrentPath();
@@ -693,15 +695,13 @@ void UStarForgeContext::RenderMenuBar() {
 			try {
 				selected = nullptr;
 				if(mRoot == nullptr) mRoot = std::make_shared<SGalaxyDOMNode>();
-				// TODO: add way to set galaxy type
-				// copy from cammie again? or infer based on root structure
-				if(!mRoot->LoadGalaxy(FilePath, std::filesystem::exists(Options.mRootPath  / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
+				if(!mRoot->LoadGalaxy(FilePath, std::filesystem::exists(Options.mRootPath  / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1, EGameSystem::Wii)){
 					ImGui::OpenPopup("Galaxy Load Error");
 				} else {
 					ModelCache.erase(ModelCache.begin(), ModelCache.end());
 					mRenderables.erase(mRenderables.begin(), mRenderables.end());
 
-					// Get a good enough guesstimation of how many renderables we will need so we aren't reallocating a bunch every frame 
+					// Get a good enough guesstimation of how many renderables we will need so we aren't reallocating a bunch every frame
 					size_t renderableCountEstimation = 0;
 					for(auto& child : mRoot->Children){
 						renderableCountEstimation += child->Children.size();
@@ -749,7 +749,7 @@ void UStarForgeContext::RenderMenuBar() {
 
 		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
 		ImGui::Text("StarForge");
-		
+
 		ImGui::Separator();
 
 		textWidth = ImGui::CalcTextSize("https://github.com/Astral-C/StarForge").x;
@@ -802,15 +802,19 @@ void UStarForgeContext::RenderMenuBar() {
 			selected = nullptr;
 			mRoot = std::make_shared<SGalaxyDOMNode>();
 			mOpenGalaxies[galaxyPath] = mRoot;
-			// TODO: add way to set galaxy type
-			// copy from cammie again? or infer based on root structure
-			if(!mRoot->LoadGalaxy(Options.mRootPath  / "StageData" / galaxyPath, std::filesystem::exists(Options.mRootPath  / "SystemData" / "ObjNameTable.arc") ? EGameType::SMG2 : EGameType::SMG1)){
+			auto project = mProjects.CurrentProject();
+
+			if(project == nullptr){
+			    throw "Project is null? What?";
+			}
+
+			if(!mRoot->LoadGalaxy(Options.mRootPath  / "StageData" / galaxyPath, project->GetGame(), project->GetSystem())){
 				ImGui::OpenPopup("Galaxy Load Error");
 			} else {
 				ModelCache.erase(ModelCache.begin(), ModelCache.end());
 				mRenderables.erase(mRenderables.begin(), mRenderables.end());
 
-				// Get a good enough guesstimation of how many renderables we will need so we aren't reallocating a bunch every frame 
+				// Get a good enough guesstimation of how many renderables we will need so we aren't reallocating a bunch every frame
 				size_t renderableCountEstimation = 0;
 				for(auto& child : mRoot->Children){
 					renderableCountEstimation += child->Children.size();

@@ -9,7 +9,14 @@
 
 enum EGameType {
     SMG1,
-    SMG2
+    SMG2,
+    GameTypeCount
+};
+
+enum EGameSystem {
+    Wii,
+    Switch,
+    SystemTypeCount
 };
 
 enum EDOMNodeState
@@ -27,7 +34,7 @@ enum class EDOMNodeType
     Scenario,
 	Zone,
 	ZoneLayer,
-	
+
 	// Paths
 	Path,
 	PathPoint,
