@@ -371,3 +371,9 @@ out/
 starforge
 *.a
 *.bin
+projects
+res/thumb
+res/*.png
+!res/default_project.png
+.cache
+.clang
