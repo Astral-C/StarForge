@@ -60,13 +60,10 @@ UStarForgeContext::~UStarForgeContext(){
 	mRenderables.erase(mRenderables.begin(), mRenderables.end());
 	ModelCache.clear();
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-	glDeleteFramebuffers(1, &mFbo);
-	glDeleteRenderbuffers(1, &mRbo);
 	glDeleteTextures(1, &mViewTex);
 	glDeleteTextures(1, &mPickTex);
+	glDeleteFramebuffers(1, &mFbo);
+	glDeleteRenderbuffers(1, &mRbo);
 }
 
 UStarForgeContext::UStarForgeContext(){

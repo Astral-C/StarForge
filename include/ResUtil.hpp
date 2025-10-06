@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GenUtil.hpp"
+#include "bstream.h"
 #include <Archive.hpp>
 #include <Compression.hpp>
 
@@ -19,14 +20,16 @@ namespace SResUtility
 {
 	class SGCResourceManager
 	{
-		bool mInitialized = false;
+		bool mInitialized { false };
+		bStream::Endianess mEndian { bStream::Endianess::Big };
 		public:
 
-			void CacheModel(std::string modelName, bStream::Endianess endian=bStream::Endianess::Big);
+		    void SetEndian(bStream::Endianess e){ mEndian = e; }
+			void CacheModel(std::string modelName);
 
-			std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> LoadColorAnimation(std::string modelName, std::string animName, bStream::Endianess endian=bStream::Endianess::Big);
-			std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> LoadJointAnimation(std::string modelName, std::string animName, bStream::Endianess endian=bStream::Endianess::Big);
-			std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> LoadTextureAnimation(std::string modelName, std::string animName, bStream::Endianess endian=bStream::Endianess::Big);
+			std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> LoadColorAnimation(std::string modelName, std::string animName);
+			std::shared_ptr<J3DAnimation::J3DJointAnimationInstance> LoadJointAnimation(std::string modelName, std::string animName);
+			std::shared_ptr<J3DAnimation::J3DTexMatrixAnimationInstance> LoadTextureAnimation(std::string modelName, std::string animName);
 
 			void Init();
 	};

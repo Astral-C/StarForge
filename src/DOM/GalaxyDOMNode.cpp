@@ -4,6 +4,7 @@
 #include "DOM/ObjectDOMNode.hpp"
 #include "DOM/ZoneDOMNode.hpp"
 #include "ResUtil.hpp"
+#include "bstream.h"
 #include "imgui.h"
 #include <map>
 
@@ -124,6 +125,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
     mName = (galaxy_path / std::string(".")).parent_path().filename().string();
     mGame = game;
     mSystemEd = system == EGameSystem::Switch ? bStream::Endianess::Little : bStream::Endianess::Big;
+    GCResourceManager.SetEndian(mSystemEd);
 
     SBcsvIO scenarios;
     SBcsvIO zones;
@@ -137,9 +139,9 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 	}
 
     {
-        bStream::CFileStream scenarioArchive((galaxy_path / (mName + "Scenario.arc")).string(), mSystemEd, bStream::OpenMode::In);
+        bStream::CFileStream scenarioArchive((galaxy_path / (mName + "Scenario.arc")).string(), bStream::Endianess::Big, bStream::OpenMode::In);
         if(!mScenarioArchive->Load(&scenarioArchive)){
-            std::cout << "Couldn't mount scenario archive" << mScenarioArchivePath << std::endl;
+            std::cout << "Couldn't mount scenario archive " << mScenarioArchivePath << std::endl;
             return false;
         }
     }
@@ -154,7 +156,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         std::shared_ptr<Archive::Rarc> lightDataArc = Archive::Rarc::Create();
 
         {
-            bStream::CFileStream lightDataArcFile((Options.mRootPath  / "ObjectData" / "LightData.arc").string(), mSystemEd, bStream::OpenMode::In);
+            bStream::CFileStream lightDataArcFile((Options.mRootPath  / "ObjectData" / "LightData.arc").string(), bStream::Endianess::Big, bStream::OpenMode::In);
 
             lightDataArc->Load(&lightDataArcFile);
         }
@@ -173,6 +175,8 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
 
         }
 
+        std::cout << "Loaded Lighting Configs" << std::endl;
+
     } else {
         zoneFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("ZoneList.bcsv"));
         scenarioFile = mScenarioArchive->Get<Archive::File>(std::filesystem::path("ScenarioData.bcsv"));
@@ -182,7 +186,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         std::shared_ptr<Archive::Rarc> lightDataArc = Archive::Rarc::Create();
 
         {
-            bStream::CFileStream lightDataArcFile((Options.mRootPath  / "LightData" / "LightData.arc").string(), mSystemEd, bStream::OpenMode::In);
+            bStream::CFileStream lightDataArcFile((Options.mRootPath  / "LightData" / "LightData.arc").string(), bStream::Endianess::Big, bStream::OpenMode::In);
 
             lightDataArc->Load(&lightDataArcFile);
         }
@@ -200,6 +204,9 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
             LoadLightConfig("Player", &lightData);
 
         }
+
+        std::cout << "Loaded Lighting Configs" << std::endl;
+
     }
 
 
@@ -211,6 +218,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         // Manually load the main galaxy zone so we can get a list of zone transforms
         auto mainZone = std::make_shared<SZoneDOMNode>();
         mainZone->Deserialize(&mZoneListData, 0);
+        std::cout << "Loaded Zone List Data" << std::endl;
 
         std::filesystem::path mainZonePath;
 
@@ -221,6 +229,7 @@ bool SGalaxyDOMNode::LoadGalaxy(std::filesystem::path galaxy_path, EGameType gam
         }
 
         auto zoneTransforms = mainZone->LoadMainZone(mainZonePath, mSystemEd);
+        std::cout << "Loaded Main Zone" << std::endl;
         AddChild(mainZone);
 
         for(size_t entry = 1; entry < mZoneListData.GetEntryCount(); entry++){

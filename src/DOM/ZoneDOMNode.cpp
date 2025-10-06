@@ -14,6 +14,7 @@
 #include "DOM/StartDOMNode.hpp"
 #include "DOM/SoundObjectDOMNode.hpp"
 #include <Archive.hpp>
+#include "bstream.h"
 #include "imgui.h"
 #include "UStarForgeContext.hpp"
 #include "IconsForkAwesome.h"
@@ -462,7 +463,7 @@ void SZoneDOMNode::LoadZone(std::filesystem::path zonePath, EGameType game, bStr
     mZoneArchivePath = zonePath;
     mZoneArchive = Archive::Rarc::Create();
 
-    bStream::CFileStream zoneFileStream(zonePath.string(), endianess, bStream::OpenMode::In);
+    bStream::CFileStream zoneFileStream(zonePath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
     if(!mZoneArchive->Load(&zoneFileStream)){
         std::cout << "Error Loading Zone Archive" << std::endl;
         return;
@@ -577,11 +578,13 @@ std::map<std::string, std::pair<glm::mat4, int32_t>> SZoneDOMNode::LoadMainZone(
     mZoneArchivePath = zonePath;
     mZoneArchive = Archive::Rarc::Create();
 
-    bStream::CFileStream zoneFileStream(zonePath.string(), endianess, bStream::OpenMode::In);
+    bStream::CFileStream zoneFileStream(zonePath.string(), bStream::Endianess::Big, bStream::OpenMode::In);
     if(!mZoneArchive->Load(&zoneFileStream)){
         std::cout << "Couldn't load zone archive " << zonePath << std::endl;
         return {};
     }
+
+    std::cout << "Loaded Main Zone Arc" << std::endl;
 
     mZoneArchiveLoaded = true;
 
