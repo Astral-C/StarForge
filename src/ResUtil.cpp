@@ -205,6 +205,10 @@ void SResUtility::SOptions::UpdateObjectDB(){
 
 	FILE* objectDBFile = fopen((std::filesystem::current_path() / "res" / "objectdb.json").string().c_str(), "w");
 
+	if(objectDBFile == nullptr){
+	    return;
+	}
+
 	curl_easy_setopt(curl, CURLOPT_URL, mObjectDBUrl.c_str());
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteObjectDBChunk);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, objectDBFile);

@@ -25,7 +25,7 @@ public:
     std::string GetName() { return mName; }
     std::string GetDescription() { return mDescription; }
     std::filesystem::path GetRootPath() { return mProjectRoot; }
-    nlohmann::json GetGalaxies() { return mGalaxies; }
+    nlohmann::json& GetGalaxies() { return mGalaxies; }
     uint32_t GetImage() { return mProjImageID; }
     EGameType GetGame() { return mGame; }
     EGameSystem GetSystem() { return mSystem; }
@@ -50,6 +50,9 @@ private:
     bool mSelectRootDialogOpen { false };
     bool mSelectIconDialogOpen { false };
     bool mNewGalaxyDialogOpen { false } ;
+
+    int mGalaxyNameEditIndex { -1 };
+    std::string mEditGalaxyName { "" };
 
     std::string mNewGalaxyName { "Readable Galaxy Name" };
     std::string mNewGalaxyInternalName { "Main Zone Archive Name" };

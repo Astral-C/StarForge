@@ -1,7 +1,9 @@
 #include "UProject.hpp"
+#include <filesystem>
 #include <format>
 #include <imgui.h>
 #include "DOM/DOMNodeBase.hpp"
+#include "json.hpp"
 #include "stb_image.h"
 #include "glad/glad.h"
 #include "IconsForkAwesome.h"
@@ -124,8 +126,11 @@ UStarForgeProjectManager::UStarForgeProjectManager(){
 
 void UStarForgeProjectManager::Init(){
     int w, h, c;
-    unsigned char* defaultProjImg = stbi_load("./res/default_project.png", &w, &h, &c, 4);
+    unsigned char* defaultProjImg = nullptr;
 
+    if(std::filesystem::exists("res/default_project.png")){
+        defaultProjImg = stbi_load("res/default_project.png", &w, &h, &c, 4);
+    }
     glGenTextures(1, &mProjImageID);
     glBindTexture(GL_TEXTURE_2D, mProjImageID);
 
@@ -182,15 +187,14 @@ std::string UStarForgeProjectManager::RenderGalaxySelectUi(bool& galaxySelectOpe
                 mNewGalaxyDialogOpen = false;
             }
         } else {
-            for(auto galaxy : mCurrentProject->GetGalaxies()){
+            int index = 0;
+            int markDelete = -1;
+            for(auto& galaxy : mCurrentProject->GetGalaxies()){
                 ImGui::BeginChild(std::format("##{}", galaxy["name"].get<std::string>()).data(), ImVec2(ImGui::GetContentRegionAvail().x, 80.0f), ImGuiChildFlags_Border);
+                    bool hovered = false;
                     if(ImGui::IsWindowHovered()){
                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
-
-                        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)){
-                            selectedGalaxy = galaxy["internalName"];
-                            shouldClosePopup = true;
-                        }
+                        hovered = true;
                     }
 
                     uint32_t imgId = mCurrentProject->GetThumbnail(galaxy["internalName"].get<std::string>());
@@ -200,29 +204,98 @@ std::string UStarForgeProjectManager::RenderGalaxySelectUi(bool& galaxySelectOpe
                         ImGui::Image((ImTextureID)mProjImageID, ImVec2(64, 64));
                     }
                     ImGui::SameLine();
+                    float ypos = ImGui::GetCursorPosY();
+                    ImGui::SetCursorPosY(ypos + 24);
                     ImGui::BeginGroup();
-                    ImGui::Text(galaxy["name"].get<std::string>().data());
+                    if(mGalaxyNameEditIndex == index){
+                        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 64);
+                        ImGui::InputText("##galaxyName", &mEditGalaxyName);
+                        if(ImGui::IsKeyPressed(ImGuiKey_Enter)){
+                            galaxy["name"] = mEditGalaxyName;
+                            mGalaxyNameEditIndex = -1;
+                            std::fstream projectsFileIn(Options.mProjectsPath / "projects.json", std::ios::in);
+                            nlohmann::json projectsJson = nlohmann::json::parse(projectsFileIn);
+
+                            for(int i = 0; i < mProjects.size(); i++){
+                                if(mProjects.at(i) == mCurrentProject){
+                                    projectsJson["projects"].at(i)["galaxies"][index]["name"] = mEditGalaxyName;
+                                }
+                            }
+
+                            std::fstream projectsFileOut(Options.mProjectsPath / "projects.json", std::ios::out);
+                            projectsJson >> projectsFileOut;
+                        }
+                    } else {
+                        ImGui::Text(galaxy["name"].get<std::string>().data());
+                    }
                     ImGui::EndGroup();
+                    ImGui::SetCursorPosY(ypos + 24);
+                    ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - 32);
+                    ImGui::Text(ICON_FK_PENCIL);
+                    bool clickedEdit = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+                    ImGui::SameLine();
+                    ImGui::Text(ICON_FK_TRASH);
+                    if(ImGui::IsItemClicked(ImGuiMouseButton_Left)){
+                        markDelete = index;
+                    } else if(clickedEdit){
+                        if(mGalaxyNameEditIndex == index){
+                            galaxy["name"] = mEditGalaxyName;
+                            mGalaxyNameEditIndex = -1;
+                            std::fstream projectsFileIn(Options.mProjectsPath / "projects.json", std::ios::in);
+                            nlohmann::json projectsJson = nlohmann::json::parse(projectsFileIn);
+
+                            for(int i = 0; i < mProjects.size(); i++){
+                                if(mProjects.at(i) == mCurrentProject){
+                                    projectsJson["projects"].at(i)["galaxies"][index]["name"] = mEditGalaxyName;
+                                }
+                            }
+
+                            std::fstream projectsFileOut(Options.mProjectsPath / "projects.json", std::ios::out);
+                            projectsJson >> projectsFileOut;
+                        } else {
+                            if(mGalaxyNameEditIndex != -1){
+                                galaxy["name"] = mEditGalaxyName;
+                                std::fstream projectsFileIn(Options.mProjectsPath / "projects.json", std::ios::in);
+                                nlohmann::json projectsJson = nlohmann::json::parse(projectsFileIn);
+
+                                for(int i = 0; i < mProjects.size(); i++){
+                                    if(mProjects.at(i) == mCurrentProject){
+                                        projectsJson["projects"].at(i)["galaxies"][index]["name"] = mEditGalaxyName;
+                                    }
+                                }
+
+                                std::fstream projectsFileOut(Options.mProjectsPath / "projects.json", std::ios::out);
+                                projectsJson >> projectsFileOut;
+                            }
+                            mGalaxyNameEditIndex = index;
+                            mEditGalaxyName = galaxy["name"].get<std::string>();
+                        }
+                    } else if(hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && mGalaxyNameEditIndex == -1){
+                        selectedGalaxy = galaxy["internalName"];
+                        shouldClosePopup = true;
+                    }
+                    ImGui::SetCursorPosY(ypos);
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX());
                 ImGui::EndChild();
+                index++;
             }
 
-                ImGui::BeginChild("##newGalaxyBtn", ImVec2(ImGui::GetContentRegionAvail().x, 32.0f), ImGuiChildFlags_Border);
-                    if(ImGui::IsWindowHovered()){
-                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5);
+            if(markDelete != -1) mCurrentProject->GetGalaxies().erase(markDelete);
 
-                        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)){
-                            // set the projectmanager mode to create project
-                            mNewGalaxyDialogOpen = true;
-                        }
+            ImGui::BeginChild("##newGalaxyBtn", ImVec2(ImGui::GetContentRegionAvail().x, 32.0f), ImGuiChildFlags_Border);
+                if(ImGui::IsWindowHovered()){
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 5);
+                    if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)){
+                        // set the projectmanager mode to create project
+                        mNewGalaxyDialogOpen = true;
                     }
-
-
-                    ImGui::BeginGroup();
-                    ImGui::Text(ICON_FK_PLUS);
-                    ImGui::SameLine();
-                    ImGui::Text("New");
-                    ImGui::EndGroup();
-                ImGui::EndChild();
+                }
+                ImGui::BeginGroup();
+                ImGui::Text(ICON_FK_PLUS);
+                ImGui::SameLine();
+                ImGui::Text("New");
+                ImGui::EndGroup();
+            ImGui::EndChild();
 
             if(shouldClosePopup){
                 ImGui::CloseCurrentPopup();
@@ -297,6 +370,14 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
                 newProject["system"] = mNewProjectSystem;
                 newProject["isDolphinRoot"] = mNewProjectDolphinRoot;
 
+                newProject["galaxies"] = nlohmann::json::array();
+
+                for(auto dir : std::filesystem::directory_iterator(std::filesystem::path(mNewProjectRoot) / "StageData")){
+                    if(std::filesystem::is_directory(dir.path())){
+                        newProject["galaxies"].push_back({{"internalName", dir.path().filename()},{"name", dir.path().filename()}});
+                    }
+                }
+
                 mProjects.push_back(std::make_shared<UStarForgeProject>(newProject));
 
                 std::fstream projectsFileIn(Options.mProjectsPath / "projects.json", std::ios::in);
@@ -315,7 +396,6 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
             for(auto project : mProjects){
                 ImGui::BeginChild(std::format("##{}", project->GetName()).data(), ImVec2(0.0f, 64.0f), ImGuiChildFlags_Border);
                     if(ImGui::IsWindowHovered()){
-
                         float ypos = ImGui::GetCursorPosY();
                         ImGui::SetCursorPosY(ypos + 16);
                         ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - 10);
@@ -329,8 +409,6 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
                         }
                         ImGui::SetCursorPosY(ypos);
                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
-
-
                     }
 
                     uint32_t imgId = project->GetImage();
