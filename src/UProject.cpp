@@ -294,7 +294,7 @@ void UStarForgeProjectManager::RenderUi(bool& projectManagerOpen){
                 newProject["root"] = mNewProjectRoot;
                 newProject["icon"] = mNewProjectIconPath;
                 newProject["game"] = mNewProjectGame;
-                newProject["system"] = mNewProjectGame;
+                newProject["system"] = mNewProjectSystem;
                 newProject["isDolphinRoot"] = mNewProjectDolphinRoot;
 
                 mProjects.push_back(std::make_shared<UStarForgeProject>(newProject));
